@@ -80,13 +80,13 @@ public class PushNotification {
   }
   public func dictionary() throws -> [String: Any] {
     let value = userInfo["aps"] as? [String: Any]
-    return try unnil(value, PushError.noAps)
+    return try value.try(throw: PushError.noAps)
   }
   public func data() throws -> DataReader {
     let aps = try dictionary()
     let raw64 = aps["d"] as? String
-    let base64: String = try unnil(raw64, PushError.noData)
-    return try unnil(DataReader(base64: base64), PushError.noData)
+    let base64: String = try raw64.try(throw: PushError.noData)
+    return try DataReader(base64: base64).try(throw: PushError.noData)
   }
 }
 

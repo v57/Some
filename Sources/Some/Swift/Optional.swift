@@ -29,6 +29,14 @@ public extension Optional {
       return value
     }
   }
+  func `try`(throw error: Error) throws -> Wrapped {
+    switch self {
+    case .some(let value):
+      return value
+    case .none:
+      throw error
+    }
+  }
   var stringDescription: String {
     switch self {
     case .some(let value):
