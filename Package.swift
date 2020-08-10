@@ -3,26 +3,65 @@
 
 import PackageDescription
 
+// Support class
+// All relations located at the bottom
+class Targets {
+  var array = [PackageDescription.Target]()
+  private var _executables = [String]()
+  private var _libraries = [String]()
+  private var _dependencies = [String]()
+  var products: [PackageDescription.Product] {
+    _libraries.map { PackageDescription.Product.library(name: $0, targets: [$0]) }
+      + _executables.map { PackageDescription.Product.executable(name: $0, targets: [$0])}
+  }
+  var dependencies: [Package.Dependency] {
+    return _dependencies.map {
+      let array = $0.split(separator: " ")
+      return Package.Dependency.package(url: "https://github.com/\(array[0]).git", .upToNextMajor(from: .init(stringLiteral: "\(array[1])")))
+    }
+  }
+  func git(_ name: String) -> Self {
+    let framework = String(name.split(separator: " ").first!.split(separator: "/").last!)
+    _libraries.append(framework)
+    _dependencies.append(name)
+    return self
+  }
+  func app(_ name: String) -> Self {
+    let array = name.split(separator: " ")
+    _executables.append(String(array[0]))
+    return set(name)
+  }
+  func set(_ name: String) -> Self {
+    guard !name.isEmpty else { return self }
+    let array = name.split(separator: " ")
+    let name = String(array[0])
+    _libraries.append(name)
+    let dependencies = array.dropFirst().map {
+      Target.Dependency(stringLiteral: String($0))
+    }
+    self.array.append(.target(name: name, dependencies: dependencies))
+    return self
+  }
+  func some() -> Self {
+    array.last!.dependencies.append("SomeFunctions")
+    array.last!.dependencies.append("SomeData")
+    return self
+  }
+  func test() -> Self {
+    let name = array.last!.name
+    array.append(.testTarget(name: name + "Tests", dependencies: [Target.Dependency(stringLiteral: name)]))
+    return self
+  }
+}
+
+let targets = Targets()
+  // .git("ReactiveX/RxSwift 5.0.0")
+  .set("SomeFunctions")
+
 let package = Package(
-    name: "Some",
-    products: [
-        // Products define the executables and libraries produced by a package, and make them visible to other packages.
-        .library(
-            name: "Some",
-            targets: ["Some"]),
-    ],
-    dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
-    ],
-    targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages which this package depends on.
-        .target(
-            name: "Some",
-            dependencies: []),
-        .testTarget(
-            name: "SomeTests",
-            dependencies: ["Some"]),
-    ]
+  name: "SomeFunctionsApp",
+  platforms: [.iOS(.v11), .macOS(.v10_15)],
+  products: targets.products,
+  dependencies: [],
+  targets: targets.array
 )
