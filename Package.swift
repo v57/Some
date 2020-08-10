@@ -55,8 +55,8 @@ class Targets {
 }
 
 let targets = Targets()
-  // .git("ReactiveX/RxSwift 5.0.0")
   .set("Some")
+  .set("SomeUI Some")
 
 let package = Package(
   name: "SomeFunctionsApp",
