@@ -8,7 +8,7 @@
 
 import UIKit
 
-public struct CellCache<T: UICollectionViewCell> {
+public struct EasyCellCache<T: UICollectionViewCell> {
   private let v = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewLayout())
   public init() {
     v.register(T.self, forCellWithReuseIdentifier: "_")

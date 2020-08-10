@@ -32,6 +32,16 @@ public extension Comparable {
       self = value
     }
   }
+  mutating func set(max: Self) {
+    if max > self {
+      self = max
+    }
+  }
+  mutating func set(min: Self) {
+    if min < self {
+      self = min
+    }
+  }
 }
 
 extension ComparableValue {
