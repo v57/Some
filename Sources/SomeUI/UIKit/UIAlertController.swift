@@ -40,6 +40,9 @@ extension UIAlertController {
   public func cancel() -> Self {
     button("Cancel", .cancel)
   }
+  public func destructive(_ title: String, action: @escaping ()->()) -> Self {
+    button(title, .destructive, action)
+  }
   public func button(_ title: String, _ style: UIAlertAction.Style = .default) -> Self {
     addAction(UIAlertAction(title: title, style: style, handler: nil))
     return self
