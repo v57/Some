@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import SomeFunctions
+import Some
 
 public typealias PEmptyView = PStackView
 open class PView: UIView, PipeStorage {

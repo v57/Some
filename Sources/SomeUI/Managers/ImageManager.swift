@@ -8,7 +8,7 @@
 //
 
 import UIKit
-import SomeFunctions
+import Some
 
 extension UIImage: Cachable {
   public var cacheSize: Int {
@@ -145,7 +145,7 @@ private class Image: KeyedCachable, CustomStringConvertible {
   var cacheKey: FileURL { url }
   
   var description: String {
-    return "(name: \(url.fileName), size: \(url.fileSize.bytesStringShort), cacheSize: \(cacheSize.bytesStringShort))"
+    return "(name: \(url.fileName), size: \(url.fileSize.bytesString(.short)), cacheSize: \(cacheSize.bytesString(.short)))"
   }
   
   var processed = [String: UIImage]()

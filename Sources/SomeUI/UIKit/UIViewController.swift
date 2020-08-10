@@ -8,6 +8,7 @@
 //
 
 import UIKit
+import Some
 
 public func notify<T>(_ type: T.Type, _ body: (T)->()) {
   UIViewController.root.forEach(as: type, body)

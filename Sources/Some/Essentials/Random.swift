@@ -54,9 +54,9 @@ public func ..<T: Randomizable>(l: T, r: T) -> T {
   T.random(in: l...r)
 }
 
-extension Bool {
-  public static func random() -> Bool { Int.random(in: 0...1) == 0 ? false : true }
-  public static func seed() -> Bool { UInt32.seed() < UInt32.max / 2 }
+public extension Bool {
+  static func random() -> Bool { Int.random(in: 0...1) == 0 ? false : true }
+  static func seed() -> Bool { UInt32.seed() < UInt32.max / 2 }
 }
 
 

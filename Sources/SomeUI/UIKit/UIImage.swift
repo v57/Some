@@ -8,7 +8,7 @@
 //
 
 import UIKit
-import SomeFunctions
+import Some
 
 class TableArray: NSObject, UITableViewDataSource {
   var sections = [TableSection]()

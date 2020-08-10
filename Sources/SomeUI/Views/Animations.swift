@@ -23,7 +23,7 @@
 //  SOFTWARE.
 
 import UIKit
-import SomeFunctions
+import Some
 
 public func animation(_ path: String, function: AnimationFunction, from: CGFloat, to: CGFloat, steps: Int = 10) -> CAKeyframeAnimation {
   var values = [CGFloat](repeating: 0, count: steps)

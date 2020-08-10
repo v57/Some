@@ -8,6 +8,7 @@
 //
 
 import CoreGraphics
+import Some
 
 public let π = CGFloat.pi
 public let π_2 = CGFloat.pi/2
@@ -29,15 +30,7 @@ extension CGFloat {
   public static var margin2: CGFloat = 24
   public static var miniMargin: CGFloat = 8
   public static var miniMargin2: CGFloat = 16
-  public static func random() -> CGFloat {
-    return CGFloat(NativeType.random())
-  }
-  public static func random(max: CGFloat) -> CGFloat {
-    return CGFloat(NativeType.random(max: NativeType(max)))
-  }
-  public static func random(min: CGFloat, max: CGFloat) -> CGFloat {
-    return CGFloat(NativeType.random(min: NativeType(min), max: NativeType(max)))
-  }
+  public static func random() -> CGFloat { .random(in: 0..<1) }
   public static func seed(_ x: Int, _ y: Int) -> CGFloat {
     return CGFloat(NativeType.seed(x, y))
   }

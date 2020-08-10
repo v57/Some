@@ -7,7 +7,7 @@
 //  Copyright © 2019 Дмитрий Козлов. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 public extension String {
   static var defaultAttributes = setDefaultAttributes

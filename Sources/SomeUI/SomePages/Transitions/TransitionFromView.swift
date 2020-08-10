@@ -8,7 +8,7 @@
 //
 
 import UIKit
-import SomeFunctions
+import Some
 
 public enum TransitionState {
   case preInit, postInit

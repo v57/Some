@@ -9,7 +9,6 @@
 
 import UIKit
 import Some
-import SomeFunctions
 
 public extension UIDevice {
   /// - Todo: Save id in shared or app directory

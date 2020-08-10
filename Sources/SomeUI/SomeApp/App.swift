@@ -24,7 +24,6 @@
 
 import UIKit
 import UserNotifications
-import SomeFunctions
 import Some
 
 private let saveLocation = "some.db"

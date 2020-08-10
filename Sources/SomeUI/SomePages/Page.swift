@@ -23,7 +23,7 @@
 //  SOFTWARE.
 
 import UIKit
-import SomeFunctions
+import Some
 
 public enum UnloadType {
   case none, memoryWarning, background, offScreen

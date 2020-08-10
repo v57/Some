@@ -8,7 +8,7 @@
 //
 
 import UIKit
-import SomeFunctions
+import Some
 
 open class ProgressView: UIProgressView {
   open weak var currentProgress: Progress?

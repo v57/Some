@@ -23,7 +23,7 @@
 //  SOFTWARE.
 
 import UIKit
-import SomeFunctions
+import Some
 
 public var backgroundImage: UIImage? = UIImage(named: "Background")
 

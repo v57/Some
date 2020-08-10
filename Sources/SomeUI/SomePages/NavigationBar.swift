@@ -23,7 +23,7 @@
 //  SOFTWARE.
 
 import UIKit
-import SomeFunctions
+import Some
 
 private var c: GoBackObject!
 public var NBHeight: CGFloat = 45

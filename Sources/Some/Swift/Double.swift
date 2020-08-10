@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension Double {
+public extension Double {
   func devide(by: Double) -> Double { self / by }
   func string(precision: Int) -> String {
     String(format: "%.\(precision)f", self)

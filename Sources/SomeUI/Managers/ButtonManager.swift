@@ -8,7 +8,7 @@
 //
 
 import UIKit
-import SomeFunctions
+import Some
 
 public final class ButtonActions {
   fileprivate var gesture: ButtonGesture

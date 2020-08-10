@@ -23,7 +23,7 @@
 //  SOFTWARE.
 
 import UIKit
-import SomeFunctions
+import Some
 
 // MARK:- #Textfield
 open class TextField: UITextField, UITextFieldDelegate {
