@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -490,3 +491,4 @@ private extension UIScrollView {
     block()
   }
 }
+#endif

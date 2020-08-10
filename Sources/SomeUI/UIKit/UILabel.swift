@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UILabel.swift
 //  Some
@@ -153,3 +154,4 @@ extension UILabel {
     return CGRect(x: x, y: y, width: w, height: h);
   }
 }
+#endif

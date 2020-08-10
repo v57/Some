@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  CGFloat.swift
 //  mutating funcs
@@ -52,3 +53,4 @@ public func increment2d(_ x: inout CGFloat, _ y: inout CGFloat, _ width: CGFloat
     y += 1
   }
 }
+#endif

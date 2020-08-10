@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UITableView.swift
 //  Some
@@ -13,3 +14,4 @@ public extension UITableView {
     register(UINib(nibName: id, bundle: nil), forCellReuseIdentifier: id)
   }
 }
+#endif

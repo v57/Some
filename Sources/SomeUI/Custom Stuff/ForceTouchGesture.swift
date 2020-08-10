@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  ForceTouchGesture.swift
 //  Some
@@ -54,3 +55,4 @@ public class ForceTouchGestureRecognizer: UILongPressGestureRecognizer {
     force = 0.0
   }
 }
+#endif

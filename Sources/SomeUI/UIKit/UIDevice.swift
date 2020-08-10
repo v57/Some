@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIDevice.swift
 //  Some
@@ -40,3 +41,4 @@ public extension UIApplication {
     }
   }
 }
+#endif

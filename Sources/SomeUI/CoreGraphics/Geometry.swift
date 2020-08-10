@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -180,3 +181,4 @@ extension CGAffineTransform {
     return CGAffineTransform(scaleX: s, y: s)
   }
 }
+#endif

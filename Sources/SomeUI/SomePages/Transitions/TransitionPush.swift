@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Push.swift
 //  Some
@@ -40,3 +41,4 @@ private class Push: PageTransition {
     right.frame.x = screen.width
   }
 }
+#endif

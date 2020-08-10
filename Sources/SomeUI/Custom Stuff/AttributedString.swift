@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  AttributedString.swift
 //  Some
@@ -169,3 +170,4 @@ public extension AString {
     return AString(string: text, attributes: attributes)
   }
 }
+#endif

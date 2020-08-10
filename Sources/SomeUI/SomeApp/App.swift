@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -186,3 +187,4 @@ extension SomeApp: UIApplicationDelegate {
   }
 }
 
+#endif

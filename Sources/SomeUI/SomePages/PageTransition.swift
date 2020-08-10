@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  PageTransition.swift
 //  Some
@@ -385,3 +386,4 @@ public extension SomePage {
 public enum SlideDirection {
   case left, right, down, up, any
 }
+#endif

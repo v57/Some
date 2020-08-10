@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UISwitch.swift
 //  Some
@@ -29,3 +30,4 @@ public extension UISwitch {
     addTarget(closureSelector, action: closureSelector.selector, for: controlEvents)
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -156,3 +157,4 @@ open class TextField: UITextField, UITextFieldDelegate {
     }
   }
 }
+#endif

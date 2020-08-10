@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIFont.swift
 //  Some
@@ -144,3 +145,4 @@ extension UIFont {
     return .monoNumbers(pointSize)
   }
 }
+#endif

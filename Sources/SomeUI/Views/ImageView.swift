@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -48,3 +49,4 @@ open class ImageView: UIImageView {
     }
   }
 }
+#endif

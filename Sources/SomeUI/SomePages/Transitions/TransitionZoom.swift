@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Zoom.swift
 //  Some
@@ -96,3 +97,4 @@ private class Zoom: PageTransitionFromView {
     f = nil
   }
 }
+#endif

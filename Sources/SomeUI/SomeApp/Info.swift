@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Info.swift
 //  Some
@@ -142,3 +143,4 @@ extension SomeAppInfo {
     public let new: T
   }
 }
+#endif

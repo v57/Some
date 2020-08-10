@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -528,3 +529,4 @@ open class DFContentView: ContentView, DynamicFrame {
 open class DPContentView: ContentView, DynamicPos {
   public var dpos: DPos? { didSet { updateFrame() } }
 }
+#endif

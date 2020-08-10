@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  CGSize.swift
 //  mutating funcs
@@ -113,3 +114,4 @@ public func / (left: CGSize, right: CGFloat) -> CGSize {
 public func / (left: CGSize, right: CGSize) -> CGSize {
   return CGSize(left.width / right.width, left.height / right.height)
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  View.swift
 //  Some
@@ -56,3 +57,4 @@ open class DPView2: View, DynamicPos {
 open class DCView2: View, DynamicCenter {
   public var dcenter: DCenter? { didSet { updateFrame() } }
 }
+#endif

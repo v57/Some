@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -386,3 +387,4 @@ open class LoadingViewImage: LoadingView {
 
 
 
+#endif

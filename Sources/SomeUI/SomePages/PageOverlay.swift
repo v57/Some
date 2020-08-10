@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  PageOverlay.swift
 //  Some
@@ -87,3 +88,4 @@ public class PageOverlay {
     _main.back()
   }
 }
+#endif

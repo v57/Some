@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIWindow.swift
 //  Some
@@ -11,3 +12,4 @@ import UIKit
 public extension UIWindow {
   static var main: UIWindow = UIApplication.shared.windows[0]
 }
+#endif

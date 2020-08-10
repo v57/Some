@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UINavigationController.swift
 //  Some
@@ -13,3 +14,4 @@ public extension UINavigationController {
     self.init(rootViewController: vc)
   }
 }
+#endif

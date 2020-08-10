@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  File.swift
 //  
@@ -19,3 +20,4 @@ public struct CellCache<T: UICollectionViewCell> {
     return v.dequeueReusableCell(withReuseIdentifier: "_", for: IndexPath(item: index, section: 0)) as! T
   }
 }
+#endif

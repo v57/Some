@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  autolayout.swift
 //  Some
@@ -76,3 +77,4 @@ extension UIView: UIViewResolutionProtocol {
     }
   }
 }
+#endif

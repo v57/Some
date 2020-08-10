@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  States.swift
 //  Some
@@ -18,3 +19,4 @@ public class SomeAppStates {
   open func inactive() {}
   open func quit() {}
 }
+#endif

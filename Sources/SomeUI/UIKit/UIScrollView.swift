@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIScrollView.swift
 //  SomeUI
@@ -63,3 +64,4 @@ public extension UIScrollView {
     }
   }
 }
+#endif

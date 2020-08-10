@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  DynamicFrame2.swift
 //  Some
@@ -264,3 +265,4 @@ open class DynamicLayout {
 //open class DCVisualEffectView: UIVisualEffectView, DynamicCenter {
 //  public var dcenter: DCenter? { didSet { updateFrame() } }
 //}
+#endif

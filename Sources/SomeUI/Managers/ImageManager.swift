@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  ImageManager.swift
 //  Some
@@ -319,3 +320,4 @@ private class PngFormat: ImageFormat {
     return image.png()
   }
 }
+#endif

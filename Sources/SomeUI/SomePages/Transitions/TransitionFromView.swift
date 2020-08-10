@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  FromView.swift
 //  Some
@@ -559,3 +560,4 @@ private class BackgroundTransitionView: DFView {
   
   required init(coder: NSCoder) { fatalError() }
 }
+#endif

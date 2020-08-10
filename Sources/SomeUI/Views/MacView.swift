@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  MacView.swift
 //  Some
@@ -72,3 +73,4 @@ open class MacView: UIView, DynamicFrame {
     }
   }
 }
+#endif

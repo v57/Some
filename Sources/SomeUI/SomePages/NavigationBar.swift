@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -733,3 +734,4 @@ open class GoBackObject3: GoBackObject {
 
 
 
+#endif

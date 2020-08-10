@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  StringUI.swift
 //  Some
@@ -52,3 +53,4 @@ extension String {
     UIPasteboard.general.string = self
   }
 }
+#endif

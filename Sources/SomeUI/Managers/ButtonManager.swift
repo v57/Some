@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  ButtonGesture.swift
 //  Some
@@ -445,3 +446,4 @@ private extension UIView {
     gesture.holding()
   }
 }
+#endif

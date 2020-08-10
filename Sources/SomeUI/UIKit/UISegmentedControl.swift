@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UISegmentedControl.swift
 //  Some
@@ -27,3 +28,4 @@ extension UISegmentedControl {
     return image!
   }
 }
+#endif

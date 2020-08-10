@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIButton.swift
 //  Some
@@ -153,3 +154,4 @@ private extension UIButton {
     }
   }
 }
+#endif

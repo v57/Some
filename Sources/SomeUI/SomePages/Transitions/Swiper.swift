@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Swiper.swift
 //  Some Events
@@ -137,3 +138,4 @@ public class PageScrollViewSwiper: NSObject {
 //  }
 //}
 
+#endif

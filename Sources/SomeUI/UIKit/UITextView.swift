@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UITextView.swift
 //  Some
@@ -28,3 +29,4 @@ extension UITextView {
     isSelectable = false
   }
 }
+#endif

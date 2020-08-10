@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIStackView.swift
 //  Some
@@ -49,3 +50,4 @@ public extension UIStackView {
     return self
   }
 }
+#endif

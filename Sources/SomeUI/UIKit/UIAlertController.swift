@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIAlertController.swift
 //  Some
@@ -68,3 +69,4 @@ extension UIAlertController {
     addAction(action)
   }
 }
+#endif

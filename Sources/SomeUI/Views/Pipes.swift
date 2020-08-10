@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  File.swift
 //  
@@ -104,3 +105,4 @@ extension PScrollView {
     }
   }
 }
+#endif

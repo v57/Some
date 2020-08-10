@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIImage.swift
 //  Some
@@ -703,3 +704,4 @@ public class ImageEditor {
   }
 }
 
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Constraints.swift
 //  Some
@@ -704,3 +705,4 @@ final public class ConstraintsSwitch {
     return right
   }
 }
+#endif

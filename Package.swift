@@ -59,7 +59,7 @@ let targets = Targets()
   .set("SomeUI Some")
 
 let package = Package(
-  name: "SomeFunctionsApp",
+  name: "Some",
   platforms: [.iOS(.v11), .macOS(.v10_15)],
   products: targets.products,
   dependencies: [],

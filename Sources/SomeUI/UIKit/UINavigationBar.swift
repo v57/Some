@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UINavigationBar.swift
 //  Some
@@ -27,3 +28,4 @@ public extension UINavigationBar {
     }
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIImageView.swift
 //  Some
@@ -55,3 +56,4 @@ extension UIImageView {
     return self
   }
 }
+#endif

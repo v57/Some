@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -149,3 +150,4 @@ open class LoadingLabel: Label {
     }
   }
 }
+#endif

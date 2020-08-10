@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Device.swift
 //  Some
@@ -106,3 +107,4 @@ public enum DeviceType: Int {
     }
   }
 }
+#endif

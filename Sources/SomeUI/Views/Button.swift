@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -191,3 +192,4 @@ extension UIButton {
     }
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Notifications.swift
 //  Some
@@ -98,3 +99,4 @@ public enum PushError: Error {
     }
   }
 }
+#endif

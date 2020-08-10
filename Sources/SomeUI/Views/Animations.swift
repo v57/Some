@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -464,3 +465,4 @@ public func errorAnimation(_ a: @escaping ()->()) {
 public func errorAnimation(_ a: @escaping ()->(), _ c: @escaping ()->()) {
   UIView.an(1, 0, 0.1, 10, [.allowUserInteraction], a, { _ in c() })
 }
+#endif

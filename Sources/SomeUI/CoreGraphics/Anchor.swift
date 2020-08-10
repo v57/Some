@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Anchor.swift
 //  mutating funcs
@@ -70,3 +71,4 @@ public struct Anchor {
     }
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  CGPoint.swift
 //  mutating funcs
@@ -116,3 +117,4 @@ public extension CGPoint {
     left = left / right
   }
 }
+#endif

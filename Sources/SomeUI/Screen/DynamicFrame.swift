@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  dpos.swift
 //  stickchat-swift
@@ -246,3 +247,4 @@ open class DPVisualEffectView: UIVisualEffectView, DynamicPos {
 open class DCVisualEffectView: UIVisualEffectView, DynamicCenter {
   public var dcenter: DCenter? { didSet { updateFrame() } }
 }
+#endif

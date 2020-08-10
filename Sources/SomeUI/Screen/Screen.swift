@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Screen.swift
 //  Some
@@ -146,3 +147,4 @@ extension UIInterfaceOrientation {
     return UIApplication.shared.statusBarOrientation
   }
 }
+#endif

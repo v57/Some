@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIViewController.swift
 //  Some
@@ -51,3 +52,4 @@ public extension UIViewController {
     vc.present(self)
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -403,3 +404,4 @@ private func highlightText(_ text: String, mentions: NSArray?, attributes: [AStr
   @objc optional func textViewImageSelected(_ textView: TextView, image: UIImage)
   
 }
+#endif

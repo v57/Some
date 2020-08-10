@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -1721,3 +1722,4 @@ class Table: ScrollView {
   }
 }
 */
+#endif

@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIView.swift
 //  Some
@@ -489,3 +490,4 @@ public enum DisplayOptions {
   public static var horizontalLeft: DisplayOptions = .horizontal(.left)
   public static var verticalLeft: DisplayOptions = .vertical(.left)
 }
+#endif

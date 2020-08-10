@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  CGRect.swift
 //  mutating funcs
@@ -254,3 +255,4 @@ public func /= (left: inout CGRect, right: CGSize) {
 public func /= (left: inout CGRect, right: CGFloat) {
   left = left / right
 }
+#endif

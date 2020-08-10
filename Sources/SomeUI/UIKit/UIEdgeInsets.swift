@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  File.swift
 //  
@@ -74,3 +75,4 @@ public extension UIEdgeInsets {
     lr(inset).tb(inset)
   }
 }
+#endif

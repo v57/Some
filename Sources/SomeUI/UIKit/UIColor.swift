@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIColor.swift
 //  Some
@@ -119,3 +120,4 @@ extension Int {
   }
 }
 
+#endif

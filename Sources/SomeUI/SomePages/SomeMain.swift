@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -392,3 +393,4 @@ private extension SomeMain {
 private func statusBarAnimation(_ animation: @escaping ()->()) {
   UIView.animate(withDuration: 0.35, animations: animation)
 }
+#endif

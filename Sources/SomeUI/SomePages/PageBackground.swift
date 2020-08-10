@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  PageBackground.swift
 //  Some
@@ -97,3 +98,4 @@ extension SomePage {
 }
 
 
+#endif

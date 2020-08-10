@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  File.swift
 //  
@@ -23,3 +24,4 @@ public extension UIVisualEffectView {
     UIVisualEffectView(effect: .style(style))
   }
 }
+#endif

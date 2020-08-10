@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  ProgressView.swift
 //  Some
@@ -41,3 +42,4 @@ open class ProgressView: UIProgressView {
     destroy()
   }
 }
+#endif

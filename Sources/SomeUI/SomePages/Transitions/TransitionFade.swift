@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Fade.swift
 //  Some
@@ -48,3 +49,4 @@ private class Fade: PageTransition {
     right.alpha = 1
   }
 }
+#endif

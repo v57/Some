@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  Selector.swift
 //  Some
@@ -46,3 +47,4 @@ extension UIView {
     addGestureRecognizer(UITapGestureRecognizer(target: self, action: closureSelector.selector))
   }
 }
+#endif

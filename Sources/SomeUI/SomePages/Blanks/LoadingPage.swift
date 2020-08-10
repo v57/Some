@@ -1,3 +1,4 @@
+#if os(iOS)
 
 //  The MIT License (MIT)
 //
@@ -37,3 +38,4 @@ class MainLoading: SomePage {
   
   required init(coder: NSCoder) { fatalError() }
 }
+#endif

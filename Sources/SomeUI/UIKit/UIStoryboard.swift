@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIStoryboard.swift
 //  Some
@@ -30,3 +31,4 @@ extension UIStoryboard {
   }
 }
 
+#endif

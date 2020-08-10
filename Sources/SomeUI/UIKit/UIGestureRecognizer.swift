@@ -1,3 +1,4 @@
+#if os(iOS)
 //
 //  UIGestureRecognizer.swift
 //  Some
@@ -15,3 +16,4 @@ extension UIGestureRecognizer {
     isEnabled = true
   }
 }
+#endif
