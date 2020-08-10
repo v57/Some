@@ -6,6 +6,7 @@
 //  Copyright © 2019 Дмитрий Козлов. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public enum HttpError: Error {
@@ -163,3 +164,4 @@ public extension FutureRepeater {
     return self
   }
 }
+#endif

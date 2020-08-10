@@ -6,6 +6,7 @@
 //  Copyright © 2018 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public class StreamPriorityQueue: Queue {
@@ -176,3 +177,4 @@ public class StreamPriorityQueue: Queue {
     running.forEach(block)
   }
 }
+#endif

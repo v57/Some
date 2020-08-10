@@ -6,6 +6,7 @@
 //  Copyright © 2019 Bankex Foundation. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public func _bool(_ data: AnyReader) throws -> Bool {
@@ -38,3 +39,4 @@ public extension Future where T == AnyReader {
     return map(on: .some) { try $0.array().map(convert) }
   }
 }
+#endif

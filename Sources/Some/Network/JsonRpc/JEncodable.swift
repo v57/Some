@@ -6,6 +6,7 @@
 //  Copyright © 2018 Bankex Foundation. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public protocol JEncodable {
@@ -147,4 +148,4 @@ public struct JsonRpcDictionaryKey {
   }
 }
 
-
+#endif

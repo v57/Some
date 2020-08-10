@@ -6,6 +6,7 @@
 //  Copyright © 2018 Bankex Foundation. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 extension URLSession {
@@ -212,3 +213,5 @@ public class NetworkProvider {
     isWaiting = false
   }
 }
+
+#endif

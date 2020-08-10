@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 let uploadSpeed = SpeedManager<Int>(name: "upload speed")
@@ -98,3 +99,4 @@ private func print(_ text: String) {
   guard SomeSettings.stream.debugFileProgress else { return }
   Swift.print(text)
 }
+#endif

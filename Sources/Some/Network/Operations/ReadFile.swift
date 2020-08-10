@@ -6,7 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
-import Foundation
+#if !os(Linux)
 import Foundation
 
 class SpeedManager<T: BinaryInteger> {
@@ -179,3 +179,4 @@ private func print(_ text: String) {
   guard SomeSettings.stream.debugFileProgress else { return }
   Swift.print(text)
 }
+#endif

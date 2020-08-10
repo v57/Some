@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 extension DataReader {
@@ -41,3 +42,4 @@ extension DataReader {
     return reader
   }
 }
+#endif

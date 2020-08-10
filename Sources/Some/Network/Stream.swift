@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public enum StreamError: Error {
@@ -153,3 +154,4 @@ extension SomeStream: Hashable {
     ObjectIdentifier(self).hash(into: &hasher)
   }
 }
+#endif

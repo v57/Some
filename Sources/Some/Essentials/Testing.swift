@@ -37,10 +37,10 @@ public extension SomeTest {
               var _ops = 0
               var time = 0.0
               while time < 0.5 {
-                  let t = CFAbsoluteTimeGetCurrent()
+                  let t = Time.abs
                   code()
                   _ops += 1
-                  time += CFAbsoluteTimeGetCurrent() - t
+                  time += Time.abs - t
               }
               lock.lock()
               ops += Double(_ops) / time
@@ -98,8 +98,8 @@ public extension SomeTest {
   }
 }
 
-// MARK: MacOS, Linux
-#if os(macOS) || os(Linux)
+// MARK: MacOS
+#if os(macOS)
 public extension Process {
   static var memoryUsage: Int {
     var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)

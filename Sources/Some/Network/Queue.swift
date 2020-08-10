@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public enum CompletionStatus {
@@ -291,3 +292,4 @@ extension StreamOperation: Hashable {
     ObjectIdentifier(self).hash(into: &hasher)
   }
 }
+#endif

@@ -5,6 +5,7 @@
 //  Created by Dmitry Kozlov on 5/21/20.
 //
 
+#if !os(Linux)
 import Foundation
 
 public protocol NetworkRequest {
@@ -343,3 +344,4 @@ extension NetworkQueue {
     }
   }
 }
+#endif

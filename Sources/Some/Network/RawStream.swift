@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public enum StreamStatus {
@@ -324,3 +325,4 @@ extension StreamConnection {
     override var onDisconnect: Bool { return true }
   }
 }
+#endif

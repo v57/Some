@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 extension StreamOperations {
@@ -36,3 +37,4 @@ class ReadStreamOperation: StreamOperation {
     }
   }
 }
+#endif

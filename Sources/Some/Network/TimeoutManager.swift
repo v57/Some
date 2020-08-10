@@ -18,8 +18,9 @@
  кстати руский шрифт тут вобше охуевный, заебись. прям "у вити всё нормально"
  */
 
+#if !os(Linux)
 import Foundation
-// import SystemConfiguration
+import SystemConfiguration
 
 class StreamQueues: Manager {
   var autoPause = true
@@ -83,7 +84,6 @@ class StreamQueues: Manager {
   }
 }
 
-/*
 enum NetworkStatus {
   case disconnected, cellular, wifi
 }
@@ -143,6 +143,4 @@ class Reachability {
     stop()
   }
 }
-*/
-
-
+#endif

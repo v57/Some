@@ -6,6 +6,7 @@
 //  Copyright © 2019 Дмитрий Козлов. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 public protocol JsonEncodable {
@@ -147,4 +148,4 @@ public struct JsonDictionaryKey {
   }
 }
 
-
+#endif

@@ -5,7 +5,7 @@
 //  Created by Dmitry on 14/12/2018.
 //  Copyright © 2018 Bankex Foundation. All rights reserved.
 //
-
+#if !os(Linux)
 import Foundation
 
 public protocol NetworkProtocol {
@@ -76,8 +76,10 @@ public extension URLSession {
     if #available(iOS 13.0, *), #available(OSX 10.15, *) {
       URLCache.shared = URLCache(memoryCapacity: mem100mb, diskCapacity: disk1gb, directory: nil)
     } else {
+      #if !os(Linux)
       #if !targetEnvironment(macCatalyst)
       URLCache.shared = URLCache(memoryCapacity: mem100mb, diskCapacity: disk1gb, diskPath: nil)
+      #endif
       #endif
     }
     return URLCache.shared
@@ -199,3 +201,4 @@ public extension URLSession {
 public enum URLRequestCacheError: Error {
   case cacheNotFound
 }
+#endif

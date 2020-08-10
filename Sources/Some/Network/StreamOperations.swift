@@ -6,6 +6,7 @@
 //  Copyright © 2018 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 open class StreamOperations: StreamOperation {
@@ -228,3 +229,4 @@ open class StreamOperations: StreamOperation {
     return self
   }
 }
+#endif

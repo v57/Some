@@ -6,8 +6,8 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
-
 
 extension StreamOperations {
   @discardableResult
@@ -53,3 +53,4 @@ private class SyncCompletionOperation: StreamOperation {
     self.completion(status: .success, action: .next)
   }
 }
+#endif

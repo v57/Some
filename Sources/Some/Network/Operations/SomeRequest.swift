@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 extension StreamOperations {
@@ -50,3 +51,4 @@ public class SomeRequestOperation: StreamOperation {
     case success, lostConnection
   }
 }
+#endif

@@ -6,6 +6,7 @@
 //  Copyright © 2017 Dmitry Kozlov. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 open class SomeStream2: SomeStream {
@@ -209,3 +210,4 @@ open class SomeStream2: SomeStream {
     }
   }
 }
+#endif

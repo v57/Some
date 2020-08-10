@@ -6,6 +6,7 @@
 //  Copyright © 2018 Bankex Foundation. All rights reserved.
 //
 
+#if !os(Linux)
 import Foundation
 
 private extension String {
@@ -189,3 +190,4 @@ struct RemoveResult {
   var request: Request
   var isEmpty: Bool
 }
+#endif
