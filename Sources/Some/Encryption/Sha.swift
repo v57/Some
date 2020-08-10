@@ -9,6 +9,12 @@ import Foundation
 import SomeC
 
 public extension Data {
+  /// - Returns: kaccak256 hash of data
+  var keccak256: Data {
+    var data = Data(count: 32)
+    keccak_256(data.mutableBaseAddress8, 32, baseAddress8, count)
+    return data
+  }
   /// - Returns: sha256 hash of data
   var sha256: Data {
     var data = Data(count: 32)
