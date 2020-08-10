@@ -57,7 +57,7 @@ open class DataReader: DataRepresentable {
 
 // MARK: Reading
 public extension DataReader {
-  public func offset(by offset: Int) throws -> Range<Int> {
+  func offset(by offset: Int) throws -> Range<Int> {
     let start = position
     let end = position + offset
     guard end <= data.count else { throw corrupted }
@@ -66,91 +66,91 @@ public extension DataReader {
     }
     return start..<end
   }
-  // public func pointee<T>() throws -> T {
+  // func pointee<T>() throws -> T {
   //   
   //   pointer.load(fromByteOffset: position, as: <#T##T.Type#>)
   // }
   
-  public func uncompressed(_ action: ()->()) {
+  func uncompressed(_ action: ()->()) {
     let compress = self.compress
     self.compress = false
     defer { self.compress = compress }
     action()
   }
-  public func offset(_ position: Int) -> Self {
+  func offset(_ position: Int) -> Self {
     self.position += position
     return self
   }
-  public func save(data: DataWriter) {
+  func save(data: DataWriter) {
     data.append(self.data)
   }
   func convert<T>() throws -> T where T: DataRepresentable {
     return try subdata(MemoryLayout<T>.size).convert()
   }
-  public func check(count: Int, max: Int) throws {
+  func check(count: Int, max: Int) throws {
     guard count <= bytesLeft else { throw corrupted }
     guard count >= 0 else { throw corrupted }
     guard count < max else { throw corrupted }
   }
   
-  public func next<T>() throws -> T where T: DataDecodable {
+  func next<T>() throws -> T where T: DataDecodable {
     try T.init(data: self)
   }
-  public func next<T>(version: Int) throws -> T where T: DataDecodableVersionable {
+  func next<T>(version: Int) throws -> T where T: DataDecodableVersionable {
     try T.init(data: self, version: version)
   }
-  public func next<T>(_ version: DataVersion) throws -> T where T: DataDecodableVersionable & Versionable {
+  func next<T>(_ version: DataVersion) throws -> T where T: DataDecodableVersionable & Versionable {
     try T.init(data: self, version: version.version(for: T.self))
   }
-  public func next<T>(version: Int) throws -> T? where T: DataDecodableVersionable {
+  func next<T>(version: Int) throws -> T? where T: DataDecodableVersionable {
     guard try bool() else { return nil }
     return try T.init(data: self, version: version)
   }
-  public func next<T>(_ version: DataVersion) throws -> T? where T: DataDecodableVersionable & Versionable {
+  func next<T>(_ version: DataVersion) throws -> T? where T: DataDecodableVersionable & Versionable {
     guard try bool() else { return nil }
     return try T.init(data: self, version: version.version(for: T.self))
   }
   #if !__LP64__
-  public func next() throws -> [Int] {
+  func next() throws -> [Int] {
     let array: [Int64] = try next()
     return array.map { Int($0) }
   }
-  public func next() throws -> [UInt] {
+  func next() throws -> [UInt] {
     let array: [UInt64] = try next()
     return array.map { UInt($0) }
   }
   #endif
   
-  public func load<T>(_ value: T) throws where T: DataLoadable {
+  func load<T>(_ value: T) throws where T: DataLoadable {
     return try value.load(data: self)
   }
-  public func load<T>(_ value: Array<T>) throws where T: DataLoadable {
+  func load<T>(_ value: Array<T>) throws where T: DataLoadable {
     for v in value {
       try v.load(data: self)
     }
   }
-  public func load<T>(_ value: Set<T>) throws where T: DataLoadable {
+  func load<T>(_ value: Set<T>) throws where T: DataLoadable {
     for v in value {
       try v.load(data: self)
     }
   }
   
-  public func update<T>(_ value: Array<T>) where T: DataLoadable {
+  func update<T>(_ value: Array<T>) where T: DataLoadable {
     for v in value {
       try? v.load(data: self)
     }
   }
-  public func update<T>(_ value: Set<T>) where T: DataLoadable {
+  func update<T>(_ value: Set<T>) where T: DataLoadable {
     for v in value {
       try? v.load(data: self)
     }
   }
-  public func update<T>(_ value: ArraySlice<T>) where T: DataLoadable {
+  func update<T>(_ value: ArraySlice<T>) where T: DataLoadable {
     for v in value {
       try? v.load(data: self)
     }
   }
-  public func subdata(_ count: Int) throws -> Data {
+  func subdata(_ count: Int) throws -> Data {
     guard position + count <= data.count else { throw corrupted }
     let subdata = data.subdata(in: position..<position+count)
     if !preview {
@@ -161,147 +161,147 @@ public extension DataReader {
   
   // долбаеб не используй это вместо int() только для того,
   // чтобы получить положительное число
-  public func intCount() throws -> Int {
+  func intCount() throws -> Int {
     let count = try int()
     try check(count: count, max: safeLimits)
     return count
   }
-  public func intCount(max: Int) throws -> Int {
+  func intCount(max: Int) throws -> Int {
     let count = try int()
     try check(count: count, max: max)
     return count
   }
-  public func `enum`<T,S>() throws -> T where T: RawRepresentable, S: DataRepresentable, T.RawValue == S {
+  func `enum`<T,S>() throws -> T where T: RawRepresentable, S: DataRepresentable, T.RawValue == S {
     return try next()
   }
-  public func uint() throws -> UInt {
+  func uint() throws -> UInt {
     return try next()
   }
-  public func uint64() throws -> UInt64 {
+  func uint64() throws -> UInt64 {
     return try next()
   }
-  public func uint32() throws -> UInt32 {
+  func uint32() throws -> UInt32 {
     return try next()
   }
-  public func uint16() throws -> UInt16 {
+  func uint16() throws -> UInt16 {
     return try next()
   }
-  public func uint8() throws -> UInt8 {
+  func uint8() throws -> UInt8 {
     return try next()
   }
-  public func int() throws -> Int {
+  func int() throws -> Int {
     return try next()
   }
-  public func int64() throws -> Int64 {
+  func int64() throws -> Int64 {
     return try next()
   }
-  public func int32() throws -> Int32 {
+  func int32() throws -> Int32 {
     return try next()
   }
-  public func int16() throws -> Int16 {
+  func int16() throws -> Int16 {
     return try next()
   }
-  public func int8() throws -> Int8 {
+  func int8() throws -> Int8 {
     return try next()
   }
-  public func string() throws -> String {
+  func string() throws -> String {
     return try next()
   }
-  public func bool() throws -> Bool {
+  func bool() throws -> Bool {
     return try next()
   }
-  public func float() throws -> Float {
+  func float() throws -> Float {
     return try next()
   }
-  public func double() throws -> Double {
-    return try next()
-  }
-  
-  public func uintArray() throws -> Array<UInt> {
-    return try next()
-  }
-  public func uint64Array() throws -> Array<UInt64> {
-    return try next()
-  }
-  public func uint32Array() throws -> Array<UInt32> {
-    return try next()
-  }
-  public func uint16Array() throws -> Array<UInt16> {
-    return try next()
-  }
-  public func uint8Array() throws -> Array<UInt8> {
-    return try next()
-  }
-  public func intArray() throws -> Array<Int> {
-    return try next()
-  }
-  public func int64Array() throws -> Array<Int64> {
-    return try next()
-  }
-  public func int32Array() throws -> Array<Int32> {
-    return try next()
-  }
-  public func int16Array() throws -> Array<Int16> {
-    return try next()
-  }
-  public func int8Array() throws -> Array<Int8> {
-    return try next()
-  }
-  public func stringArray() throws -> Array<String> {
+  func double() throws -> Double {
     return try next()
   }
   
-  public func uintSet() throws -> Set<UInt> {
+  func uintArray() throws -> Array<UInt> {
     return try next()
   }
-  public func uint64Set() throws -> Set<UInt64> {
+  func uint64Array() throws -> Array<UInt64> {
     return try next()
   }
-  public func uint32Set() throws -> Set<UInt32> {
+  func uint32Array() throws -> Array<UInt32> {
     return try next()
   }
-  public func uint16Set() throws -> Set<UInt16> {
+  func uint16Array() throws -> Array<UInt16> {
     return try next()
   }
-  public func uint8Set() throws -> Set<UInt8> {
+  func uint8Array() throws -> Array<UInt8> {
     return try next()
   }
-  public func intSet() throws -> Set<Int> {
+  func intArray() throws -> Array<Int> {
     return try next()
   }
-  public func int64Set() throws -> Set<Int64> {
+  func int64Array() throws -> Array<Int64> {
     return try next()
   }
-  public func int32Set() throws -> Set<Int32> {
+  func int32Array() throws -> Array<Int32> {
     return try next()
   }
-  public func int16Set() throws -> Set<Int16> {
+  func int16Array() throws -> Array<Int16> {
     return try next()
   }
-  public func int8Set() throws -> Set<Int8> {
+  func int8Array() throws -> Array<Int8> {
     return try next()
   }
-  public func stringSet() throws -> Set<String> {
+  func stringArray() throws -> Array<String> {
+    return try next()
+  }
+  
+  func uintSet() throws -> Set<UInt> {
+    return try next()
+  }
+  func uint64Set() throws -> Set<UInt64> {
+    return try next()
+  }
+  func uint32Set() throws -> Set<UInt32> {
+    return try next()
+  }
+  func uint16Set() throws -> Set<UInt16> {
+    return try next()
+  }
+  func uint8Set() throws -> Set<UInt8> {
+    return try next()
+  }
+  func intSet() throws -> Set<Int> {
+    return try next()
+  }
+  func int64Set() throws -> Set<Int64> {
+    return try next()
+  }
+  func int32Set() throws -> Set<Int32> {
+    return try next()
+  }
+  func int16Set() throws -> Set<Int16> {
+    return try next()
+  }
+  func int8Set() throws -> Set<Int8> {
+    return try next()
+  }
+  func stringSet() throws -> Set<String> {
     return try next()
   }
   
   
-  public func uintFull() throws -> UInt {
+  func uintFull() throws -> UInt {
     return try convert()
   }
-  public func uint64Full() throws -> UInt64 {
+  func uint64Full() throws -> UInt64 {
     return try convert()
   }
-  public func uint32Full() throws -> UInt32 {
+  func uint32Full() throws -> UInt32 {
     return try convert()
   }
-  public func intFull() throws -> Int {
+  func intFull() throws -> Int {
     return try convert()
   }
-  public func int64Full() throws -> Int64 {
+  func int64Full() throws -> Int64 {
     return try convert()
   }
-  public func int32Full() throws -> Int32 {
+  func int32Full() throws -> Int32 {
     return try convert()
   }
   //  func next<T,S>() throws -> T where T: RawRepresentable, S: DataRepresentable, T.RawValue == S {

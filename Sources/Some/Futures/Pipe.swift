@@ -7,7 +7,7 @@
 
 import Foundation
 
-typealias Result<T> = Swift.Result<T, Error>
+typealias PResult<T> = Swift.Result<T, Error>
 public typealias E = P<Void>
 public typealias B = P<Bool>
 public typealias P2<A,B> = P<(A,B)>
@@ -127,7 +127,7 @@ open class S: Hashable {
   }
   deinit {
     log("deinit()")
-    print()
+    _print()
     removeFromParents()
   }
   func log(_ text: String) {

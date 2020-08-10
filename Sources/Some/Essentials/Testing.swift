@@ -24,26 +24,10 @@ public struct UniqueData<T: Hashable> {
   }
 }
 
-public extension Process {
-  static var memoryUsage: Int {
-    var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
-    let rev1Count = mach_msg_type_number_t(MemoryLayout.offset(of: \task_vm_info_data_t.min_address)! / MemoryLayout<integer_t>.size)
-    var info = task_vm_info_data_t()
-    let kr = withUnsafeMutablePointer(to: &info) { infoPtr in
-      infoPtr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { intPtr in
-        task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), intPtr, &count)
-      }
-    }
-    guard kr == KERN_SUCCESS, count >= rev1Count
-      else { return 0 }
-    return Int(info.phys_footprint)
-  }
-}
-
-public enum Test {
+public enum SomeTest {
   
 }
-public extension Test {
+public extension SomeTest {
   static func ops(_ name: String, _ code: @escaping ()->()) {
       var ops: Double = 0
       let queue = OperationQueue()
@@ -112,6 +96,26 @@ public extension Test {
       }
     }
   }
+}
+
+// MARK: MacOS, Linux
+#if os(macOS) || os(Linux)
+public extension Process {
+  static var memoryUsage: Int {
+    var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
+    let rev1Count = mach_msg_type_number_t(MemoryLayout.offset(of: \task_vm_info_data_t.min_address)! / MemoryLayout<integer_t>.size)
+    var info = task_vm_info_data_t()
+    let kr = withUnsafeMutablePointer(to: &info) { infoPtr in
+      infoPtr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { intPtr in
+        task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), intPtr, &count)
+      }
+    }
+    guard kr == KERN_SUCCESS, count >= rev1Count
+      else { return 0 }
+    return Int(info.phys_footprint)
+  }
+}
+extension SomeTest {
   static func memoryUsage(_ execute: (()->())->()) {
     let memory = Process.memoryUsage
     let completion = {
@@ -128,3 +132,4 @@ public extension Test {
     print("Memory usage: \((memory).bytesString()) \(memory/operations) bytes/operation")
   }
 }
+#endif

@@ -44,7 +44,7 @@ public protocol Versionable {
 }
 public extension Versionable {
   static var className: String {
-    return SomeFunctions.className(Self.self)
+    return Some.className(Self.self)
   }
 }
 public struct Version: ExpressibleByIntegerLiteral, Comparable, CustomStringConvertible {
