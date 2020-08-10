@@ -8,7 +8,10 @@
 import Swift
 
 public extension FloatingPoint {
-  var fraction: Self { remainder(dividingBy: 1) }
+  var fraction: Self {
+    let remainder = self.remainder(dividingBy: 1)
+    return remainder < 0 ? remainder + 1 : remainder
+  }
   func devide(by: Self) -> Self { self / by }
 }
 
