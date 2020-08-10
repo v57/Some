@@ -8,16 +8,6 @@
  * Use #defines in order to avoid namespace collisions with anyone else's
  * SHA256 code (e.g., the code in OpenSSL).
  */
-#define SHA256_Init libcperciva_SHA256_Init
-#define SHA256_Update libcperciva_SHA256_Update
-#define SHA256_Final libcperciva_SHA256_Final
-#define SHA256_Buf libcperciva_SHA256_Buf
-#define SHA256_CTX libcperciva_SHA256_CTX
-#define HMAC_SHA256_Init libcperciva_HMAC_SHA256_Init
-#define HMAC_SHA256_Update libcperciva_HMAC_SHA256_Update
-#define HMAC_SHA256_Final libcperciva_HMAC_SHA256_Final
-#define HMAC_SHA256_Buf libcperciva_HMAC_SHA256_Buf
-#define HMAC_SHA256_CTX libcperciva_HMAC_SHA256_CTX
 
 /* Context structure for SHA256 operations. */
 typedef struct {
