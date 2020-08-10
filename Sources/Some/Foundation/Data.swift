@@ -153,3 +153,30 @@ public extension Data {
     }
   }
 }
+
+public extension Data {
+  var mutableVoidPointer: UnsafeMutablePointer<Int8> {
+    mutating get {
+      mutableBaseAddress.bindMemory(to: Int8.self, capacity: 1)
+    }
+  }
+  var voidPointer: UnsafePointer<Int8> {
+    baseAddress.bindMemory(to: Int8.self, capacity: 1)
+  }
+  var mutableBaseAddress: UnsafeMutableRawPointer {
+    mutating get {
+      self.withUnsafeMutableBytes { $0.baseAddress! }
+    }
+  }
+  var baseAddress: UnsafeRawPointer {
+    withUnsafeBytes { $0.baseAddress! }
+  }
+  var baseAddress8: UnsafePointer<UInt8> {
+    withUnsafeBytes { $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1) }
+  }
+  var mutableBaseAddress8: UnsafeMutablePointer<UInt8> {
+    mutating get {
+      withUnsafeMutableBytes { $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1) }
+    }
+  }
+}
