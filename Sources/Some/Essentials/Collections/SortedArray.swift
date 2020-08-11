@@ -53,8 +53,14 @@ public struct SortedArray<Element: Comparable>: EasierCollection, Equatable {
   }
 }
 extension SortedArray: Hashable where Element: Hashable {}
-extension SortedArray where Element: ComparsionValue {
-  mutating func remove(_ value: Element.ValueToCompare) -> Int? {
+public extension SortedArray where Element: ComparsionValue {
+  func at(_ value: Element.ValueToCompare) -> Element? {
+    if let index = index(of: value) {
+      return array[index]
+    } else {
+      return nil
+    }
+  }
   func index(of value: Element.ValueToCompare) -> Int? {
     if let index = array.binarySearch(value, { $0._valueToCompare }) {
       return index
