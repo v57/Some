@@ -21,5 +21,14 @@ public extension Data {
     SomeC_SHA256_Buf(baseAddress8, count, data.mutableBaseAddress8)
     return data
   }
+  var uint64: UInt64 {
+    var number = UInt64()
+    self.withUnsafeBytes { data in
+      Swift.withUnsafeMutableBytes(of: &number) {
+        $0.safeCopyMemory(from: data)
+      }
+    }
+    return number
+  }
 }
 
