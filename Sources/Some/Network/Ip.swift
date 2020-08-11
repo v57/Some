@@ -10,32 +10,32 @@ import Foundation
 
 public var localhost = "127.0.0.1"
 
-public struct IP {
+public struct IP: ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, CustomStringConvertible {
   public var ip: String
   public var port: Int
   public var string: String { return "\(ip):\(port)" }
   
-  #if os(macOS)
-  public init?(string: String) {
-    let split = string.components(separatedBy: ".")
-    guard split.count == 4 else { return nil }
-    guard let a0 = Int(split[0]) else { return nil }
-    guard let a1 = Int(split[1]) else { return nil }
-    guard let a2 = Int(split[2]) else { return nil }
-    let s3 = split[3].components(separatedBy: ":")
-    guard s3.count <= 2 else { return nil }
-    guard let a3 = Int(s3[0]) else { return nil }
-
-    ip = "\(a0).\(a1).\(a2).\(a3)"
-    if s3.count == 2 {
-      guard let p = Int(s3[1]) else { return nil }
+  public init(stringLiteral value: String) {
+    self.init(value)!
+  }
+  public init(integerLiteral value: Int) {
+    self.init(ip: "0.0.0.0", port: value)
+  }
+  public init?(_ string: String) {
+    let ipPort = string.components(separatedBy: ":")
+    guard ipPort.count > 0 && ipPort.count < 3 else { return nil }
+    guard ipPort[0]
+      .components(separatedBy: ".")
+      .compactMap(UInt8.init).count == 4 else { return nil }
+    ip = String(ipPort[0])
+    if ipPort.count == 2 {
+      guard let p = Int(ipPort[1]) else { return nil }
       guard p < Int(Int16.max) else { return nil }
       port = p
     } else {
       port = 1989
     }
   }
-  #endif
   
   public init(ip: String, port: Int) {
     self.ip = ip
@@ -45,24 +45,31 @@ public struct IP {
     ip = "127.0.0.1"
     port = 80
   }
-  
-  #if os(macOS)
+  public static var `public`: String? {
+    guard let url = URL(string: "https://icanhazip.com/") else { return nil }
+    let ip = try? String(contentsOf: url)
+    return ip
+  }
+  public var description: String { string }
+}
+
+
+#if os(macOS) || os(Linux)
+extension IP {
   @discardableResult
   public mutating func set(string: String) -> Bool {
-    let split = string.components(separatedBy: ".")
-    guard split.count == 4 else { return false }
-    guard let a0 = Int(split[0]) else { return false }
-    guard let a1 = Int(split[1]) else { return false }
-    guard let a2 = Int(split[2]) else { return false }
-    let s3 = split[3].components(separatedBy: ":")
-    guard s3.count <= 2 else { return false }
-    guard let a3 = Int(s3[0]) else { return false }
-    
-    ip = "\(a0).\(a1).\(a2).\(a3)"
-    if s3.count == 2 {
-      guard let p = Int(s3[1]) else { return false }
+    let ipPort = string.components(separatedBy: ":")
+    guard ipPort.count > 0 && ipPort.count < 3 else { return false }
+    guard ipPort[0]
+      .components(separatedBy: ".")
+      .compactMap(UInt8.init).count == 4 else { return false }
+    ip = String(ipPort[0])
+    if ipPort.count == 2 {
+      guard let p = Int(ipPort[1]), p < Int(Int16.max) else { return false }
       guard p < Int(Int16.max) else { return false }
       port = p
+    } else {
+      port = 1989
     }
     return true
   }
@@ -75,10 +82,6 @@ public struct IP {
     }
     return nil
   }
-  #endif
-  public static var `public`: String? {
-    guard let url = URL(string: "https://icanhazip.com/") else { return nil }
-    let ip = try? String(contentsOf: url)
-    return ip
-  }
 }
+#endif
+
