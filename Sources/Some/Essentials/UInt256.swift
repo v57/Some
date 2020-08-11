@@ -179,9 +179,9 @@ extension UInt256: Numeric {
         Array(source.words).withUnsafeBytes { src in
           let bitWidth = source.bitWidth
           if bitWidth > 256 {
-            memcpy(dst.baseAddress, src.baseAddress, 32)
+            memcpy(dst.baseAddress!, src.baseAddress!, 32)
           } else {
-            memcpy(dst.baseAddress, src.baseAddress, bitWidth/8)
+            memcpy(dst.baseAddress!, src.baseAddress!, bitWidth/8)
           }
         }
       }
