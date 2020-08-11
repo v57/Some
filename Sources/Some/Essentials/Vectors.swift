@@ -28,15 +28,17 @@ public struct Vector2<T> {
     return [a, b]
   }
 }
-extension Vector2: Equatable where T: Equatable {
-  func opposite(of value: T) -> T {
+extension Vector2: Equatable where T: Equatable { }
+extension Vector2: Hashable where T: Hashable { }
+
+extension Vector2 where T: Equatable {
+  public func opposite(of value: T) -> T {
     return value == a ? b : a
   }
-  func contains(_ value: T) -> Bool {
+  public func contains(_ value: T) -> Bool {
     return value == a || value == b
   }
 }
-extension Vector2: Hashable where T: Hashable {  }
 
 public struct Vector3<T> {
   public var a: T
