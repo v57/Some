@@ -24,3 +24,6 @@ public extension UnsafeMutableRawBufferPointer {
   }
 }
 
+public func memcpy(_ destination: UnsafeMutableRawBufferPointer, _ source: UnsafeRawBufferPointer) {
+  destination.safeCopyMemory(from: source)
+}
