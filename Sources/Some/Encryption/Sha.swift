@@ -31,4 +31,8 @@ public extension Data {
     return number
   }
 }
+public extension String {
+  var sha256: Data { data.sha256 }
+}
+
 
