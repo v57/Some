@@ -26,7 +26,11 @@ import Foundation
 public enum DataError: Error {
   case corrupted
 }
+public enum MainError: Error {
+  case notFound
+}
 public var corrupted: Error = DataError.corrupted
+public var notFound: Error = MainError.notFound
 
 public func unraw<T>(_ raw: ArraySlice<UInt8>) -> T {
   return raw.withUnsafeBufferPointer {
