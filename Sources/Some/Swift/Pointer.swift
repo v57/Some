@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension UnsafeRawPointer {
+public extension UnsafeRawPointer {
   func load<T>(offset: inout Int, count: Int, as: T.Type) throws -> T {
     let size = MemoryLayout<T>.stride
     guard offset + size <= count else { throw corrupted }
@@ -16,3 +16,11 @@ extension UnsafeRawPointer {
     return v
   }
 }
+public extension UnsafeMutableRawBufferPointer {
+  /// Safely copies memory so it won't overlaps like in `.copyMemory` function
+  @inlinable
+  func safeCopyMemory(from source: UnsafeRawBufferPointer) {
+    baseAddress!.copyMemory(from: source.baseAddress!, byteCount: Swift.min(count, source.count))
+  }
+}
+
