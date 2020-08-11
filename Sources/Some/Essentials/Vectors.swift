@@ -36,6 +36,7 @@ extension Vector2: Equatable where T: Equatable {
     return value == a || value == b
   }
 }
+extension Vector2: Hashable where T: Hashable {  }
 
 public struct Vector3<T> {
   public var a: T
