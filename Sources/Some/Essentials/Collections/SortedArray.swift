@@ -54,6 +54,15 @@ public struct SortedArray<Element: Comparable>: EasierCollection, Equatable {
 }
 extension SortedArray: Hashable where Element: Hashable {}
 public extension SortedArray where Element: ComparsionValue {
+  mutating func at(_ value: Element.ValueToCompare, create: ()->(Element)) -> (index: Index, element: Element) {
+    if let index = index(of: value) {
+      return (index, array[index])
+    } else {
+      let value = create()
+      let index = insert(value)
+      return (index, value)
+    }
+  }
   func at(_ value: Element.ValueToCompare) -> Element? {
     if let index = index(of: value) {
       return array[index]
