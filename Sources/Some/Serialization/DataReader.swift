@@ -66,10 +66,6 @@ public extension DataReader {
     }
     return start..<end
   }
-  // func pointee<T>() throws -> T {
-  //   
-  //   pointer.load(fromByteOffset: position, as: <#T##T.Type#>)
-  // }
   
   func uncompressed(_ action: ()->()) {
     let compress = self.compress
@@ -120,6 +116,9 @@ public extension DataReader {
     return array.map { UInt($0) }
   }
   #endif
+  func codable<T: Decodable>() throws -> T {
+    try T.init(from: DataReaderDecoder(self))
+  }
   
   func load<T>(_ value: T) throws where T: DataLoadable {
     return try value.load(data: self)
@@ -326,5 +325,208 @@ extension DataReader: CustomStringConvertible {
     string.addLine("next: \(data[position..<next].hex(separateEvery: 4, separator: " "))")
     
     return string
+  }
+}
+
+// MARK:- Codable support
+struct DataReaderUnkeyedDecoder: UnkeyedDecodingContainer {
+  var decoder: DataReaderDecoder { DataReaderDecoder(data) }
+  let data: DataReader
+  init(_ data: DataReader) {
+    self.data = data
+  }
+  
+  var codingPath: [CodingKey] = []
+  
+  var count: Int? { data.count }
+  var isAtEnd: Bool { data.bytesLeft <= 0 }
+  var currentIndex: Int { data.position }
+  
+  mutating func decodeNil() throws -> Bool {
+    try data.next()
+  }
+  mutating func decode(_ type: Bool.Type) throws -> Bool {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: String.Type) throws -> String {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: Double.Type) throws -> Double {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: Float.Type) throws -> Float {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: Int.Type) throws -> Int {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: Int8.Type) throws -> Int8 {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: Int16.Type) throws -> Int16 {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: Int32.Type) throws -> Int32 {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: Int64.Type) throws -> Int64 {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: UInt.Type) throws -> UInt {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: UInt8.Type) throws -> UInt8 {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: UInt16.Type) throws -> UInt16 {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: UInt32.Type) throws -> UInt32 {
+    try data.next()
+  }
+  
+  mutating func decode(_ type: UInt64.Type) throws -> UInt64 {
+    try data.next()
+  }
+  
+  mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+    try type.init(from: decoder)
+  }
+  
+  mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+    KeyedDecodingContainer(DataReaderKeyedDecoder<NestedKey>(data))
+  }
+  
+  mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
+    self
+  }
+  
+  mutating func superDecoder() throws -> Decoder {
+    decoder
+  }
+}
+
+struct DataReaderKeyedDecoder<CKey: CodingKey>: KeyedDecodingContainerProtocol {
+  var decoder: DataReaderDecoder { DataReaderDecoder(data) }
+  let data: DataReader
+  init(_ data: DataReader) {
+    self.data = data
+  }
+  typealias Key = CKey
+  var allKeys: [Key] { [] }
+  
+  var codingPath: [CodingKey] { [] }
+  func contains(_ key: Self.Key) -> Bool { true }
+  
+  func decodeNil(forKey key: Self.Key) throws -> Bool {
+    try data.next()
+  }
+  func decode(_ type: Bool.Type, forKey key: Self.Key) throws -> Bool {
+    try data.next()
+  }
+  func decode(_ type: String.Type, forKey key: Self.Key) throws -> String {
+    try data.next()
+  }
+  func decode(_ type: Double.Type, forKey key: Self.Key) throws -> Double {
+    try data.next()
+  }
+  func decode(_ type: Float.Type, forKey key: Self.Key) throws -> Float {
+    try data.next()
+  }
+  func decode(_ type: Int.Type, forKey key: Self.Key) throws -> Int {
+    try data.next()
+  }
+  func decode(_ type: Int8.Type, forKey key: Self.Key) throws -> Int8 {
+    try data.next()
+  }
+  func decode(_ type: Int16.Type, forKey key: Self.Key) throws -> Int16 {
+    try data.next()
+  }
+  func decode(_ type: Int32.Type, forKey key: Self.Key) throws -> Int32 {
+    try data.next()
+  }
+  func decode(_ type: Int64.Type, forKey key: Self.Key) throws -> Int64 {
+    try data.next()
+  }
+  func decode(_ type: UInt.Type, forKey key: Self.Key) throws -> UInt {
+    try data.next()
+  }
+  func decode(_ type: UInt8.Type, forKey key: Self.Key) throws -> UInt8 {
+    try data.next()
+  }
+  func decode(_ type: UInt16.Type, forKey key: Self.Key) throws -> UInt16 {
+    try data.next()
+  }
+  func decode(_ type: UInt32.Type, forKey key: Self.Key) throws -> UInt32 {
+    try data.next()
+  }
+  func decode(_ type: UInt64.Type, forKey key: Self.Key) throws -> UInt64 {
+    try data.next()
+  }
+  func decode<T>(_ type: T.Type, forKey key: Self.Key) throws -> T where T : Decodable {
+    try T.init(from: decoder)
+  }
+  func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Self.Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+    return KeyedDecodingContainer<NestedKey>.init(DataReaderKeyedDecoder<NestedKey>(data))
+  }
+  func nestedUnkeyedContainer(forKey key: Self.Key) throws -> UnkeyedDecodingContainer {
+    DataReaderUnkeyedDecoder(data)
+  }
+  func superDecoder() throws -> Decoder { decoder }
+  func superDecoder(forKey key: Self.Key) throws -> Decoder { decoder }
+}
+struct DataReaderSingleDecoder: SingleValueDecodingContainer {
+  let data: DataReader
+  init(_ data: DataReader) {
+    self.data = data
+  }
+  
+  var codingPath: [CodingKey] { [] }
+  func decodeNil() -> Bool { (try? data.bool()) ?? true }
+  func decode(_ type: Bool.Type) throws -> Bool { try data.next() }
+  func decode(_ type: String.Type) throws -> String { try data.next() }
+  func decode(_ type: Double.Type) throws -> Double { try data.next() }
+  func decode(_ type: Float.Type) throws -> Float { try data.next() }
+  func decode(_ type: Int.Type) throws -> Int { try data.next() }
+  func decode(_ type: Int8.Type) throws -> Int8 { try data.next() }
+  func decode(_ type: Int16.Type) throws -> Int16 { try data.next() }
+  func decode(_ type: Int32.Type) throws -> Int32 { try data.next() }
+  func decode(_ type: Int64.Type) throws -> Int64 { try data.next() }
+  func decode(_ type: UInt.Type) throws -> UInt { try data.next() }
+  func decode(_ type: UInt8.Type) throws -> UInt8 { try data.next() }
+  func decode(_ type: UInt16.Type) throws -> UInt16 { try data.next() }
+  func decode(_ type: UInt32.Type) throws -> UInt32 { try data.next() }
+  func decode(_ type: UInt64.Type) throws -> UInt64 { try data.next() }
+  func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+    try T.init(from: DataReaderDecoder(data))
+  }
+}
+struct DataReaderDecoder: Decoder {
+  let data: DataReader
+  init(_ data: DataReader) {
+    self.data = data
+  }
+  var codingPath: [CodingKey] { [] }
+  var userInfo: [CodingUserInfoKey : Any] { [:] }
+  func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+    KeyedDecodingContainer<Key>(DataReaderKeyedDecoder<Key>(data))
+  }
+  func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    DataReaderUnkeyedDecoder(data)
+  }
+  func singleValueContainer() throws -> SingleValueDecodingContainer {
+    DataReaderSingleDecoder(data)
   }
 }
