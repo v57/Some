@@ -23,19 +23,18 @@
 
 import Foundation
 
+public enum SomeSettings {
+  
+}
+
 /// returns class name in string format
 /**
  let a = 10
  let b = className(a) // b = "Int"
  let c = className(b) // c = "String"
  */
-
-public enum SomeSettings {
-  
-}
-
 public func className(_ item: Any) -> String {
-  return String(describing: item is Any.Type ? item : type(of: item))
+  String(describing: item is Any.Type ? item : type(of: item))
 }
 
 public func increment2d(_ x: inout Int, _ y: inout Int, _ width: Int) {
@@ -77,4 +76,13 @@ public func temp<T>(_ value: inout T, _ new: T, _ action: ()throws->()) rethrows
   value = new
   defer { value = v }
   try action()
+}
+
+@discardableResult
+public func mapError<T>(_ execute: @autoclosure () throws -> (T), _ mappedError: Error) throws -> T {
+  do {
+    return try execute()
+  } catch {
+    throw mappedError
+  }
 }
