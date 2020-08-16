@@ -127,10 +127,9 @@ open class S: Hashable {
   }
   deinit {
     log("deinit()")
-    _print()
     removeFromParents()
   }
-  func log(_ text: String) {
+  func log(_ text: @autoclosure ()->String) {
     // Swift.print("\n\(name)\n  \(text)")
   }
 }
