@@ -7,6 +7,17 @@
 
 import Foundation
 
+/**
+ Sorted array, that uses binary tree to search and insert elements.
+ ```
+ var array = SortedArray<Int>()
+ array.insert(5)
+ array.insert(1)
+ array.insert(6)
+ array.insert(5)
+ print(array) // prints [1,5,6]
+ ```
+ */
 public struct SortedArray<Element: Comparable>: EasierCollection, Equatable {
   public typealias SubSequence = ArraySlice<Element>
   
@@ -34,6 +45,7 @@ public struct SortedArray<Element: Comparable>: EasierCollection, Equatable {
   public mutating func insert(_ element: Element) -> Int {
     self.array.binaryInsert(element)
   }
+  @discardableResult
   public mutating func remove(_ element: Element) -> Int? {
     if let index = index(of: element) {
       self.array.remove(at: index)
@@ -77,6 +89,7 @@ public extension SortedArray where Element: ComparsionValue {
       return nil
     }
   }
+  @discardableResult
   mutating func remove(_ value: Element.ValueToCompare) -> Int? {
     if let index = index(of: value) {
       array.remove(at: index)
