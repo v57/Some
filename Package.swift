@@ -56,7 +56,7 @@ class Targets {
 
 let targets = Targets()
   .set("SomeC")
-  .set("Some SomeC")
+  .set("Some SomeC").test()
   .set("SomeUI Some")
 
 let package = Package(
