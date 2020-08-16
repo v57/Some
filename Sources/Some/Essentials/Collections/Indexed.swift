@@ -19,6 +19,10 @@ public struct Indexed<Value> {
     self.value = value
   }
 }
+extension Indexed: ComparsionValue {
+  public var _valueToCompare: Int { index }
+}
+
 public extension ArraySlice {
   var indexed: Indexed<[Element]> { Indexed(startIndex, Array(self)) }
 }
@@ -40,11 +44,6 @@ public extension Int {
 }
 extension Indexed where Value: Collection {
   public var range: Range<Int> { index..<index+value.count }
-}
-extension Indexed: Equatable where Value: Equatable {
-  public static func == (lhs: Indexed<Value>, rhs: Indexed<Value>) -> Bool {
-    lhs.index == rhs.index && lhs.value == rhs.value
-  }
 }
 public extension Array {
   func indexed(_ body: (Indexed<Element>)->()) {
