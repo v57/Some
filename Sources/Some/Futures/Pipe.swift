@@ -169,6 +169,9 @@ public extension P {
   func add<T: PipeReceiver>(_ receiver: T) where T.Input == Input, T: PipeStorage {
     Pipes.UnownedReceiver(receiver).add(to: self).store(in: receiver)
   }
+  func send<First,Second>(_ first: First, _ second: Second) where Input == (First,Second) {
+    send((first, second))
+  }
   func osend(_ value: Input?) {
     guard let value = value else { return }
     send(value)
