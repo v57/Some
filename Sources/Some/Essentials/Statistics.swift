@@ -208,7 +208,8 @@ extension ArrayMap {
 }
 
 public extension Time {
-  var mcs: Time { Time(self) * 1_000_000 }
+  var fromMcs: Time { self / 1_000_000 }
+  var mcs: Time { self * 1_000_000 }
   static var mcs: Time {
     var tv = timeval()
     gettimeofday(&tv, nil)
