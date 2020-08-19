@@ -360,14 +360,8 @@ extension UInt256: Numeric {
     var carry = false
     
     var (d, c) = self.raw.0.addingReportingOverflow(b.raw.0)
-    if carry {
-      let (d2, c2) = d.addingReportingOverflow(1)
-      self.raw.0 = d2
-      carry = c || c2
-    } else {
-      self.raw.0 = d
-      carry = c
-    }
+    self.raw.0 = d
+    carry = c
     
     (d, c) = self.raw.1.addingReportingOverflow(b.raw.1)
     if carry {
