@@ -157,7 +157,7 @@ public protocol ArraySyncServer: class {
   
   // Storage
   var storageVersion: Int { get set }
-  var data: [Item] { get set }
+  var items: [Item] { get set }
   var updates: [Int] { get set }
   
   // Events
@@ -281,21 +281,21 @@ public enum ArraySync {
 public extension ArraySyncServer {
   @discardableResult
   func add(items: [Item]) -> Int {
-    let index = data.count
+    let index = self.items.count
     willAdd(items: Indexed(index: index, value: items))
-    data.append(contentsOf: items)
+    self.items.append(contentsOf: items)
     added(notification: .init(header: header, data: index.indexed(items)))
     return index
   }
   func update(items: Indexed<[Item]>) {
     var result = items
     for i in 0..<items.value.count {
-      let old = data[items.index + i]
+      let old = self.items[items.index + i]
       let new = items.value[i]
       result.value[i] = update(item: old, with: new)
     }
     willAdd(items: result)
-    self.data.replaceSubrange(with: result)
+    self.self.items.replaceSubrange(with: result)
     self.updates += items.index ..< items.index + items.count
     updated(notification: ArraySync.ItemsUpdated(header: header, data: result))
   }
@@ -309,26 +309,26 @@ public extension ArraySyncServer {
     for i in lastIndex..<updates.count {
       let index = updates[i]
       if index < lastIndex {
-        result.append(Indexed(index: index, value: data[index]))
+        result.append(Indexed(index: index, value: self.items[index]))
       }
     }
     return result
   }
   fileprivate var header: ArraySync.Header {
-    ArraySync.Header(version: storageVersion, arraySize: data.count, updatesSize: updates.count)
+    ArraySync.Header(version: storageVersion, arraySize: self.items.count, updatesSize: updates.count)
   }
   func loadNew(request: ArraySync.LoadNewRequest) -> ArraySync.LoadNewResponse<Item> {
     let lastIndex = request.header.arraySize
     let lastUpdate = request.header.updatesSize
-    let unloadedCount = data.count - lastIndex
+    let unloadedCount = self.items.count - lastIndex
     let updatesSize = updates.count - lastUpdate
     if storageVersion != request.header.version || unloadedCount < 0 || updatesSize < 0 || (maxUpdates > 0 && updatesSize > maxUpdates) {
       /// Invalid data received or there are more updates that limits allowed
-      let array = max(0, data.count - blockSize).indexed(data.last(blockSize))
+      let array = max(0, self.items.count - blockSize).indexed(self.items.last(blockSize))
       return .init(header: header, shouldReset: true, data: array, updates: [])
     } else if unloadedCount > blockSize {
       /// Loading `blockSize`amount of items
-      let array = lastIndex.indexed(data[lastIndex..<lastIndex + blockSize])
+      let array = lastIndex.indexed(self.items[lastIndex..<lastIndex + blockSize])
       let updates = getUpdates(lastIndex: lastUpdate)
       return .init(header: header, shouldReset: false, data: array, updates: updates)
     } else if unloadedCount == 0 {
@@ -336,7 +336,7 @@ public extension ArraySyncServer {
       return .init(header: header, shouldReset: false, data: lastIndex.indexed([]), updates: [])
     } else {
       /// Loading all
-      let array = lastIndex.indexed(data[lastIndex...])
+      let array = lastIndex.indexed(self.items[lastIndex...])
       let updates = getUpdates(lastIndex: lastUpdate)
       return .init(header: header, shouldReset: false, data: array, updates: updates)
     }
@@ -344,23 +344,23 @@ public extension ArraySyncServer {
   func loadPrevious(request: ArraySync.LoadPreviousRequest) -> ArraySync.LoadPreviousResponse<Item> {
     let lastIndex = request.unloadedRange.upperBound
     let unloadedCount = min(request.unloadedRange.count, blockSize)
-    if storageVersion != request.version || request.unloadedRange.lowerBound < 0 || request.unloadedRange.upperBound >= data.count {
+    if storageVersion != request.version || request.unloadedRange.lowerBound < 0 || request.unloadedRange.upperBound >= self.items.count {
       /// Invalid data received or there are more updates that limits allowed. Returning last `blockSize` amount of items
-      let array = min(0, data.count - blockSize).indexed(data.suffix(blockSize))
+      let array = min(0, self.items.count - blockSize).indexed(self.items.suffix(blockSize))
       return .init(header: header, shouldReset: true, data: array)
     } else if unloadedCount == 0 {
       /// Nothing to load
       return .init(header: header, shouldReset: false, data: lastIndex.indexed([]))
     } else {
       /// Loading all
-      let array = lastIndex.indexed(data[...request.unloadedRange.upperBound])
+      let array = lastIndex.indexed(self.items[...request.unloadedRange.upperBound])
       return .init(header: header, shouldReset: false, data: array)
     }
   }
   
   func clear() {
     storageVersion += 1
-    data.removeAll()
+    self.items.removeAll()
     updates.removeAll()
     cleared(notification: ArraySync.Cleared(version: storageVersion))
   }
