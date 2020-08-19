@@ -46,8 +46,8 @@ extension SomePage {
 }
 
 open class SomeNavigationBar: DFView {
-  static var main: SomeMain { SomeUI.main! }
-  var main: SomeMain { SomeUI.main! }
+  static var main: SomeMain { SomeUI._main! }
+  var main: SomeMain { SomeUI._main! }
   override public var dynamicFrame: DFrame? {
     didSet { visualEffectView.dframe = dframe }
   }
@@ -376,7 +376,7 @@ private extension SomeNavigationBar {
 }
 
 open class GoBackObject {
-  var main: SomeMain { SomeUI.main! }
+  var main: SomeMain { SomeUI._main! }
   let changeTitle: Bool
   let changeLeft: Bool
   let changeRight: Bool

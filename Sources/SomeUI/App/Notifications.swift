@@ -61,7 +61,7 @@ extension SomeAppNotifications {
   public func didReceive(remote userInfo: [AnyHashable : Any]) {
     let notification = PushNotification(userInfo: userInfo)
     var mainLoaded = true
-    if let main = main {
+    if let main = _main {
       mainLoaded = main.isLoaded
     }
     if mainLoaded {

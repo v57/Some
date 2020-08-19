@@ -44,8 +44,7 @@ extension SomeSettings {
 }
 
 public var ceo: SomeCeo!
-var main: SomeMain?
-var _main: SomeMain { main! }
+var _main: SomeMain!
 public var screen: SomeScreen!
 
 public let application = UIApplication.shared
@@ -61,7 +60,7 @@ open class SomeApp: UIResponder {
   public var notifications: SomeAppNotifications!
   
   open var useMain: Bool { true }
-  open var root: UIViewController? { main }
+  open var root: UIViewController? { _main }
   open var disableOnTesting: Bool { true }
   
   func setDefaultValues() {
@@ -71,7 +70,7 @@ open class SomeApp: UIResponder {
     notifications = SomeAppNotifications.default()
     ceo = SomeCeo.default()
     if useMain {
-      main = SomeMain.default()
+      _main = SomeMain.default()
     }
   }
   
@@ -127,7 +126,7 @@ extension SomeApp: UIApplicationDelegate {
   open func applicationDidEnterBackground(_ application: UIApplication) {
     guard !Device.isInBackground else { return }
     Device.isInBackground = true
-    main?.pages.reversed().forEach { $0.toBackground() }
+    _main?.pages.reversed().forEach { $0.toBackground() }
     states.toBackground()
     pause()
   }
@@ -139,10 +138,10 @@ extension SomeApp: UIApplicationDelegate {
     
     let changed = Device.updateLowPowerMode()
     if changed {
-      main?.lowPowerModeChanged()
+      _main?.lowPowerModeChanged()
     }
     
-    main?.pages.reversed().forEach { $0.fromBackground() }
+    _main?.pages.reversed().forEach { $0.fromBackground() }
     states.fromBackground()
     resume()
   }
@@ -182,7 +181,7 @@ extension SomeApp: UIApplicationDelegate {
   }
   
   open func applicationDidReceiveMemoryWarning(_ application: UIApplication) {
-    main?.pages.forEach { $0.memoryWarning() }
+    _main?.pages.forEach { $0.memoryWarning() }
   }
 }
 

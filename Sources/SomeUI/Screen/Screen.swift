@@ -49,7 +49,7 @@ public class SomeScreen {
     shouldUpdate = true
     guard !isLocked else { return }
     shouldUpdate = false
-    main?.resolutionChanged()
+    _main?.resolutionChanged()
   }
   
   func lock(execute: ()->()) {

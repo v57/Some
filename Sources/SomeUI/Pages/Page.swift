@@ -30,8 +30,8 @@ public enum UnloadType {
 }
 
 open class SomePage: UIView, DynamicFrame {
-  static var main: SomeMain { SomeUI.main! }
-  var main: SomeMain { SomeUI.main! }
+  static var main: SomeMain { SomeUI._main! }
+  var main: SomeMain { SomeUI._main! }
   public static var test: ()->(SomePage?) = { nil }
   
   public var dynamicFrame: DFrame? = screen.dframe

@@ -18,7 +18,7 @@ extension SomeMain {
 }
 
 open class PageTransition {
-  var main: SomeMain { SomeUI.main! }
+  var main: SomeMain { _main! }
   public static var `default`: ()->(PageTransition) = { .push }
   public static var none: PageTransition {
     return PageTransition()

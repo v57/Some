@@ -49,7 +49,7 @@ extension SomeScreen {
     set {
       screenStatusBarWhite = newValue
       animate {
-        main?.setNeedsStatusBarAppearanceUpdate()
+        _main?.setNeedsStatusBarAppearanceUpdate()
       }
     }
   }
@@ -60,7 +60,7 @@ extension SomeScreen {
     set {
       screenStatusBarHidden = newValue
       animate {
-        main?.setNeedsStatusBarAppearanceUpdate()
+        _main?.setNeedsStatusBarAppearanceUpdate()
       }
     }
   }
