@@ -74,11 +74,12 @@ extension RawRepresentable where RawValue == UInt8 {
   public typealias IntSet = Options<Self,Int>
   public var int: Int { Int(rawValue) }
 }
-public extension Array where Element: RawRepresentable, Element.RawValue == UInt8 {
+public extension Sequence where Element: RawRepresentable, Element.RawValue == UInt8 {
   func optionSet() -> Element.Set { Options(self) }
   func optionSet() -> Element.Set16 { Options(self) }
   func optionSet() -> Element.Set32 { Options(self) }
   func optionSet() -> Element.Set64 { Options(self) }
+  func optionSet() -> Element.IntSet { Options(self) }
 }
 
 
@@ -130,6 +131,12 @@ where Enum: RawRepresentable, RawValue: BinaryInteger, Enum.RawValue == UInt8 {
   public init(_ array: [Enum]) {
     rawValue = 0
     for v in array {
+      rawValue[v.rawValue] = true
+    }
+  }
+  public init<S: Sequence>(_ sequence: S) where S.Element == Enum {
+    rawValue = 0
+    for v in sequence {
       rawValue[v.rawValue] = true
     }
   }
@@ -402,3 +409,7 @@ extension Options: CustomStringConvertible {
   }
 }
 
+// MARK:- FixedWidthInteger
+extension Options where RawValue: FixedWidthInteger {
+  public var count: Int { rawValue.nonzeroBitCount }
+}
