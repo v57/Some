@@ -148,6 +148,13 @@ extension UIView {
   public func rotate(_ a: CGFloat) {
     transform = CGAffineTransform(rotationAngle: a)
   }
+  public func replaceWithCopy() -> UIView {
+    guard let view = snapshotView(afterScreenUpdates: false) else { return self }
+    view.frame.origin = frame.origin
+    superview?.insertSubview(view, aboveSubview: self)
+    removeFromSuperview()
+    return view
+  }
   public func scale(from: Float, to: Float, animated: Bool, remove: Bool = true) {
     if animated && animationsAvailable() {
       let animation = CABasicAnimation(keyPath: "transform.scale")
