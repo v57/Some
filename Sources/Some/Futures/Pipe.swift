@@ -306,6 +306,9 @@ public extension P where Input: Equatable {
   func filter(_ value: Input) -> P<Void> {
     filter(where: { $0 == value }).void()
   }
+  func unique() -> P<Input> {
+    Pipes.Unique<Input>().add(to: self)
+  }
 }
 public extension P where Input: AnyObject & Equatable {
   func filterWeak(_ value: Input) -> P<Void> {
@@ -532,6 +535,34 @@ extension Pipes {
       singleSend(value)
     }
     public func singleSend(_ value: T) {
+      super.send(value)
+    }
+    open override func add(child: S) {
+      super.add(child: child)
+      if let result = result {
+        (child as? P<T>)?.send(result)
+      }
+    }
+    open override func request(from child: S) {
+      log("request(from: \(child))")
+      guard let result = result else { return }
+      (child as? P<T>)?.send(result)
+    }
+  }
+  open class Unique<T>: P<T> where T: Equatable {
+    @Locked open var result: T?
+    open override var storesValues: Bool { true }
+    
+    public init(_ result: T?) {
+      self.result = result
+    }
+    public override init() {
+      super.init()
+    }
+    public override func send(_ value: T) {
+      log("send(\(value)) \(childs.count)")
+      guard result != value else { return }
+      self.result = value
       super.send(value)
     }
     open override func add(child: S) {
