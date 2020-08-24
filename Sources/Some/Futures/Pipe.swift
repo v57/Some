@@ -25,6 +25,7 @@ public protocol PipeReceiver {
 }
 
 open class S: Hashable {
+  public static var debugEnabled: Bool = false
   open var pipeName: String { className(self) }
   open var parents = Set<S>()
   open var childs = WeakArray<S>()
@@ -130,7 +131,9 @@ open class S: Hashable {
     removeFromParents()
   }
   func log(_ text: @autoclosure ()->String) {
-    // Swift.print("\n\(name)\n  \(text)")
+    if S.debugEnabled {
+      Swift.print("\n\(pipeName)\n  \(text())")
+    }
   }
 }
 
