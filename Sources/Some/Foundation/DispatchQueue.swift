@@ -120,6 +120,19 @@ public class Waiter {
   public func cancel() {
     version += 1
   }
+  /// Repeats `execute` function in time interval.
+  /// You can sefely use `[unowned self]` if waiter is only stores in self
+  public func `repeat`(_ time: Double, _ execute: @escaping ()->()) {
+    wait(time) { [weak self] in
+      guard let self = self else { return }
+      // storing current version, so you could cancel repeater inside execute function
+      let version = self.version
+      execute()
+      if self.version == version {
+        self.repeat(time, execute)
+      }
+    }
+  }
   public func external() -> External {
     External(waiter: self)
   }
