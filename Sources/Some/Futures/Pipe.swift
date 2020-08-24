@@ -550,7 +550,6 @@ extension Pipes {
 
 @propertyWrapper
 public struct V<Value> {
-  
   @inlinable // trivially forwarding
   public init(initialValue: Value) {
     self.init(wrappedValue: initialValue)
@@ -579,6 +578,40 @@ public struct V<Value> {
   }
 }
 extension V: CustomStringConvertible {
+  public var description: String { "\(value) "}
+}
+
+@propertyWrapper
+public struct VE<Value> where Value: Equatable {
+  @inlinable // trivially forwarding
+  public init(initialValue: Value) {
+    self.init(wrappedValue: initialValue)
+  }
+  public init(wrappedValue: Value) {
+    value = wrappedValue
+  }
+  
+  public private(set) var value: Value
+  private var publisher: Var<Value>?
+  public var projectedValue: Var<Value> {
+    mutating get {
+      publisher.lazy { Var(value) }
+    }
+  }
+  public var wrappedValue: Value {
+    get { value }
+    set {
+      guard value != newValue else { return }
+      value = newValue
+      if let publisher = publisher {
+        DispatchQueue.main.async {
+          publisher.send(newValue)
+        }
+      }
+    }
+  }
+}
+extension VE: CustomStringConvertible {
   public var description: String { "\(value) "}
 }
 
