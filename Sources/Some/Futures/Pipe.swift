@@ -12,12 +12,39 @@ public typealias E = P<Void>
 public typealias B = P<Bool>
 public typealias P2<A,B> = P<(A,B)>
 
-public protocol PipeStorage: class {
+public protocol _PipeStorage {
+  func _insert(pipe: S)
+  func _remove(pipe: S)
+}
+public protocol PipeStorage: class, _PipeStorage {
   var pipes: Set<S> { get set }
+}
+public extension PipeStorage {
+  func _insert(pipe: S) {
+    pipes.insert(pipe)
+  }
+  func _remove(pipe: S) {
+    pipes.remove(pipe)
+  }
 }
 public class Bag: PipeStorage {
   public var pipes: Set<S> = []
   public init() {}
+}
+public class SingleItemBag: _PipeStorage {
+  public var item: S?
+  public init() {}
+  public func _insert(pipe: S) {
+    item = pipe
+  }
+  public func _remove(pipe: S) {
+    if item == pipe {
+      item = nil
+    }
+  }
+  public func clean() {
+    item = nil
+  }
 }
 public protocol PipeReceiver {
   associatedtype Input
@@ -158,8 +185,8 @@ public extension S {
   fileprivate func store(in set: inout Set<S>) {
     set.insert(self)
   }
-  func store<Holder: PipeStorage>(in holder: Holder) {
-    holder.pipes.insert(self)
+  func store<Holder: _PipeStorage>(in holder: Holder) {
+    holder._insert(pipe: self)
   }
 }
 public extension P {
