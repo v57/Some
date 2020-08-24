@@ -31,7 +31,6 @@ open class TimeWatch: E {
       guard version == self.version else { return }
       guard !self.isEmpty else { return }
       if Time.now > t {
-        print(self.time.rawValue, DispatchTime.now().rawValue, Time.now)
         self.time = self.time + 1
         self.run()
       } else {
@@ -49,3 +48,4 @@ open class TimeWatch: E {
     }
   }
 }
+
