@@ -44,6 +44,15 @@ public protocol ArraySyncQueuedClient: ArraySyncClient where Item: HashedItem {
   func sentUpdates(items: Indexed<[Item]>, oldValue: Indexed<[Item]>)
 }
 public extension ArraySyncQueuedClient {
+  func added(items: Indexed<[Item]>) {
+    items.enumerate { item, stop in
+      if queue.remove(waiting: item.value) {
+        sentAppend(items: Indexed(item.index, [item.value]))
+      } else {
+        newAdded(items: Indexed(item.index, [item.value]))
+      }
+    }
+  }
   func timeout(_ completion: @escaping ()->()) {
     wait(3) {
       completion()
