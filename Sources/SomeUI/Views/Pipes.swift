@@ -9,34 +9,108 @@
 import UIKit
 import Some
 
-public typealias PEmptyView = PStackView
-open class PView: UIView, PipeStorage {
+public struct ViewData {
   public var pipes: Set<S> = []
+  public var size: CGSize = .zero
 }
-open class PImageView: UIImageView, PipeStorage {
-  public var pipes: Set<S> = []
+public extension ViewData {
+  mutating func layoutSubviews<View: ViewDataProtocol>(_ view: View) {
+    guard view.frame.size != size else { return }
+    size = view.frame.size
+  }
+}
+/**
+ Implementation:
+ ```
+ class View: UIView, ViewDataProtocol {
+  public var viewData = ViewData()
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+ }
+ ```
+ */
+public protocol ViewDataProtocol: UIView, PipeStorage {
+  var viewData: ViewData { get set }
+  func sizeChanged()
+}
+public extension ViewDataProtocol {
+  var pipes: Set<S> {
+    get { viewData.pipes }
+    set { viewData.pipes = newValue }
+  }
+}
+
+public typealias PEmptyView = PStackView
+open class PView: UIView, ViewDataProtocol {
+  public var viewData = ViewData()
+  public override init(frame: CGRect = .zero) {
+    super.init(frame: frame)
+  }
+  required public init?(coder: NSCoder) {
+    super.init(coder: coder)
+  }
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+  open func sizeChanged() {}
+}
+open class PImageView: UIImageView, ViewDataProtocol {
+  public var viewData = ViewData()
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+  open func sizeChanged() {}
   public var pipe: P<UIImage>? {
     get { nil }
     set { newValue?.assign(self, \.image).store(in: self) }
   }
 }
-open class PStackView: UIStackView, PipeStorage {
-  public var pipes: Set<S> = []
+open class PStackView: UIStackView, ViewDataProtocol {
+  public var viewData = ViewData()
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+  open func sizeChanged() {}
 }
-open class PLabel: UILabel, PipeStorage {
-  public var pipes: Set<S> = []
+open class PLabel: UILabel, ViewDataProtocol {
+  public var viewData = ViewData()
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+  open func sizeChanged() {}
 }
-open class PTextField: UITextField, PipeStorage {
-  public var pipes: Set<S> = []
+open class PTextField: UITextField, ViewDataProtocol {
+  public var viewData = ViewData()
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+  open func sizeChanged() {}
 }
-open class PTextView: UITextView, PipeStorage {
-  public var pipes: Set<S> = []
+open class PTextView: UITextView, ViewDataProtocol {
+  public var viewData = ViewData()
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+  open func sizeChanged() {}
 }
 open class PViewController: UIViewController, PipeStorage {
   public var pipes: Set<S> = []
 }
-open class PScrollView: UIScrollView, PipeStorage {
-  public var pipes: Set<S> = []
+open class PScrollView: UIScrollView, ViewDataProtocol {
+  public var viewData = ViewData()
+  open override func layoutSubviews() {
+    super.layoutSubviews()
+    viewData.layoutSubviews(self)
+  }
+  open func sizeChanged() {}
   public lazy var pipe: Delegate = {
     let delegate = Delegate()
     self.delegate = delegate
