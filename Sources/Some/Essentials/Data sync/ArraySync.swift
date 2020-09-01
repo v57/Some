@@ -38,6 +38,12 @@ public struct ArraySyncQueue {
   public var updatingCount = 0
   public var updating = SortedArray<Indexed<Item>>()
 }
+public protocol ArraySyncQueuedClient: ArraySyncClient {
+  var queue: ArraySyncQueue { get set }
+  func timeout(_ completion: @escaping ()->())
+  /// - Returns: `true` if operation should repeat
+  func process(error: Error) -> Bool
+}
 
 // MARK: Notifications
 public extension ArraySyncClient {
