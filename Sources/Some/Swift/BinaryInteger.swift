@@ -95,6 +95,10 @@ public extension FixedWidthInteger {
         }
         self = mainPart
     }
+    mutating func increment() -> Self {
+      self &+= 1
+      return self
+    }
 }
 
 // MARK:- To String with radix
