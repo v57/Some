@@ -22,8 +22,8 @@ public protocol ArraySyncClient: class {
   // Requests
   func loadNew(request: ArraySync.LoadNewRequest) -> P<ArraySync.LoadNewResponse<Item>>
   func loadPrevious(request: ArraySync.LoadPreviousRequest) -> P<ArraySync.LoadPreviousResponse<Item>>
-  func add(items: [Item]) -> P<Void>
-  func update(items: Indexed<[Item]>) -> P<Void>
+  func add(items: [Item]) -> P<Error?>
+  func update(items: Indexed<[Item]>) -> P<Error?>
   func clear() -> P<Void>
   
   // Notifications
@@ -80,10 +80,10 @@ public extension ArraySyncClient {
 
 // MARK: Mutable requests
 public extension ArraySyncClient {
-  func add(item: Item) -> P<Void> {
+  func add(item: Item) -> P<Error?> {
     add(items: [item])
   }
-  func update(item: Item, at index: Int) -> P<Void> {
+  func update(item: Item, at index: Int) -> P<Error?> {
     update(items: Indexed(index: index, value: [item]))
   }
 }
