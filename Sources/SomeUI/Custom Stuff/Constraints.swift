@@ -559,6 +559,12 @@ public extension UIView {
     translatesAutoresizingMaskIntoConstraints = false
     return Constraints(view: self)
   }
+  @discardableResult
+  func build(_ view: UIView) -> Constraints {
+    view.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(view)
+    return Constraints(view: view)
+  }
   func wh(_ s: CGFloat) -> Self {
     build().wh(s)
     return self
