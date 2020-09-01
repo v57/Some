@@ -32,6 +32,12 @@ public protocol ArraySyncClient: class {
   /// Reset called by response
   func reset()
 }
+public struct ArraySyncQueue {
+  public var appendingCount = 0
+  public var appending = [Item]()
+  public var updatingCount = 0
+  public var updating = SortedArray<Indexed<Item>>()
+}
 
 // MARK: Notifications
 public extension ArraySyncClient {
