@@ -25,12 +25,30 @@ import Foundation
 
 extension Int {
   public func k() -> String {
-    if self > 10000000 {
-      return "\(self / 1000000)M"
-    } else if self > 10000 {
-      return "\(self / 1000)K"
-    } else {
+    let prefix = self < 0 ? "-" : ""
+    switch magnitude {
+    case 0..<1_000:
       return String(self)
+      
+    case 1_000..<100_000:
+      return prefix + string(unitDecimals: 3, decimals: 1, options: []) + "k"
+    case 100_000..<1_000_000:
+      return prefix + String(self / 1_000) + "k"
+      
+    case 1_000_000..<100_000_000:
+      return prefix + string(unitDecimals: 6, decimals: 1, options: []) + "m"
+    case 100_000_000..<1_000_000_000:
+      return prefix + String(self / 1_000_000) + "m"
+      
+    case 1_000_000_000..<100_000_000_000:
+      return prefix + string(unitDecimals: 9, decimals: 1, options: []) + "b"
+    case 100_000_000_000..<1_000_000_000_000:
+      return prefix + String(self / 1_000_000_000) + "b"
+      
+    case 1_000_000_000_000..<100_000_000_000_000:
+      return prefix + string(unitDecimals: 12, decimals: 1, options: []) + "t"
+    default:
+      return prefix + String(self / 1_000_000_000_000) + "t"
     }
   }
 }
@@ -50,6 +68,7 @@ extension String {
   public static func *= (l: inout String, r: String) {
     l.addLine(r)
   }
+  public var int: Int? { Int(self) }
   public var isEnter: Bool {
     return count == 1 && self.first!.asciiValue == 10
   }
