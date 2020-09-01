@@ -32,51 +32,6 @@ public protocol ArraySyncClient: class {
   /// Reset called by response
   func reset()
 }
-public struct ArraySyncQueue {
-  public var appendingCount = 0
-  public var appending = [Item]()
-  public var updatingCount = 0
-  public var updating = SortedArray<Indexed<Item>>()
-}
-public protocol ArraySyncQueuedClient: ArraySyncClient {
-  var queue: ArraySyncQueue { get set }
-  func timeout(_ completion: @escaping ()->())
-  /// - Returns: `true` if operation should repeat
-  func process(error: Error) -> Bool
-}
-public extension ArraySyncQueuedClient {
-  func timeout(_ completion: @escaping ()->()) {
-    wait(3) {
-      completion()
-    }
-  }
-  func queuedAdd(items: [Item]) {
-    queue.appending.append(contentsOf: items)
-    if queue.appendingCount == 0 {
-      addNext()
-    }
-  }
-  private func addNext() {
-    guard queue.appending.count > 0 else { return }
-    queue.appendingCount = queue.appending.count
-    add(items: queue.appending).next { error in
-      self.added(error: error)
-    }.storeSingle()
-  }
-  private func added(error: Error?) {
-    if let error = error {
-      if !process(error: error) {
-        queue.appending.removeLast(queue.appendingCount)
-      }
-      timeout {
-        self.addNext()
-      }
-    } else {
-      queue.appending.removeLast(queue.appendingCount)
-      addNext()
-    }
-  }
-}
 
 // MARK: Notifications
 public extension ArraySyncClient {
