@@ -179,6 +179,10 @@ public typealias SingleResult<T> = Pipes.SingleResult<T>
 
 public extension S {
   static let mainStore = Bag()
+  /// Store until received any value. Not implemented yet
+  func storeSingle() {
+    store(in: S.mainStore)
+  }
   func alwaysStore() {
     store(in: S.mainStore)
   }
