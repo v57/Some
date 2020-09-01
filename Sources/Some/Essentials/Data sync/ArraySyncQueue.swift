@@ -40,25 +40,52 @@ public protocol ArraySyncQueuedClient: ArraySyncClient where Item: HashedItem {
   func process(error: Error) -> Bool
   func newAdded(items: Indexed<[Item]>)
   func newUpdated(items: Indexed<[Item]>, oldValue: Indexed<[Item]>)
-  func sentAppend(items: Indexed<[Item]>)
-  func sentUpdates(items: Indexed<[Item]>, oldValue: Indexed<[Item]>)
+  func appendSent(items: Indexed<[Item]>)
+  func updatesSent(items: Indexed<[Item]>, oldValue: Indexed<[Item]>)
 }
 public extension ArraySyncQueuedClient {
+  // MARK:- Added
   func added(items: Indexed<[Item]>) {
-    items.enumerate { item, stop in
+    guard !items.value.isEmpty else { return }
+    var range = 0..<0
+    var sent = false
+    items.enumerate { index, item, stop in
       if queue.remove(waiting: item.value) {
-        sentAppend(items: Indexed(item.index, [item.value]))
+        if !sent {
+          addItems(index: index, items: items, range: &range, using: newAdded)
+          sent = true
+        }
       } else {
-        newAdded(items: Indexed(item.index, [item.value]))
+        if sent {
+          addItems(index: index, items: items, range: &range, using: appendSent)
+          sent = false
+        }
       }
     }
+    if sent {
+      addItems(index: items.count, items: items, range: &range, using: appendSent)
+    } else {
+      addItems(index: items.count, items: items, range: &range, using: newAdded)
+    }
   }
+  private func addItems(index: Int, items: Indexed<[Item]>, range: inout Range<Int>, using: (Indexed<[Item]>)->()) {
+    range.end = index
+    if !range.isEmpty {
+      let array = Array(items.value[range])
+      newAdded(items: Indexed(items.index + range.lowerBound, array))
+      range = index..<index
+    }
+  }
+  
+  // MARK:- Default timeout
   func timeout(_ completion: @escaping ()->()) {
     wait(3) {
       completion()
     }
   }
-  func queuedAdd(items: [Item]) {
+  
+  // MARK:- Queued append
+  func queuedAppend(items: [Item]) {
     queue.appendQueued.append(contentsOf: items)
     sendAppending()
   }
