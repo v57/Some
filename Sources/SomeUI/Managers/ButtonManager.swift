@@ -275,7 +275,7 @@ private extension ButtonGesture {
   }
   func holding() {
     var force: CGFloat?
-    if screen.forceTouchAvailable {
+    if screen?.forceTouchAvailable == true {
       force = self.force
     }
     switch self.state {
