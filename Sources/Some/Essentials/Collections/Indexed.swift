@@ -26,12 +26,12 @@ extension Indexed: ComparsionValue {
 public extension ArraySlice {
   var indexed: Indexed<[Element]> { Indexed(startIndex, Array(self)) }
 }
-public extension Array {
+public extension RangeReplaceableCollection where Index == Int {
   subscript(indexed index: Int) -> Indexed<Element> {
     get { Indexed(index: index, value: self[index]) }
   }
   mutating func replaceSubrange<C: Collection>(with indexed: Indexed<C>) where C.Element == Element {
-    replaceSubrange(indexed.index..<(indexed.index+indexed.value.count), with: indexed.value)
+    replaceSubrange(indexed.index..<(indexed.index + indexed.value.count), with: indexed.value)
   }
 }
 public extension Int {
@@ -54,7 +54,7 @@ extension Indexed where Value: Collection {
     }
   }
 }
-public extension Array {
+public extension BidirectionalCollection {
   func indexed(_ body: (Indexed<Element>)->()) {
     enumerated().forEach {
       body(Indexed(index: $0.offset, value: $0.element))
