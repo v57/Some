@@ -41,6 +41,7 @@ public protocol ArraySyncChat: ArraySyncQueuedClient where Item == ArraySyncChat
   var senderId: Int { get }
 }
 public extension ArraySyncChat {
+  typealias Message = ArraySyncChatMessage<Content>
   func send(messages: [Content]) {
     let from = senderId
     let time = Time.now
@@ -57,7 +58,7 @@ public extension ArraySyncChat {
       return nil
     }
   }
-  func update(message: Indexed<ArraySyncChatMessage<Content>>, with content: Content) -> P<Error?> {
+  func update(message: Indexed<Message>, with content: Content) -> P<Error?> {
     var message = message
     message.value.content = content
     return update(items: Indexed(message.index, [message.value]))
