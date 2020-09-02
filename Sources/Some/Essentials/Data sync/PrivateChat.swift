@@ -17,3 +17,10 @@ extension PrivateChatUser: Equatable {
     l.id == r.id
   }
 }
+public protocol ASPrivateChat: ArraySyncChat {
+  var users: Vector2<PrivateChatUser> { get set }
+  func recipientDidRead(user: PrivateChatUser)
+  func senderDidRead(user: PrivateChatUser)
+  func messageShouldCountAsUnread(message: Indexed<Message>, for user: PrivateChatUser) -> Bool
+  func unreadMessages(count: Int, message: Indexed<Message>?)
+}
