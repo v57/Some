@@ -193,16 +193,16 @@ public enum ArraySync {
   }
   public struct Header {
     public var version: Int
-    public var arraySize: Int
+    public var itemsCount: Int
     public var updatesSize: Int
     public init() {
       self.version = 0
-      self.arraySize = 0
+      self.itemsCount = 0
       self.updatesSize = 0
     }
     public init(version: Int, arraySize: Int, updatesSize: Int) {
       self.version = version
-      self.arraySize = arraySize
+      self.itemsCount = arraySize
       self.updatesSize = updatesSize
     }
   }
@@ -318,7 +318,7 @@ public extension ArraySyncServer {
     ArraySync.Header(version: storageVersion, arraySize: self.items.count, updatesSize: updates.count)
   }
   func loadNew(request: ArraySync.LoadNewRequest) -> ArraySync.LoadNewResponse<Item> {
-    let lastIndex = request.header.arraySize
+    let lastIndex = request.header.itemsCount
     let lastUpdate = request.header.updatesSize
     let unloadedCount = self.items.count - lastIndex
     let updatesSize = updates.count - lastUpdate
@@ -375,7 +375,7 @@ extension ArraySync.Header: DataRepresentable {
   }
   public func save(data: DataWriter) {
     data.append(version)
-    data.append(arraySize)
+    data.append(itemsCount)
     data.append(updatesSize)
   }
 }
