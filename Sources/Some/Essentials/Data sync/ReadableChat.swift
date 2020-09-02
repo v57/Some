@@ -9,7 +9,7 @@ import Foundation
 
 public protocol ReadableChat: ArraySyncChat {
   associatedtype ChatUser: ArraySyncChatUser
-  var sender: ChatUser { get }
+  var sender: ChatUser? { get }
   func messageShouldCountAsUnread(message: Indexed<Message>, for user: ChatUser) -> Bool
   func updated(user: ChatUser, oldValue: ChatUser)
   func unreadMessages(count: Int, message: Indexed<Message>?)
@@ -17,7 +17,8 @@ public protocol ReadableChat: ArraySyncChat {
 public extension ReadableChat {
   func read(at index: Int) {
     let index = min(header.itemsCount, index)
-    guard index > sender.lastRead else { return }
+    let lastRead = sender?.lastRead ?? -1
+    guard index > lastRead else { return }
   }
   func countUnreadMessages(for user: ChatUser) -> (count: Int, message: Indexed<Message>?) {
     var count = header.itemsCount - user.lastRead
