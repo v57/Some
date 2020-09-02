@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ArraySyncQueue<Item: HashedItem> {
+public struct ArraySyncQueue<Item: ArraySyncHashedItem> {
   public var appendSending = [Item]()
   public var appendQueued = [Item]()
   public var appendWaiting = [UInt64]()
@@ -30,10 +30,10 @@ private extension ArraySyncQueue {
     appendWaiting.binarySearch(waiting.hash) != nil
   }
 }
-public protocol HashedItem {
+public protocol ArraySyncHashedItem {
   var hash: UInt64 { get set }
 }
-public protocol ArraySyncQueuedClient: ArraySyncClient where Item: HashedItem {
+public protocol ArraySyncQueuedClient: ArraySyncClient where Item: ArraySyncHashedItem {
   var queue: ArraySyncQueue<Item> { get set }
   func timeout(_ completion: @escaping ()->())
   /// - Returns: `true` if operation should repeat
