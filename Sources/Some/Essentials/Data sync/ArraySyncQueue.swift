@@ -7,11 +7,28 @@
 
 import Foundation
 
+// MARK:- ArraySyncQueue
 public struct ArraySyncQueue<Item: ArraySyncHashedItem> {
   public var appendSending = [Item]()
   public var appendQueued = [Item]()
   public var appendWaiting = [UInt64]()
+  public init() {}
 }
+
+extension ArraySyncQueue: DataRepresentable where Item: DataRepresentable {
+  // TODO: Fix problem when data saved, messages sent and app crashed. So on next load messages will send again
+  public init(data: DataReader) throws {
+    appendSending = try data.next()
+    appendQueued = try data.next()
+    appendWaiting = try data.next()
+  }
+  public func save(data: DataWriter) {
+    data.append(appendSending)
+    data.append(appendQueued)
+    data.append(appendWaiting)
+  }
+}
+
 private extension ArraySyncQueue {
   mutating func insert(waiting: Item) {
     if !contains(waiting: waiting) {
@@ -30,9 +47,12 @@ private extension ArraySyncQueue {
     appendWaiting.binarySearch(waiting.hash) != nil
   }
 }
+
 public protocol ArraySyncHashedItem {
   var hash: UInt64 { get set }
 }
+
+// MARK:- ArraySyncQueuedClient
 public protocol ArraySyncQueuedClient: ArraySyncClient where Item: ArraySyncHashedItem {
   var queue: ArraySyncQueue<Item> { get set }
   func timeout(_ completion: @escaping ()->())
