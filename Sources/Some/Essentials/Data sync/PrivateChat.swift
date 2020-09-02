@@ -7,33 +7,31 @@
 
 import Foundation
 
-public struct PrivateChatUser: ComparsionValue {
-  public var id: Int
-  public var lastRead: Int
-  public var _valueToCompare: Int { id }
+public protocol ASChatUser: ComparsionValue where ValueToCompare == Int {
+  var id: Int { get }
+  var lastRead: Int { get set }
 }
-extension PrivateChatUser: Equatable {
-  public static func ==(l: Self, r: Self) -> Bool {
-    l.id == r.id
-  }
+public extension ASChatUser {
+  var _valueToCompare: Int { id }
 }
 public protocol ASPrivateChat: ArraySyncChat {
-  var users: Vector2<PrivateChatUser> { get set }
-  func recipientDidRead(user: PrivateChatUser)
-  func senderDidRead(user: PrivateChatUser)
-  func messageShouldCountAsUnread(message: Indexed<Message>, for user: PrivateChatUser) -> Bool
+  associatedtype ChatUser: ASChatUser
+  var users: Vector2<ChatUser> { get set }
+  func recipientDidRead(user: ChatUser)
+  func senderDidRead(user: ChatUser)
+  func messageShouldCountAsUnread(message: Indexed<Message>, for user: ChatUser) -> Bool
   func unreadMessages(count: Int, message: Indexed<Message>?)
 }
 public extension ASPrivateChat {
-  var sender: PrivateChatUser {
+  var sender: ChatUser {
     get { users[value: senderId] }
     set { users[value: senderId] = newValue }
   }
-  var recipient: PrivateChatUser {
+  var recipient: ChatUser {
     get { users.opposite(of: senderId) }
     set { users.editOpposite(of: senderId, edit: { $0 = newValue }) }
   }
-  func updated(user: PrivateChatUser, oldValue: PrivateChatUser) {
+  func updated(user: ChatUser, oldValue: ChatUser) {
     guard oldValue.lastRead != user.lastRead else { return }
     if user.id == senderId {
       senderDidRead(user: user)
@@ -43,7 +41,7 @@ public extension ASPrivateChat {
       recipientDidRead(user: user)
     }
   }
-  func updated(users: Vector2<PrivateChatUser>) {
+  func updated(users: Vector2<ChatUser>) {
     let oldValue = self.users
     self.users = users
     updated(user: users.a, oldValue: oldValue.a)
@@ -53,7 +51,7 @@ public extension ASPrivateChat {
     let index = min(header.itemsCount, index)
     guard index > sender.lastRead else { return }
   }
-  func countUnreadMessages(for user: PrivateChatUser) -> (count: Int, message: Indexed<Message>?) {
+  func countUnreadMessages(for user: ChatUser) -> (count: Int, message: Indexed<Message>?) {
     var count = header.itemsCount - user.lastRead
     guard count > 0 else { return (count, nil) }
     guard let part = items.body.last else { return (count, nil) }
