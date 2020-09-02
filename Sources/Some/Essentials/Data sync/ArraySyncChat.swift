@@ -65,3 +65,10 @@ public extension ArraySyncChat {
   }
 }
 
+public protocol ArraySyncChatUser: ComparsionValue where ValueToCompare == Int {
+  var id: Int { get }
+  var lastRead: Int { get set }
+}
+public extension ArraySyncChatUser {
+  var _valueToCompare: Int { id }
+}

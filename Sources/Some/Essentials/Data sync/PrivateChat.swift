@@ -7,19 +7,12 @@
 
 import Foundation
 
-public protocol ASChatUser: ComparsionValue where ValueToCompare == Int {
-  var id: Int { get }
-  var lastRead: Int { get set }
-}
-public extension ASChatUser {
-  var _valueToCompare: Int { id }
-}
-public protocol ASPrivateChat: ReadableChat {
+public protocol ArraySyncPrivateChat: ReadableChat {
   var users: Vector2<ChatUser> { get set }
   func recipientDidRead(user: ChatUser)
   func senderDidRead(user: ChatUser)
 }
-public extension ASPrivateChat {
+public extension ArraySyncPrivateChat {
   var sender: ChatUser {
     get { users[value: senderId] }
     set { users[value: senderId] = newValue }

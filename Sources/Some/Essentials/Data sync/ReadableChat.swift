@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol ReadableChat: ArraySyncChat {
-  associatedtype ChatUser: ASChatUser
+  associatedtype ChatUser: ArraySyncChatUser
   var sender: ChatUser { get }
   func messageShouldCountAsUnread(message: Indexed<Message>, for user: ChatUser) -> Bool
   func updated(user: ChatUser, oldValue: ChatUser)
