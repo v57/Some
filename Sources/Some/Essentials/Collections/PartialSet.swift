@@ -38,8 +38,14 @@ public extension Indexable {
     }
   }
 }
-extension Indexed: Indexable where Value: _Mergeable {
-  public var count: Int { value._count }
+extension Indexed: Indexable where Value: RangeReplaceableCollection, Value.Index == Int {
+  public var count: Int { value.count }
+  public subscript(relative index: Int) -> Value.Element {
+    value[index]
+  }
+  public subscript(nonRelative index: Int) -> Value.Element {
+    value[index - self.index]
+  }
   public func combined(with range: Indexed<Value>) -> (combined: Self, clamped: (Self, Self)) {
     let (combined, clamped) = value._merge(with: range, offset: index)
     return (combined as! Indexed<Value>, clamped as! (Indexed<Value>, Indexed<Value>))
@@ -76,24 +82,18 @@ extension Range: Indexable where Bound == Int {
     return (combined, (clamped, clamped))
   }
 }
-public protocol _Mergeable {
-  var _count: Int { get }
-  func _merge(with: Any, offset: Int) -> (combined: Any, clamped: Any)
-  subscript(relative range: Range<Int>) -> Self { get }
-}
-
-extension Array: _Mergeable {
-  public subscript(relative range: Range<Int>) -> Array {
-    Array(self[range])
+extension RangeReplaceableCollection where Index == Int {
+  public subscript(relative range: Range<Int>) -> Self {
+    Self(self[range])
   }
   public var _count: Int { count }
   public func _merge(with: Any, offset: Int) -> (combined: Any, clamped: Any) {
-    assert(with as? Indexed<Array<Element>> != nil)
-    func clamped(array1: Indexed<Array<Element>>, array2: Indexed<Array<Element>>) -> Indexed<Array<Element>> {
+    assert(with as? Indexed<Self> != nil)
+    func clamped(array1: Indexed<Self>, array2: Indexed<Self>) -> Indexed<Self> {
       array2[nonRelative: array1.range.clamped(to: array2.range)]
     }
     let indexedSelf = Indexed(index: offset, value: self)
-    let value = with as! Indexed<Array<Element>>
+    let value = with as! Indexed<Self>
     let clampedOld = clamped(array1: value, array2: indexedSelf)
     let clampedNew = clamped(array1: indexedSelf, array2: value)
     let second = value.value
@@ -104,7 +104,7 @@ extension Array: _Mergeable {
     let c2 = value.value.count
     let e2 = s2 + c2
     let index: Int
-    var array: Array<Element>
+    var array: Self
     if s1 < s2 {
       index = s1
       if e1 > e2 {
@@ -122,7 +122,7 @@ extension Array: _Mergeable {
         array = second + self[(s2 + c2 - s1)...]
       }
     }
-    let combined = Indexed<Array<Element>>(index: index, value: array)
+    let combined = Indexed<Self>(index: index, value: array)
     return (combined, (clampedOld, clampedNew))
   }
 }
