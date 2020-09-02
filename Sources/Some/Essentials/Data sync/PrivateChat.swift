@@ -33,26 +33,21 @@ public extension ASPrivateChat {
     get { users.opposite(of: senderId) }
     set { users.editOpposite(of: senderId, edit: { $0 = newValue }) }
   }
-  func updated(users: Vector2<PrivateChatUser>) {
-    var oldValue = self.users
-    var users = users
-    let sender = self.sender
-    self.users = users
-    
-    // converting users.a to sender and users.b to recipient
-    if sender == users.b {
-      oldValue.swap()
-      users.swap()
-    }
-    
-    if oldValue.a.lastRead != users.a.lastRead {
-      senderDidRead(user: users.a)
-      let unread = countUnreadMessages(for: users.a)
+  func updated(user: PrivateChatUser, oldValue: PrivateChatUser) {
+    guard oldValue.lastRead != user.lastRead else { return }
+    if user.id == senderId {
+      senderDidRead(user: user)
+      let unread = countUnreadMessages(for: user)
       unreadMessages(count: unread.count, message: unread.message)
+    } else {
+      recipientDidRead(user: user)
     }
-    if oldValue.b.lastRead != users.b.lastRead {
-      recipientDidRead(user: users.b)
-    }
+  }
+  func updated(users: Vector2<PrivateChatUser>) {
+    let oldValue = self.users
+    self.users = users
+    updated(user: users.a, oldValue: oldValue.a)
+    updated(user: users.b, oldValue: oldValue.b)
   }
   func read(at index: Int) {
     let index = min(header.itemsCount, index)
@@ -63,7 +58,7 @@ public extension ASPrivateChat {
     guard count > 0 else { return (count, nil) }
     guard let part = items.body.last else { return (count, nil) }
     var lastMessage: Indexed<Message>?
-    part.enumerate(from: max(0, sender.lastRead - part.index)) { i, message, stop in
+    part.enumerate(from: max(0, user.lastRead - part.index)) { i, message, stop in
       if !messageShouldCountAsUnread(message: message, for: user) {
         count -= 1
         lastMessage = message
