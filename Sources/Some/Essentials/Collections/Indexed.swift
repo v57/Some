@@ -42,8 +42,17 @@ public extension Int {
     Indexed(index: self, value: Array(value))
   }
 }
-extension Indexed where Value: Collection {
+extension Indexed where Value: Collection, Value.Index == Int {
   public var range: Range<Int> { index..<index+value.count }
+  public func enumerate(from: Int, _ body: (Int, Indexed<Value.Element>, inout Bool)->()) {
+    var stop = false
+    for (i, element) in value[from...].enumerated() {
+      body(i + from, Indexed<Value.Element>(index + i + from, element), &stop)
+      if stop {
+        return
+      }
+    }
+  }
   public func enumerate(_ body: (Int, Indexed<Value.Element>, inout Bool)->()) {
     var stop = false
     for (i, element) in value.enumerated() {
