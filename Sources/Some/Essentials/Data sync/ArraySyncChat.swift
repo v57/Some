@@ -22,6 +22,20 @@ public struct ArraySyncChatMessage<Content: ArraySyncChatMessageContent>: ArrayS
     self.content = content
   }
 }
+extension ArraySyncChatMessage: DataRepresentable where Content: DataRepresentable {
+  public init(data: DataReader) throws {
+    from = try data.next()
+    time = try data.next()
+    hash = try data.next()
+    content = try data.next()
+  }
+  public func save(data: DataWriter) {
+    data.append(from)
+    data.append(time)
+    data.append(hash)
+    data.append(content)
+  }
+}
 public protocol ArraySyncChat: ArraySyncQueuedClient where Item == ArraySyncChatMessage<Content> {
   associatedtype Content: ArraySyncChatMessageContent
   var senderId: Int { get }
@@ -49,3 +63,4 @@ public extension ArraySyncChat {
     return update(items: Indexed(message.index, [message.value]))
   }
 }
+
