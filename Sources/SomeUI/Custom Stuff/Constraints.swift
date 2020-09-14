@@ -455,6 +455,14 @@ public extension Constraints {
   @discardableResult func hw(_ c: C = Constraints.e) -> Self {
     return make(v.h, v.w, 0, c)
   }
+  /// Width equal to height
+  @discardableResult func weh(_ c: C = Constraints.e) -> Self {
+    return make(v.w, v.h, 0, c)
+  }
+  /// Height equal to width
+  @discardableResult func hew(_ c: C = Constraints.e) -> Self {
+    return make(v.h, v.w, 0, c)
+  }
   /// Size
   @discardableResult func s(_ size: CGSize) -> Self {
     return w(size.width).h(size.height)
