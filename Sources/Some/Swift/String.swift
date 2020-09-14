@@ -248,6 +248,18 @@ extension String {
   public func word(at lengthIndex: Int) -> String {
     (self as NSString).substring(with: wordRange(at: lengthIndex))
   }
+  public mutating func insert(_ string: String, every: Int) {
+    var currentIndex = startIndex
+    while let i = index(currentIndex, offsetBy: every, limitedBy: endIndex) {
+      currentIndex = index(i, offsetBy: string.count)
+      insert(contentsOf: string, at: i)
+    }
+  }
+  public func inserting(_ string: String, every: Int) -> Self {
+    var string = self
+    string.insert(string, every: every)
+    return string
+  }
   // public func wordRange(at position: Int, left: CharacterSet = .separators, right: CharacterSet = .separators) -> Range<String.Index> {
   //   let position = index(startIndex, offsetBy: position)
   //   var start = position
