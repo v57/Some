@@ -294,6 +294,7 @@ extension UIView {
     return self
   }
   func updateShadow() {
+    guard bounds.size != .zero else { return }
     layer.shadowPath = UIBezierPath(rect: bounds).cgPath
   }
   public func dropShadow(opacity: Float, offset: CGFloat, cornerRadius: CGFloat) {
