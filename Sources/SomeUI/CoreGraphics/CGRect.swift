@@ -66,10 +66,10 @@ extension CGRect {
   
   public var top: CGPoint {
     get {
-      return CGPoint(x+w*0.5,y)
+      return CGPoint(x-w*0.5,y)
     }
     set {
-      origin = CGPoint(newValue.x+w*0.5,newValue.y)
+      origin = CGPoint(newValue.x-w*0.5,newValue.y)
     }
   }
   public var topRight: CGPoint {
@@ -77,7 +77,7 @@ extension CGRect {
       return CGPoint(x+w,y)
     }
     set {
-      origin = CGPoint(x+w,y)
+      origin = CGPoint(x-w,y)
     }
   }
   public var right: CGPoint {
@@ -85,7 +85,7 @@ extension CGRect {
       return CGPoint(x+w,y+h*0.5)
     }
     set {
-      origin = CGPoint(newValue.x+w,newValue.y+h*0.5)
+      origin = CGPoint(newValue.x-w,newValue.y-h*0.5)
     }
   }
   public var bottomRight: CGPoint {
@@ -93,7 +93,7 @@ extension CGRect {
       return CGPoint(x+w,y+h)
     }
     set {
-      origin = CGPoint(newValue.x+w,newValue.y+h)
+      origin = CGPoint(newValue.x-w,newValue.y-h)
     }
   }
   public var bottom: CGPoint {
@@ -101,7 +101,7 @@ extension CGRect {
       return CGPoint(x+w*0.5,y+h)
     }
     set {
-      origin = CGPoint(newValue.x+w*0.5,newValue.y+h)
+      origin = CGPoint(newValue.x-w*0.5,newValue.y-h)
     }
   }
   public var bottomLeft: CGPoint {
@@ -109,7 +109,7 @@ extension CGRect {
       return CGPoint(x,y+h)
     }
     set {
-      origin = CGPoint(newValue.x,newValue.y+h)
+      origin = CGPoint(newValue.x,newValue.y-h)
     }
   }
   public var left: CGPoint {
@@ -117,7 +117,7 @@ extension CGRect {
       return CGPoint(x,y+h*0.5)
     }
     set {
-      origin = CGPoint(newValue.x,newValue.y+h*0.5)
+      origin = CGPoint(newValue.x,newValue.y-h*0.5)
     }
   }
   public var center: CGPoint {
