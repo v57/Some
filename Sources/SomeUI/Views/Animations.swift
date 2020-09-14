@@ -87,12 +87,25 @@ public class Animation {
 }
 
 public extension CALayer {
+  @discardableResult
   func animate(_ keyPath: String, to value: Any?) -> CABasicAnimation {
     let animation = CABasicAnimation(keyPath: keyPath)
     animation.fromValue = self.value(forKeyPath: keyPath)
     animation.toValue = value
     animation.timingFunction = .default
     animation.duration = atime
+    add(animation, forKey: keyPath)
+    setValue(value, forKeyPath: keyPath)
+    return animation
+  }
+  @discardableResult
+  func animate(_ keyPath: String, to value: Any?, edit: (CABasicAnimation)->()) -> CABasicAnimation {
+    let animation = CABasicAnimation(keyPath: keyPath)
+    animation.fromValue = self.value(forKeyPath: keyPath)
+    animation.toValue = value
+    animation.timingFunction = .default
+    animation.duration = atime
+    edit(animation)
     add(animation, forKey: keyPath)
     setValue(value, forKeyPath: keyPath)
     return animation
