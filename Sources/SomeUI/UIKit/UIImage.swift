@@ -10,6 +10,34 @@
 import UIKit
 import Some
 
+public extension URL {
+  func downloadImage() -> Future<UIImage?> {
+    URLSession.some.downloadImage(url: self)
+  }
+}
+public extension URLSession {
+  func downloadImage(url: URL) -> Future<UIImage?> {
+    let cache = URLSession.cache
+    var request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 30)
+    if let time = URLSession.cleared[url], time + 3 >= .now {
+      request.cachePolicy = .reloadIgnoringLocalCacheData
+      return self.send(request: request).map(UIImage.init)
+    } else {
+      if let data = cache.cachedResponse(for: request)?.data {
+        if let image = UIImage(data: data) {
+          return Future(value: image)
+        } else {
+          cache.removeCachedResponse(for: request)
+          request.cachePolicy = .reloadIgnoringLocalCacheData
+          return send(request: request).map(UIImage.init)
+        }
+      } else {
+        return send(request: request).map(UIImage.init)
+      }
+    }
+  }
+}
+
 extension CGImage {
   public var isPng: Bool {
     let alphaInfo = self.alphaInfo
