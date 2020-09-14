@@ -17,6 +17,7 @@ public extension ViewData {
   mutating func layoutSubviews<View: ViewDataProtocol>(_ view: View) {
     guard view.frame.size != size else { return }
     size = view.frame.size
+    view.sizeChanged()
   }
 }
 /**
