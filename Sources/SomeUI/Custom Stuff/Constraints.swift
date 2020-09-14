@@ -387,6 +387,10 @@ public extension Constraints {
   @discardableResult func c(_ c: C = Constraints.e) -> Self {
     return cx(0, c).cy(0, c)
   }
+  /// Center X to view's center x
+  @discardableResult func c(_ view: UIView, _ c: C = Constraints.e) -> Self {
+    return cx(view, c).cy(view, c)
+  }
   /// Top to superview safe area top with offset
   @discardableResult func st(_ o: CGFloat = 0, _ c: C = Constraints.e) -> Self {
     return make(v.t, s.sa.t, o, false, c)
