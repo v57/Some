@@ -77,7 +77,7 @@ public extension Data {
     return String(bytesNoCopy: stringPointer, length: stringSize, encoding: .utf8, freeWhenDone: true)!
   }
   var string: String {
-    return String(data: self, encoding: .utf8)!
+    return String(data: self, encoding: .utf8) ?? hex
   }
 }
 
