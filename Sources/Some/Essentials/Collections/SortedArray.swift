@@ -98,8 +98,20 @@ public extension SortedArray where Element: ComparsionValue {
       return nil
     }
   }
+  mutating func at(_ value: Element.ValueToCompare, default: ()->(Element)) -> Element {
+    if let index = index(of: value) {
+      return array[index]
+    } else {
+      let element = `default`()
+      insert(element)
+      return element
+    }
+  }
+  func contains(_ value: Element.ValueToCompare) -> Bool {
+    return at(value) != nil
+  }
   func index(of value: Element.ValueToCompare) -> Int? {
-    if let index = array.binarySearch(value, { $0._valueToCompare }) {
+    if let index = array.binarySearch(value, \._valueToCompare) {
       return index
     } else {
       return nil
