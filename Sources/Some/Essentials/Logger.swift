@@ -10,6 +10,7 @@ import Foundation
 
 #if os(macOS) || os(Linux)
 extension FileHandle: TextOutputStream {
+  public static var secondOutput: FileHandle?
   public func write(_ string: String) {
     write(string.data)
   }
@@ -19,15 +20,20 @@ public func _print(_ items: Any..., separator: String = " ", terminator: String 
   let output = items.map { "\($0)" }.joined(separator: separator)
   Swift.print(output, to: &out)
 }
+private let logFormat = DateFormatter().date(style: .none).time(style: .short)
+private let logFormat2 = DateFormatter().date(style: .short).time(style: .medium)
 public func print(_ items: Any..., separator: String = " ", terminator: String = "\n") {
   var out = FileHandle.standardOutput
   let output = items.map { "\($0)" }.joined(separator: separator)
-  Swift.print(output, to: &out)
+  Swift.print("[\(logFormat.string(from: Date()))] " + output, to: &out)
+  if var secondOutput = FileHandle.secondOutput {
+    Swift.print("[\(logFormat2.string(from: Date()))] " + output, to: &secondOutput)
+  }
 }
 #else
 public func _print(_ items: Any..., separator: String = " ", terminator: String = "\n") {
   let output = items.map { "\($0)" }.joined(separator: separator)
-  Swift.print(output)
+  Swift.print(Time.log, output, terminator: terminator)
 }
 #endif
 
@@ -108,7 +114,7 @@ public struct LogContainer: CustomStringConvertible {
     guard !isPrivate else { return }
     #endif
     if isEnabled {
-      print(message)
+      _print(message)
     }
   }
   public var description: String {
