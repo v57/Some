@@ -47,7 +47,7 @@ public extension Versionable {
     return Some.className(Self.self)
   }
 }
-public struct Version: ExpressibleByIntegerLiteral, Comparable, CustomStringConvertible {
+public struct Version: ExpressibleByIntegerLiteral, CustomStringConvertible {
   public let current: Int
   public var loaded: Int = 0
   public init(integerLiteral value: Int) {
@@ -64,6 +64,15 @@ public struct Version: ExpressibleByIntegerLiteral, Comparable, CustomStringConv
   }
   public static func <(l: Version, r: Version) -> Bool {
     l.loaded < r.current
+  }
+  public static func >(l: Version, r: Version) -> Bool {
+    l.loaded > r.current
+  }
+  public static func >=(l: Version, r: Version) -> Bool {
+    l.loaded >= r.current
+  }
+  public static func <=(l: Version, r: Version) -> Bool {
+    l.loaded <= r.current
   }
   public var description: String {
     "current: \(current) loaded: \(loaded)"
