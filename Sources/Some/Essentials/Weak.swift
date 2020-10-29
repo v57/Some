@@ -59,14 +59,10 @@ public class WeakArray<T: AnyObject> {
   }
   public func forEach<U>(as type: U.Type, _ action: (U)->()) {
     // increased code to reduce stack size for pipes
-    content = content.filter {
-      if let value = $0.value {
-        if let value = value as? U {
-          action(value)
-        }
-        return true
-      } else {
-        return false
+    update()
+    content.forEach {
+      if let value = $0.value as? U {
+        action(value)
       }
     }
   }
