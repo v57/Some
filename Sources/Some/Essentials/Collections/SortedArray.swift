@@ -43,6 +43,9 @@ public extension SortedArray {
   func index(of element: Element) -> Int? {
     self.array.binarySearch(element)
   }
+  @inlinable func filter(_ isIncluded: (Self.Element) throws -> Bool) rethrows -> Self {
+    try SortedArray(sorted: array.filter(isIncluded))
+  }
   @discardableResult
   mutating func insert(_ element: Element) -> Int {
     self.array.binaryInsert(element)
