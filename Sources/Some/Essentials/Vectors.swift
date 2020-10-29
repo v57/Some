@@ -48,6 +48,15 @@ extension Vector2: Comparable where T: Comparable {
     lhs.a < rhs.a || (lhs.a == rhs.a && lhs.b < rhs.b)
   }
 }
+extension Vector2: DataRepresentable where T: DataRepresentable {
+  public init(data: DataReader) throws {
+    try self.init(data.next(), data.next())
+  }
+  public func save(data: DataWriter) {
+    data.append(a)
+    data.append(b)
+  }
+}
 
 public extension Vector2 where T: Equatable {
   func opposite(of value: T) -> T {
