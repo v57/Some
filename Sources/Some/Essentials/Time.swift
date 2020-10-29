@@ -297,3 +297,47 @@ public extension DispatchTime {
   }
 }
 
+public extension Time {
+  static var mcs: Time {
+    var tv = timeval()
+    gettimeofday(&tv, nil)
+    return Time(tv.tv_sec) * 1_000_000 + Time(tv.tv_usec)
+  }
+}
+public struct Microseconds: RawRepresentable, Hashable, Comparable {
+  public typealias RawValue = Int
+  public var rawValue: Int
+  public init(_ rawValue: Int) {
+    self.rawValue = rawValue
+  }
+  public init(rawValue: Int) {
+    self.rawValue = rawValue
+  }
+  public static var now: Self { Microseconds(.mcs) }
+  public static func mcs(_ mcs: Int) -> Self {
+    Microseconds(mcs)
+  }
+  public static func ms(_ ms: Int) -> Self {
+    Microseconds(ms * 1000)
+  }
+  public static func s(_ sec: Int) -> Self {
+    Microseconds(sec * 1_000_000)
+  }
+  public static func m(_ min: Int) -> Self {
+    s(60)
+  }
+  public static func h(_ min: Int) -> Self {
+    m(60)
+  }
+  public static func d(_ day: Int) -> Self {
+    h(24)
+  }
+  public static func -(l: Self, r: Self) -> Self { Self(l.rawValue - r.rawValue) }
+  public static func /(l: Self, r: Self) -> Self { Self(l.rawValue / r.rawValue) }
+  public static func /(l: Self, r: Int) -> Self { Self(l.rawValue / r) }
+  public static func == (l: Self, r: Self) -> Bool { l.rawValue == r.rawValue }
+  public static func < (l: Self, r: Self) -> Bool { l.rawValue < r.rawValue }
+  public static func <= (l: Self, r: Self) -> Bool { l.rawValue <= r.rawValue }
+  public static func >= (l: Self, r: Self) -> Bool { l.rawValue >= r.rawValue }
+  public static func > (l: Self, r: Self) -> Bool { l.rawValue > r.rawValue }
+}
