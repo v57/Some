@@ -64,6 +64,7 @@ public struct TimeMeasure: CustomStringConvertible {
 }
 
 public extension Time {
+  static let startup = Time.mcs
   var future: Time { self - .now }
   var past: Time { .now - self }
   func pad(_ length: Int) -> String {
