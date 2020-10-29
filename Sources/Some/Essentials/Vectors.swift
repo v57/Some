@@ -43,6 +43,11 @@ public struct Vector2<T> {
 }
 extension Vector2: Equatable where T: Equatable { }
 extension Vector2: Hashable where T: Hashable { }
+extension Vector2: Comparable where T: Comparable {
+  public static func <(lhs: Self, rhs: Self) -> Bool {
+    lhs.a < rhs.a || (lhs.a == rhs.a && lhs.b < rhs.b)
+  }
+}
 
 public extension Vector2 where T: Equatable {
   func opposite(of value: T) -> T {
