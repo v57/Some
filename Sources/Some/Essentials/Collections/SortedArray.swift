@@ -69,6 +69,16 @@ public extension SortedArray {
   mutating func removeAll() {
     self.array.removeAll()
   }
+  func select(_ range: Range<Element>) -> Range<Int> {
+    let start = array.binaryClosest(range.lowerBound)
+    let end = array.binaryClosest(range.upperBound)
+    return start..<end
+  }
+  func select(_ range: ClosedRange<Element>) -> ClosedRange<Int> {
+    let start = array.binaryClosest(range.lowerBound)
+    let end = array.binaryClosest(range.upperBound)
+    return start...end
+  }
 }
 extension SortedArray: Hashable where Element: Hashable {}
 public extension SortedArray where Element: ComparsionValue {
@@ -104,6 +114,46 @@ public extension SortedArray where Element: ComparsionValue {
     } else {
       return nil
     }
+  }
+  
+  // MARK:- Range functions
+  func select(_ range: Range<Element.ValueToCompare>) -> Range<Int> {
+    let start = array.binaryClosest(range.lowerBound, \._valueToCompare)
+    let end = array.binaryClosest(range.upperBound, \._valueToCompare)
+    return start..<end
+  }
+  @discardableResult
+  mutating func remove(_ range: Range<Element.ValueToCompare>) -> [Element] {
+    let range = select(range)
+    let elements = Array(array[range])
+    array.removeSubrange(range)
+    return elements
+  }
+  func contains(in range: Range<Element.ValueToCompare>) -> Bool {
+    return !select(range).isEmpty
+  }
+  subscript(_ range: Range<Element.ValueToCompare>) -> ArraySlice<Element> {
+    array[select(range)]
+  }
+  
+  // MARK:- Closed range functions
+  func select(_ range: ClosedRange<Element.ValueToCompare>) -> ClosedRange<Int> {
+    let start = array.binaryClosest(range.lowerBound, \._valueToCompare)
+    let end = array.binaryClosest(range.upperBound, \._valueToCompare)
+    return start...end
+  }
+  @discardableResult
+  mutating func remove(_ range: ClosedRange<Element.ValueToCompare>) -> [Element] {
+    let range = select(range)
+    let elements = Array(array[range])
+    array.removeSubrange(range)
+    return elements
+  }
+  func contains(in range: ClosedRange<Element.ValueToCompare>) -> Bool {
+    return !select(range).isEmpty
+  }
+  subscript(_ range: ClosedRange<Element.ValueToCompare>) -> ArraySlice<Element> {
+    array[select(range)]
   }
 }
 extension SortedArray: DataRepresentable where Element: DataRepresentable {
