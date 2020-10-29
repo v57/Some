@@ -35,18 +35,20 @@ public struct SortedArray<Element: Comparable>: EasierCollection, Equatable {
   public init() {
     self.array = []
   }
-  public func contains(_ element: Element) -> Bool {
+}
+public extension SortedArray {
+  func contains(_ element: Element) -> Bool {
     index(of: element) != nil
   }
-  public func index(of element: Element) -> Int? {
+  func index(of element: Element) -> Int? {
     self.array.binarySearch(element)
   }
   @discardableResult
-  public mutating func insert(_ element: Element) -> Int {
+  mutating func insert(_ element: Element) -> Int {
     self.array.binaryInsert(element)
   }
   @discardableResult
-  public mutating func remove(_ element: Element) -> Int? {
+  mutating func remove(_ element: Element) -> Indexed<Element>? {
     if let index = index(of: element) {
       self.array.remove(at: index)
       return index
@@ -54,13 +56,13 @@ public struct SortedArray<Element: Comparable>: EasierCollection, Equatable {
       return nil
     }
   }
-  public mutating func merge(to array: SortedArray) -> (added: [Element], removed: [Element]) {
+  mutating func merge(to array: SortedArray) -> (added: [Element], removed: [Element]) {
     let added = array.array.filter { self.array.binarySearch($0) == nil }
     let removed = self.array.filter { !array.contains($0) }
     self = array
     return (added,removed)
   }
-  public mutating func removeAll() {
+  mutating func removeAll() {
     self.array.removeAll()
   }
 }
