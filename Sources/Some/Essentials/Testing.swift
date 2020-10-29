@@ -99,9 +99,10 @@ public extension SomeTest {
 }
 
 // MARK: MacOS
-#if os(macOS)
+#if !os(iOS)
 public extension Process {
   static var memoryUsage: Int {
+    #if os(macOS)
     var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
     let rev1Count = mach_msg_type_number_t(MemoryLayout.offset(of: \task_vm_info_data_t.min_address)! / MemoryLayout<integer_t>.size)
     var info = task_vm_info_data_t()
@@ -113,8 +114,13 @@ public extension Process {
     guard kr == KERN_SUCCESS, count >= rev1Count
       else { return 0 }
     return Int(info.phys_footprint)
+    #else
+    return 0
+    #endif
   }
 }
+#endif
+#if os(macOS)
 extension SomeTest {
   static func memoryUsage(_ execute: (()->())->()) {
     let memory = Process.memoryUsage
