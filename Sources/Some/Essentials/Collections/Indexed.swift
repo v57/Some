@@ -23,6 +23,9 @@ public extension Indexed {
   func map<U>(_ transform: (Value)->(U)) -> Indexed<U> {
     Indexed<U>(index, transform(value))
   }
+  func singleItemArray() -> Indexed<[Value]> {
+    Indexed<[Value]>(index, [value])
+  }
 }
 extension Indexed: ComparsionValue {
   public var _valueToCompare: Int { index }
