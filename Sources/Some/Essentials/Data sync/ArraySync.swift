@@ -83,8 +83,8 @@ public extension ArraySyncClient {
   func add(item: Item) -> P<Error?> {
     add(items: [item])
   }
-  func update(item: Item, at index: Int) -> P<Error?> {
-    update(items: Indexed(index: index, value: [item]))
+  func update(item: Indexed<Item>) -> P<Error?> {
+    update(items: item.singleItemArray())
   }
 }
 
@@ -100,7 +100,7 @@ public extension ArraySyncClient {
     self.update(header: response.header, reset: response.shouldReset)
     self._added(items: response.data)
     response.updates.forEach {
-      self._updated(data: Indexed($0.index, [$0.value]))
+      self._updated(data: $0.singleItemArray())
     }
   }
   func loadPrevious() -> P<Indexed<[Item]>> {
