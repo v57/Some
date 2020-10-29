@@ -45,8 +45,9 @@ public struct Bools: RawRepresentable {
     }
   }
 }
-extension Bool {
-  public static func |=(l: inout Bool, r: Bool) {
+public extension Bool {
+  static func |=(l: inout Bool, r: Bool) {
     l = l || r
   }
+  var int: Int { self ? 1 : 0 }
 }
