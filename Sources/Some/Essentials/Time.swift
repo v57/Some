@@ -31,13 +31,13 @@ public extension DateFormatter {
 }
 
 public func measure(_ text: String, _ code: ()throws->()) {
-  let start = Time.abs
+  let start = Time.mcs
   do {
     try code()
-    let end = Time.abs
-    print("\(text) \(NSString(format: "%.3f", end-start)) seconds")
+    let end = Time.mcs
+    _print("\(text) \((end-start).string(unitDecimals: 6, decimals: 6))")
   } catch {
-    print("\(text) error: \(error)")
+    _print("\(text) error: \(error)")
   }
 }
 
