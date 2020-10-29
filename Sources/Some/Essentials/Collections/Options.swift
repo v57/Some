@@ -218,7 +218,7 @@ where Enum: RawRepresentable, RawValue: BinaryInteger, Enum.RawValue == UInt8 {
   public mutating func remove(_ value: Enum) {
     rawValue[value.rawValue] = false
   }
-  public mutating func remove(_ value: Options) {
+  public mutating func remove(set value: Options) {
     rawValue &= ~value.rawValue
   }
 }
