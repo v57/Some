@@ -1,218 +1,293 @@
 //
 //  Statistics.swift
-//  
+//  StatisticsTest
 //
-//  Created by Dmitry Kozlov on 4/6/20.
+//  Created by Dmitry Kozlov on 28/10/2020.
 //
 
 import Foundation
 
-// MARK:- StatisticsTabs
-public struct StatisticsTabs {
-  public var levels: [StatisticsTab<LimitedArray<Int>>]
-  public var unlimitedTab: StatisticsTab<[Int]>?
-  public init(levels: [StatisticsTab<LimitedArray<Int>>]) {
-    self.levels = levels
-  }
-  public init() {
-    self.levels = []
-  }
-  public mutating func addTab(size: Int, time: Time) {
-    levels.append(StatisticsTab(data: LimitedArray<Int>(count: size), interval: time / Time(size), buffer: AverageValue(), bufferTime: 0))
-  }
-  public mutating func addAll() {
-    unlimitedTab = StatisticsTab(data: [], interval: Time.minute.mcs, buffer: AverageValue(), bufferTime: 0)
-  }
-  @discardableResult
-  public mutating func add(_ value: Int) -> ([Int], Bool) {
-    add(value, .mcs)
-  }
-  @discardableResult
-  public mutating func add(_ value: Int, _ time: Time) -> ([Int], Bool) {
-    var updated = [Int]()
-    for i in 0..<levels.count {
-      if levels[i].add(value, time) != nil {
-        updated.append(i)
+public enum Statistics {
+  public class Manager {
+    public var items = [String: Items]()
+    let queue = OperationQueue()
+    public init() {
+      queue.maxConcurrentOperationCount = 1
+    }
+    // thread safe
+    public func add(value: Int, name: String) {
+      let time = Microseconds.now
+      queue.addOperation {
+        self.addSync(value: value, name: name, time: time)
       }
     }
-    let unlimitedUpdated = unlimitedTab?.add(value, time) != nil
-    return (updated, unlimitedUpdated)
-  }
-}
-
-// MARK:- Protocols
-public protocol StatisticsData: Collection {
-  associatedtype Element
-  mutating func append(_ newElement: Element)
-}
-extension LimitedArray: StatisticsData {}
-extension Array: StatisticsData {}
-public protocol StatisticsBuffer {
-  mutating func bufferAdd(_ value: Int)
-  func bufferGet() -> Int
-  mutating func bufferReset(to value: Int)
-}
-extension AverageValue: StatisticsBuffer where T == Int {
-  public mutating func bufferAdd(_ value: Int) {
-    add(value)
-  }
-  public func bufferGet() -> Int {
-    get()
-  }
-  public mutating func bufferReset(to value: Int) {
-    reset(to: value)
-  }
-}
-extension Highest: StatisticsBuffer where T == Int {
-  public mutating func bufferAdd(_ value: Int) {
-    insert(value)
-  }
-  public func bufferGet() -> Int {
-    value
-  }
-  public mutating func bufferReset(to value: Int) {
-    self.value = value
-  }
-}
-extension Lowest: StatisticsBuffer where T == Int {
-  public mutating func bufferAdd(_ value: Int) {
-    insert(value)
-  }
-  public func bufferGet() -> Int {
-    value
-  }
-  public mutating func bufferReset(to value: Int) {
-    self.value = value
-  }
-}
-
-// MARK:- StatisticsTab
-public struct StatisticsTab<C: StatisticsData> where C.Element == Int {
-  public var buffer: StatisticsBuffer
-  public var bufferTime: Time
-  
-  public var data: C
-  public let interval: Time
-  
-  public init(data: C, interval: Time, buffer: StatisticsBuffer, bufferTime: Time) {
-    self.buffer = buffer
-    self.bufferTime = bufferTime
-    self.data = data
-    self.interval = interval
-  }
-  
-  @discardableResult
-  public mutating func add(_ value: Int, _ time: Time) -> Int? {
-    assert(time > bufferTime)
-    if time - bufferTime >= interval {
-      let bufferResult = buffer.bufferGet()
-      data.append(bufferResult)
-      buffer.bufferReset(to: value)
-      return value
-    } else {
-      buffer.bufferAdd(value)
-      return nil
+    // called in self.queue
+    public func addSync(value: Int, name: String, time: Microseconds) {
+      if var statistics = items[name] {
+        statistics.add(value: value, time: time, manager: self)
+        items[name] = statistics
+      } else {
+        print("[statistics] unknown statistics with name '\(name)'. Creating a new one with type .total for every day")
+      }
+    }
+    // called in self.queue
+    open func added(value: Int, transaction: Transaction?, path: Path) {
+      
+    }
+    
+    // setup
+    public func add(name: String, type: Accumulator, intervals: Interval..., from: Microseconds) {
+      if items[name] == nil {
+        items[name] = Items(name: name, items: intervals.map { $0.item(start: .now, accumulator: type) })
+      }
     }
   }
-}
-
-// MARK:- LimitedArray
-public struct LimitedArray<Element> {
-  public let limit: Int
-  public var position = 0
-  public var array: [Element]
-  public init(count: Int) {
-    self.limit = count
-    array = Array()
-    array.reserveCapacity(count)
-  }
-  public mutating func append(_ element: Element) {
-    if array.count < limit {
-      array.append(element)
-      position += 1
-    } else {
-      add(position: 1)
-      array[position] = element
+  // MARK:- Interval
+  public enum Interval {
+    case minute
+    case hour
+    case day
+    case week
+    case lastMinute
+    case lastHour
+    case lastDay
+    case lastWeekByDays
+    case lastMonthByDays
+    case lastYearByDays
+    case custom(Int, Microseconds)
+    public func item(start: Microseconds, accumulator: Accumulator) -> Item {
+      switch self {
+      case .minute:
+        return Item(accumulator: accumulator, storage: .size(0), start: start, interval: .s(1))
+      case .hour:
+        return Item(accumulator: accumulator, storage: .size(0), start: start, interval: .m(1))
+      case .day:
+        return Item(accumulator: accumulator, storage: .size(0), start: start, interval: .h(1))
+      case .week:
+        return Item(accumulator: accumulator, storage: .size(0), start: start, interval: .d(1))
+      case .lastMinute:
+        return Item(accumulator: accumulator, storage: .size(60), start: start, interval: .s(1))
+      case .lastHour:
+        return Item(accumulator: accumulator, storage: .size(60), start: start, interval: .m(1))
+      case .lastDay:
+        return Item(accumulator: accumulator, storage: .size(24), start: start, interval: .h(1))
+      case .lastWeekByDays:
+        return Item(accumulator: accumulator, storage: .size(7), start: start, interval: .d(1))
+      case .lastMonthByDays:
+        return Item(accumulator: accumulator, storage: .size(30), start: start, interval: .d(1))
+      case .lastYearByDays:
+        return Item(accumulator: accumulator, storage: .size(365), start: start, interval: .d(1))
+      case let .custom(size, interval):
+        return Item(accumulator: accumulator, storage: .size(size), start: start, interval: interval)
+      }
     }
   }
-  public mutating func add(position: Int) {
-    self.position = (self.position + position) % limit
+  // MARK:- Items
+  public struct Items {
+    public var name: String
+    public var items: [Item]
+    public mutating func add(value: Int, time: Microseconds, manager: Manager) {
+      for i in 0..<items.count {
+        let transaction = items[i].add(value: value, time: time)
+        manager.added(value: value, transaction: transaction, path: .init(name: name, index: i))
+      }
+    }
   }
-  public func convert(_ position: Int) -> Int {
-    (self.position + position) % limit
+  // MARK:- Item
+  public struct Item {
+    public var accumulator: Accumulator
+    public var current: Int
+    public var storage: Storage
+    
+    public var start: Microseconds
+    public var interval: Microseconds
+    public init(accumulator: Accumulator, storage: Storage, start: Microseconds, interval: Microseconds) {
+      self.accumulator = accumulator
+      self.storage = storage
+      self.start = start
+      self.interval = interval
+      self.current = 0
+    }
+    
+    
+    public mutating func add(value: Int, time: Microseconds) -> Transaction? {
+      defer { accumulator.add(value) }
+      let i = ((time - start) / interval).rawValue
+      print(i, current, time - start, interval)
+      if i != current, let value = accumulator.value {
+        let transaction = Transaction(value: value, index: current)
+        accumulator.reset()
+        current = i
+        storage.append(transaction)
+        return transaction
+      } else {
+        return nil
+      }
+    }
   }
-}
-extension LimitedArray: ArrayMap {
-  public var startIndex: Int { 0 }
-  public var endIndex: Int { array.count }
-  public init() {
-    limit = 0
-    array = []
+  public struct Path {
+    public var name: String
+    public var index: Int
   }
-  public subscript(position: Int) -> Element {
-    get { array[convert(position)] }
-    set { array[convert(position)] = newValue }
+  public struct Transaction {
+    public var value: Int
+    public var index: Int
   }
-  // Todo: scroll array
-  public subscript(bounds: Range<Int>) -> [Element] {
-    get { Array(array[bounds]) }
-    set { array[bounds] = ArraySlice(newValue) }
+  
+  // MARK:- Accumulators
+  public enum AccumulatorType {
+    case max, min, total, average
+    public var make: Accumulator {
+      switch self {
+      case .max: return .max(nil)
+      case .min: return .min(nil)
+      case .total: return .total(nil)
+      case .average: return .average(0,0)
+      }
+    }
   }
-}
-
-extension Array where Element: BinaryInteger {
-  var average: Element {
-    count > 0 ? reduce(0, +) / Element(count) : 0
+  public enum Accumulator {
+    case max(Int?), min(Int?), total(Int?), average(Int, Int)
+    
+    public mutating func reset() {
+      switch self {
+      case .max: self = .max(nil)
+      case .min: self = .min(nil)
+      case .total: self = .total(nil)
+      case .average: self = .average(0,0)
+      }
+    }
+    public var value: Int? {
+      switch self {
+      case let .max(c), let .min(c), let .total(c):
+        return c
+      case let .average(c, count):
+        return count == 0 ? nil : c / count
+      }
+    }
+    public mutating func add(_ value: Int) {
+      switch self {
+      case let .max(c):
+        if let c = c {
+          if value > c {
+            self = .max(c)
+          }
+        } else {
+          self = .max(c)
+        }
+      case let .min(c):
+        if let c = c {
+          if value < c {
+            self = .min(c)
+          }
+        } else {
+          self = .min(c)
+        }
+      case let .total(c):
+        self = .total((c ?? 0) + value)
+      case let .average(c, count):
+        self = .average(c+value, count+1)
+      }
+    }
   }
-}
-
-
-// MARK:- Array map
-public protocol ArrayMap: CustomDebugStringConvertible, CustomReflectable, CustomStringConvertible, MutableCollection, RandomAccessCollection, RangeReplaceableCollection where Indices == Range<Int> {
-  var array: [Element] { get set }
-  var startIndex: Int { get }
-  var endIndex: Int { get }
-  init()
-  // subscript(position: Int) -> Element { get set }
-  // subscript(bounds: Range<Int>) -> SubSequence { get set }
-}
-extension ArrayMap {
-  // CustomDebugStringConvertible
-  public var debugDescription: String { array.debugDescription }
-  // CustomReflectable
-  public var customMirror: Mirror { array.customMirror }
-  // CustomStringConvertible
-  public var description: String { array.description }
-  // ExpressibleByArrayLiteral (not conforms to it)
-  public typealias ArrayLiteralElement = Element
-  // RangeReplaceableCollection
-  public mutating func replaceSubrange<C>(_ subrange: Range<Int>, with newElements: __owned C) where C : Collection, Self.Element == C.Element {
-    array.replaceSubrange(subrange, with: newElements)
-  }
-  public subscript(range: ClosedRange<Int>) -> SubSequence {
-    self[range.lowerBound..<range.upperBound+1]
-  }
-  public subscript(range: PartialRangeFrom<Int>) -> SubSequence {
-    self[range.lowerBound..<endIndex]
-  }
-  public subscript(range: PartialRangeUpTo<Int>) -> SubSequence {
-    self[startIndex..<range.upperBound]
-  }
-  public subscript(range: PartialRangeThrough<Int>) -> SubSequence {
-    self[startIndex..<range.upperBound+1]
-  }
-  @available (*, deprecated, message: "Use Range<Int>. Other range expressions will crash for some reason")
-  @inlinable public subscript<R>(r: R) -> Self.SubSequence where R : RangeExpression, Self.Index == R.Bound {
-    fatalError()
-  }
-}
-
-public extension Time {
-  var fromMcs: Time { self / 1_000_000 }
-  var mcs: Time { self * 1_000_000 }
-  static var mcs: Time {
-    var tv = timeval()
-    gettimeofday(&tv, nil)
-    return Time(tv.tv_sec) * 1_000_000 + Time(tv.tv_usec)
+  
+  // MARK:- Storage
+  public enum Storage: ArrayMap {
+    public static func size(_ size: Int) -> Self {
+      if size == 0 {
+        return .unlimited([])
+      } else {
+        return .limited(.init(count: size))
+      }
+    }
+    
+    case unlimited([Transaction])
+    case limited(LimitedArray<Transaction>)
+    
+    public typealias Element = Transaction
+    
+    public init() {
+      self = .unlimited([])
+    }
+    public func at(_ index: Int) -> Element? {
+      guard index >= 0 && index < count else { return nil }
+      return self[index]
+    }
+    public mutating func append(_ newElement: Statistics.Transaction) {
+      switch self {
+      case .limited(var a):
+        a.append(newElement)
+        self = .limited(a)
+      case .unlimited(var a):
+        a.append(newElement)
+        self = .unlimited(a)
+      }
+    }
+    public var array: [Statistics.Transaction] {
+      get {
+        switch self {
+        case .limited(let a): return a.array
+        case .unlimited(let a): return a
+        }
+      } set {
+        switch self {
+        case .limited(var a):
+          a.array = newValue
+          self = .limited(a)
+        case .unlimited:
+          self = .unlimited(newValue)
+        }
+      }
+    }
+    
+    public var startIndex: Int {
+      switch self {
+      case .limited(let a): return a.startIndex
+      case .unlimited(let a): return a.startIndex
+      }
+    }
+    public var endIndex: Int {
+      switch self {
+      case .limited(let a): return a.endIndex
+      case .unlimited(let a): return a.endIndex
+      }
+    }
+    public subscript(position: Int) -> Element {
+      get {
+        switch self {
+        case .limited(let a): return a[position]
+        case .unlimited(let a): return a[position]
+        }
+      }
+      set {
+        switch self {
+        case .limited(var a):
+          a[position] = newValue
+          self = .limited(a)
+        case .unlimited(var a):
+          a[position] = newValue
+          self = .unlimited(a)
+        }
+      }
+    }
+    // Todo: scroll array
+    public subscript(bounds: Range<Int>) -> [Element] {
+      get {
+        switch self {
+        case .limited(let a): return a[bounds]
+        case .unlimited(let a): return Array(a[bounds])
+        }
+      }
+      set {
+        switch self {
+        case .limited(var a):
+          a[bounds] = newValue
+          self = .limited(a)
+        case .unlimited(var a):
+          a.replaceSubrange(bounds, with: newValue)
+          self = .unlimited(a)
+        }
+      }
+    }
   }
 }
