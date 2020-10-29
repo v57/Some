@@ -53,8 +53,9 @@ public extension SortedArray {
   @discardableResult
   mutating func remove(_ element: Element) -> Indexed<Element>? {
     if let index = index(of: element) {
-      self.array.remove(at: index)
-      return index
+      let element = self.array[index]
+      array.remove(at: index)
+      return Indexed(index, element)
     } else {
       return nil
     }
@@ -95,10 +96,11 @@ public extension SortedArray where Element: ComparsionValue {
     }
   }
   @discardableResult
-  mutating func remove(_ value: Element.ValueToCompare) -> Int? {
+  mutating func remove(_ value: Element.ValueToCompare) -> Indexed<Element>? {
     if let index = index(of: value) {
+      let element = array[index]
       array.remove(at: index)
-      return index
+      return index.indexed(element)
     } else {
       return nil
     }
