@@ -138,9 +138,9 @@ open class SomeCeo {
   
   public private(set) var managers = [Manager]()
   var versions = [String: Int]()
-  public var isLoaded = false
-  public var isPaused = false
-  public var isLoginned = false
+  @V public var isLoaded = false
+  @V public var isPaused = false
+  @V public var isLoginned = false
   var saveableManagers: Int = 0
   public var version: Int = 0
   public var dataPrefix: Data?
