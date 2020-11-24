@@ -62,9 +62,12 @@ public class DataWriter: DataRepresentable {
   public func append<T: DataEncodableVersionable & Versionable>(_ value: T, _ version: DataVersion) {
     value.save(data: self, version: version.version(for: T.self))
   }
-  public func append(_ value: DataEncodableVersionable?, version: Int) {
-    append(value != nil)
-    value?.save(data: self, version: version)
+  public func append<C>(_ value: C, _ version: DataVersion) where C: Collection, C.Element: DataEncodableVersionable & Versionable {
+    let version = version.version(for: C.Element.self)
+    append(value.count)
+    value.forEach {
+      $0.save(data: self, version: version)
+    }
   }
   public func append<T: DataEncodableVersionable & Versionable>(_ value: T?, _ version: DataVersion) {
     append(value != nil)
