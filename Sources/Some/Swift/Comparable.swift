@@ -74,3 +74,12 @@ public extension TwoValueEquatable {
     lhs.a == rhs.a && lhs.b == rhs.b
   }
 }
+public protocol TwoValueComparable: TwoValueEquatable, Comparable where A: Comparable, B: Comparable {
+  
+}
+public extension TwoValueComparable {
+  static func <(lhs: Self, rhs: Self) -> Bool {
+    lhs.a < rhs.a || (lhs.a == rhs.a && lhs.b < rhs.b)
+  }
+}
+
