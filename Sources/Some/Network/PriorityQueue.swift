@@ -135,7 +135,7 @@ public class StreamPriorityQueue: Queue {
     for operation in operations {
       if let binary = operation as? DataRepresentable {
         binary.save(data: data)
-        operation._print("save()")
+        operation.fullPrint("save()")
       }
     }
     if data.isEmpty {
@@ -156,7 +156,7 @@ public class StreamPriorityQueue: Queue {
       thread.async {
         for operation in operations {
           self.operations.insert(operation)
-          operation._print("load()")
+          operation.fullPrint("load()")
         }
         for _ in 0..<self.concurrent {
           self.nextOperation()

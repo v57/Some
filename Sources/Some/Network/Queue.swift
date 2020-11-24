@@ -23,7 +23,7 @@ extension Time {
 
 private func print(_ item: String) {
   guard SomeSettings.stream.debugQueue else { return }
-  Swift.print(item)
+  _print(item)
 }
 
 public class StreamQueue: Queue {
@@ -116,7 +116,7 @@ public class StreamQueue: Queue {
         isRunning = true
         print("\(name).running()")
         operation.completed = self.completed
-        operation._print("run()",name)
+        operation.fullPrint("run()",name)
         operation.run()
         return
       }
@@ -190,7 +190,7 @@ public class StreamQueue: Queue {
     for operation in operations {
       if let binary = operation as? DataRepresentable {
         binary.save(data: data)
-        operation._print("save()")
+        operation.fullPrint("save()")
       }
     }
     data.encrypt(password: 0xe26f1a8a31b7089e)
@@ -207,7 +207,7 @@ public class StreamQueue: Queue {
       thread.async {
         for operation in operations {
           self.operations.append(operation)
-          operation._print("load()")
+          operation.fullPrint("load()")
         }
         self.nextOperation()
       }

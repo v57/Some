@@ -106,7 +106,7 @@ open class StreamOperations: StreamOperation {
           }
         }
         running(operation: operation)
-        operation._print("run()")
+        operation.fullPrint("run()")
         operation.run()
         return
       }
@@ -120,9 +120,9 @@ open class StreamOperations: StreamOperation {
     //        operation.print("success()")
     case .failed(error: let error):
       failed(operation: operation, error: error)
-      operation._print("failed(error: \(ename(error))")
+      operation.fullPrint("failed(error: \(ename(error))")
     case .lostConnection:
-      operation._print("lostConnection()")
+      operation.fullPrint("lostConnection()")
     }
     isRunning = false
     switch action {

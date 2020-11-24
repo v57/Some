@@ -280,7 +280,7 @@ extension OutputStream {
   func write(data: Data, id: Int) -> Int {
     var c = _write(data: data)
     if SomeSettings.stream.debugStream {
-      Swift.print("stream \(id): sended \(c)/\(data.count) bytes")
+      _print("stream \(id): sended \(c)/\(data.count) bytes")
     }
     guard c > 0 else { return c }
     while c < data.count {
@@ -289,7 +289,7 @@ extension OutputStream {
       guard s > 0 else { return s }
       c += s
       if SomeSettings.stream.debugStream {
-        Swift.print("stream \(id): sended \(c)/\(data.count) bytes")
+        _print("stream \(id): sended \(c)/\(data.count) bytes")
       }
     }
     return c

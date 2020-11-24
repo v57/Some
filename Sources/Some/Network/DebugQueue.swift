@@ -61,7 +61,7 @@ struct CompletedOperation {
 }
 
 extension StreamOperation {
-  func _print(_ string: String, _ prefix: String = "") {
+  func fullPrint(_ string: String, _ prefix: String = "") {
     guard SomeSettings.stream.debugOperations else { return }
     var path = ""
     for parent in parents {
