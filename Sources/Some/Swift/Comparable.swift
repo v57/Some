@@ -61,3 +61,16 @@ extension ComparableValue {
     return lhs.comparableValue > rhs.comparableValue
   }
 }
+
+
+public protocol TwoValueEquatable : Equatable {
+  associatedtype A: Equatable
+  associatedtype B: Equatable
+  var a: A { get }
+  var b: B { get }
+}
+public extension TwoValueEquatable {
+  static func ==(lhs: Self, rhs: Self) -> Bool {
+    lhs.a == rhs.a && lhs.b == rhs.b
+  }
+}
