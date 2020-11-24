@@ -203,10 +203,13 @@ public extension Array where Element: Comparable {
     return firstIndex(where: { i < $0 }) ?? count-1
   }
   @discardableResult
-  mutating func binaryInsert(_ element: Element, ignoreIfExists: Bool = true) -> Index {
+  mutating func binaryInsert(_ element: Element, ignoreIfExists: Bool = true, replace: Bool = false) -> Index {
     let index = binaryClosest(element)
     if ignoreIfExists, let existed = safe(index), existed == element {
       // element is already here, so we don't need to add it
+      if replace {
+        self[index] = element
+      }
       return index
     } else {
       insert(element, at: index)
