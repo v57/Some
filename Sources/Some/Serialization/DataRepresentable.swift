@@ -66,13 +66,6 @@ public enum DataVersion {
     }
   }
 }
-public typealias DataRepresentableVersionable = DataDecodableVersionable&DataEncodableVersionable
-public protocol DataEncodableVersionable {
-  func save(data: DataWriter, version: Int)
-}
-public protocol DataDecodableVersionable {
-  init(data: DataReader, version: Int) throws
-}
 
 public protocol Storable {
   static var keys: [PartialKeyPath<Self>] { get }
@@ -215,12 +208,75 @@ extension Data: DataRepresentable {
   }
 }
 
-extension Vector2: DataRepresentable where T: DataRepresentable {
-  public init(data: DataReader) throws {
-    try self.init(data.next(), data.next())
+
+// MARK:- DataRepresentableVersionable
+
+public typealias DataRepresentableVersionable = DataDecodableVersionable&DataEncodableVersionable
+public protocol DataEncodableVersionable {
+  func save(data: DataWriter, version: Int)
+}
+public protocol DataDecodableVersionable {
+  init(data: DataReader, version: Int) throws
+}
+extension Array: DataRepresentableVersionable where Element: DataRepresentableVersionable {
+  public init(data: DataReader, version: Int) throws {
+    let count: Int = try data.intCount()
+    self = Array<Element>()
+    reserveCapacity(count)
+    for _ in 0..<count {
+      let value: Element = try data.next(version: version)
+      append(value)
+    }
   }
-  public func save(data: DataWriter) {
-    data.append(a)
-    data.append(b)
+  
+  public func save(data: DataWriter, version: Int) {
+    data.append(count)
+    forEach {
+      data.append($0, version: version)
+    }
+  }
+}
+extension SortedArray: DataRepresentableVersionable where Element: DataRepresentableVersionable {
+  public init(data: DataReader, version: Int) throws {
+    array = try data.next(version: version)
+  }
+  public func save(data: DataWriter, version: Int) {
+    data.append(array, version: version)
+  }
+}
+extension Array: Versionable where Element: Versionable {
+  public static var className: String { Element.className }
+  public static var version: Int {
+    get { Element.version }
+    set { Element.version = newValue }
+  }
+}
+extension SortedArray: Versionable where Element: Versionable {
+  public static var className: String { Element.className }
+  public static var version: Int {
+    get { Element.version }
+    set { Element.version = newValue }
+  }
+}
+
+extension Optional: DataRepresentableVersionable where Wrapped: DataRepresentableVersionable {
+  public init(data: DataReader, version: Int) throws {
+    let bool: Bool = try data.next()
+    if bool {
+      let some: Wrapped = try data.next(version: version)
+      self = Optional.some(some)
+    } else {
+      self = Optional.none
+    }
+  }
+  
+  public func save(data: DataWriter, version: Int) {
+    switch self {
+    case .some(let some):
+      data.append(true)
+      data.append(some, version: version)
+    case .none:
+      data.append(false)
+    }
   }
 }
