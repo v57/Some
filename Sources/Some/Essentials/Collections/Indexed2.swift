@@ -44,3 +44,20 @@ extension Indexed2: DataRepresentable where Value: DataRepresentable {
     data.append(value)
   }
 }
+extension Indexed2: DataRepresentableVersionable where Value: DataRepresentableVersionable {
+  public init(data: DataReader, version: Int) throws {
+    try self.init(index: data.next(), value: data.next(version: version))
+  }
+  public func save(data: DataWriter, version: Int) {
+    data.append(index)
+    data.append(value, version: version)
+  }
+}
+extension Indexed2: Versionable where Value: Versionable {
+  public static var className: String { Value.className }
+  public static var version: Int {
+    get { Value.version }
+    set { Value.version = newValue }
+  }
+}
+
