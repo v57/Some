@@ -91,3 +91,13 @@ public struct TwoValue<A: Comparable, B: Comparable>: TwoValueComparable {
     self.b = b
   }
 }
+public struct TwoValueContainer<A: Comparable, B: Comparable, C>: TwoValueComparable {
+  public var a: A
+  public var b: B
+  public var container: C
+  public init(_ a: A, _ b: B, _ c: C) {
+    self.a = a
+    self.b = b
+    self.container = c
+  }
+}
