@@ -83,3 +83,11 @@ public extension TwoValueComparable {
   }
 }
 
+public struct TwoValue<A: Comparable, B: Comparable>: TwoValueComparable {
+  public var a: A
+  public var b: B
+  public init(_ a: A, _ b: B) {
+    self.a = a
+    self.b = b
+  }
+}
