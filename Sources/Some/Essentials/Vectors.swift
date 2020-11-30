@@ -8,6 +8,11 @@
 
 import Foundation
 
+public extension Int {
+  var index2Range: Range<Vector2<Int>> {
+    Vector2(self, .min)..<Vector2(self+1, .min)
+  }
+}
 public struct Vector2<T> {
   public var a: T
   public var b: T
