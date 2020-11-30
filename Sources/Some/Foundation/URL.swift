@@ -378,3 +378,93 @@ extension Sequence where Iterator.Element == FileURL {
     return filter { $0.isVideo }
   }
 }
+
+struct FileSystem {
+  var manager: FileManager { FileManager.default }
+  func volumes(_ options: FileManager.VolumeEnumerationOptions = []) -> [FileURL] {
+    manager.mountedVolumeURLs(includingResourceValuesForKeys: nil, options: options)?
+      .map { FileURL($0) } ?? []
+  }
+}
+struct _FileURL {
+  var url: URL
+  var manager: FileManager { FileManager.default }
+  
+  func contents(recursive: Bool, options: FileManager.DirectoryEnumerationOptions = []) -> [URL] {
+    if recursive {
+      return (try? manager.subpathsOfDirectory(atPath: url.path)
+                .map { URL(fileURLWithPath: $0) }) ?? []
+    } else {
+      return (try? manager.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: options)) ?? []
+    }
+  }
+  enum CreateOptions {
+    case auto, file, directory(Bool)
+  }
+  func create(_ options: CreateOptions = .auto) {
+    switch options {
+    case .auto:
+      url.pathExtension.isEmpty ? create(.directory(false)) : create(.file)
+    case .file:
+      manager.createFile(atPath: url.path, contents: nil, attributes: nil)
+    case .directory(let recursive):
+      try? manager.createDirectory(at: url, withIntermediateDirectories: recursive, attributes: nil)
+    }
+  }
+  func symlink(to url: URL) {
+    try? manager.createSymbolicLink(at: self.url, withDestinationURL: url)
+  }
+  func copy(to url: URL) {
+    try? manager.copyItem(at: self.url, to: url)
+  }
+  func move(to url: URL) {
+    try? manager.moveItem(at: self.url, to: url)
+  }
+  func link(to url: URL) {
+    try? manager.linkItem(at: self.url, to: url)
+  }
+  func remove(to url: URL) {
+    try? manager.removeItem(at: self.url)
+  }
+  #if !os(Linux)
+  func trash() {
+    try? manager.trashItem(at: url, resultingItemURL: nil)
+  }
+  #endif
+  var exists: Bool {
+    manager.fileExists(atPath: url.path)
+  }
+  var isDirectory: Bool {
+    var isDirectory = ObjCBool(false)
+    manager.fileExists(atPath: url.path, isDirectory: &isDirectory)
+    return isDirectory.boolValue
+  }
+  var isReadable: Bool {
+    manager.isReadableFile(atPath: url.path)
+  }
+  var isWritable: Bool {
+    manager.isWritableFile(atPath: url.path)
+  }
+  var isExecutable: Bool {
+    manager.isExecutableFile(atPath: url.path)
+  }
+  var isDeletable: Bool {
+    manager.isDeletableFile(atPath: url.path)
+  }
+  func isEqual(to url: URL) -> Bool {
+    manager.contentsEqual(atPath: self.url.path, andPath: url.path)
+  }
+  func open() -> Data? {
+    manager.contents(atPath: url.path)
+  }
+  func replace(with url: URL) {
+    _ = try? manager.replaceItemAt(self.url, withItemAt: url)
+  }
+  func enumerate(options: FileManager.DirectoryEnumerationOptions = [], handler: (URL, inout Bool)->()) {
+    guard let enumerator = manager.enumerator(at: url, includingPropertiesForKeys: nil, options: options, errorHandler: nil)
+    else { return }
+    for item in enumerator {
+      print(item)
+    }
+  }
+}
