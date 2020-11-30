@@ -235,6 +235,18 @@ public enum ListOperation<T> {
       return .update(element.map(transform))
     }
   }
+  public var setOperation: SetOperation<T> {
+    switch self {
+    case .insert(let element):
+      return .insert(element.value)
+    case .remove(let element):
+      return .remove(element.value)
+    case .set(let elements):
+      return .set(elements)
+    case .update(let element):
+      return .update(element.value)
+    }
+  }
 }
 public protocol ListOperationStorage {
   associatedtype T
