@@ -100,7 +100,7 @@ extension Dictionary.Values: DataEncodable where Element: DataEncodable {
   }
 }
 
-extension Array: DataRepresentable where Element: DataRepresentable {
+extension Array: DataDecodable where Element: DataDecodable {
   public init(data: DataReader) throws {
     let count: Int = try data.intCount()
     self = Array<Element>()
@@ -110,7 +110,8 @@ extension Array: DataRepresentable where Element: DataRepresentable {
       append(value)
     }
   }
-  
+}
+extension Array: DataEncodable where Element: DataEncodable {
   public func save(data: DataWriter) {
     data.append(count)
     forEach {
