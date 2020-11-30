@@ -135,18 +135,18 @@ public class SortedArrayPipe<T: Comparable> {
     output.send(.insert(index.indexed(element)))
   }
   @discardableResult
-  public func remove(_ element: T) -> Int? {
-    if let index = array.remove(element) {
-      output.send(.remove(index))
-      return index
+  public func remove(_ element: T) -> Indexed<T>? {
+    if let removed = array.remove(element) {
+      output.send(.remove(removed))
+      return removed
     } else {
       return nil
     }
   }
 }
-extension SortedArrayPipe where T: ComparsionValue {
+public extension SortedArrayPipe where T: ComparsionValue {
   @discardableResult
-  public func remove(_ element: T.ValueToCompare) -> Int? {
+  func remove(_ element: T.ValueToCompare) -> Indexed<T>? {
     if let index = array.remove(element) {
       output.send(.remove(index))
       return index
