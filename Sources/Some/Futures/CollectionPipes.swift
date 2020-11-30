@@ -217,6 +217,18 @@ public enum SetOperation<T> {
   case remove(T)
   case update(T)
   case set([T])
+  public func map<U>(_ transform: (T)->(U)) -> SetOperation<U> {
+    switch self {
+    case .insert(let element):
+      return .insert(transform(element))
+    case .remove(let element):
+      return .remove(transform(element))
+    case .set(let elements):
+      return .set(elements.map(transform))
+    case .update(let element):
+      return .update(transform(element))
+    }
+  }
 }
 public enum ListOperation<T> {
   case insert(Indexed<T>)
