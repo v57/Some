@@ -71,7 +71,12 @@ public class SetPipe<T: Hashable> {
 }
 
 public class SortedArrayPipe<T: Comparable> {
-  public var array: SortedArray<T>
+  public var array: SortedArray<T> {
+    didSet {
+      count = array.count
+    }
+  }
+  @V public var count: Int
   public lazy var input: P<SetOperation<T>> = {
     let pipe = P<SetOperation<T>>()
     pipe.next { [unowned self] in
@@ -98,9 +103,11 @@ public class SortedArrayPipe<T: Comparable> {
   public let bag = Bag()
   public init(_ set: SortedArray<T>) {
     self.array = set
+    count = array.count
   }
   public init() {
     self.array = []
+    count = array.count
   }
   public func set(_ array: [T]) {
     let sorted = SortedArray(array)
