@@ -50,6 +50,9 @@ public class WeakArray<T: AnyObject> {
     content.remove(at: index)
   }
   
+  public func removeAll() {
+    content.removeAll()
+  }
   public func append(_ object: T) {
     content.append(Weak(object))
   }
