@@ -45,6 +45,9 @@ struct OperationStatus {
     self.string = string
   }
 }
+public enum NetworkError: Error {
+  case lostConnection
+}
 open class NetworkQueue: SomeOperationQueue {
   var statuses: [Int: OperationStatus] = [:]
   var statusesString: String {
@@ -125,13 +128,17 @@ open class NetworkQueue: SomeOperationQueue {
       }
     }
     open override func run() {
-      if request.shouldSkip {
-        status("SK")
-        done()
+      status("W")
+      if self.request.shouldSkip {
+        self.status("SK")
+        self.done()
       } else {
-        status("RN")
+        self.status("RN")
         super.run()
       }
+    }
+    open override func lostConnection() {
+      failed(error: NetworkError.lostConnection)
     }
     open override func failed(error: Error) {
       do {
@@ -156,9 +163,6 @@ open class NetworkQueue: SomeOperationQueue {
 }
 
 open class NetworkOperation: SomeOperation {
-  public enum NetworkError: Error {
-    case lostConnection
-  }
   public var networkQueue: NetworkQueue {
     if let queue = queue as? NetworkQueue {
       return queue
