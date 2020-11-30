@@ -129,7 +129,13 @@ public struct FileURL {
   public init(url: URL) {
     self.url = url
   }
+  public init(_ url: URL) {
+    self.url = url
+  }
   public init(path: String) {
+    self.url = URL(fileURLWithPath: expand(path))
+  }
+  public init(_ path: String) {
     self.url = URL(fileURLWithPath: expand(path))
   }
   
