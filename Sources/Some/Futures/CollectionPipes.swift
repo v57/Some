@@ -223,6 +223,18 @@ public enum ListOperation<T> {
   case remove(Indexed<T>)
   case set([T])
   case update(Indexed<T>)
+  public func map<U>(_ transform: (T)->(U)) -> ListOperation<U> {
+    switch self {
+    case .insert(let element):
+      return .insert(element.map(transform))
+    case .remove(let element):
+      return .remove(element.map(transform))
+    case .set(let elements):
+      return .set(elements.map(transform))
+    case .update(let element):
+      return .update(element.map(transform))
+    }
+  }
 }
 public protocol ListOperationStorage {
   associatedtype T
