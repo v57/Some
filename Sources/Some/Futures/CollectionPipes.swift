@@ -96,8 +96,8 @@ public class SortedArrayPipe<T: Comparable> {
   public lazy var output = P<ListOperation<T>>()
   public var updates: P<T> {
     output.compactMap {
-      guard case let .update(element, _) = $0 else { return nil }
-      return element
+      guard case let .update(element) = $0 else { return nil }
+      return element.value
     }
   }
   public let bag = Bag()
@@ -131,8 +131,8 @@ public class SortedArrayPipe<T: Comparable> {
   }
   public func insert(_ element: T) {
     guard !array.contains(element) else { return }
-    let index = array.insert(element)
-    output.send(.insert(element, index))
+    let index = array.insert(element, replace: replace)
+    output.send(.insert(index.indexed(element)))
   }
   @discardableResult
   public func remove(_ element: T) -> Int? {
@@ -185,22 +185,24 @@ public class ArrayPipe<T> {
   }
   public func set(_ element: T, at index: Int) {
     array[index] = element
-    output.send(.update(element, index))
+    output.send(.update(index.indexed(element)))
   }
   public func set(_ elements: [T]) {
     self.array = elements
     output.send(.set(elements))
   }
   public func append(_ element: T) {
+    let index = array.count
     array.append(element)
-    output.send(.insert(element, array.count-1))
+    output.send(.insert(index.indexed(element)))
   }
   public func insert(_ element: T, at index: Int) {
     array.insert(element, at: index)
-    output.send(.insert(element, index))
+    output.send(.insert(index.indexed(element)))
   }
   public func remove(at index: Int) {
-    output.send(.remove(index))
+    let element = array.remove(at: index)
+    output.send(.remove(index.indexed(element)))
   }
 }
 public enum ArrayOperation<T> {
@@ -217,10 +219,10 @@ public enum SetOperation<T> {
   case set([T])
 }
 public enum ListOperation<T> {
-  case insert(T, Int)
-  case remove(Int)
+  case insert(Indexed<T>)
+  case remove(Indexed<T>)
   case set([T])
-  case update(T, Int)
+  case update(Indexed<T>)
 }
 public protocol ListOperationStorage {
   associatedtype T
