@@ -200,6 +200,12 @@ public extension Time {
   static func ping(_ start: Double) -> Int {
     return Int((Time.abs - start) * 1000)
   }
+  static var mcs: Time {
+    var tv = timeval()
+    gettimeofday(&tv, nil)
+    return Time(tv.tv_sec) * 1_000_000 + Time(tv.tv_usec)
+  }
+  var fromMcs: Time { self / 1_000_000 }
 }
 public extension Double {
   mutating func measureTime(_ message: String) {
@@ -297,13 +303,6 @@ public extension DispatchTime {
   }
 }
 
-public extension Time {
-  static var mcs: Time {
-    var tv = timeval()
-    gettimeofday(&tv, nil)
-    return Time(tv.tv_sec) * 1_000_000 + Time(tv.tv_usec)
-  }
-}
 public struct Microseconds: RawRepresentable, Hashable, Comparable {
   public typealias RawValue = Int
   public var rawValue: Int
