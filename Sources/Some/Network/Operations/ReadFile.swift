@@ -31,7 +31,7 @@ class SpeedManager<T: BinaryInteger> {
   func completed() {
     thread.lock {
       isRunning = false
-      Swift.print("\(name) \(current.bytesString(.short))/s")
+      _print("\(name) \(current.bytesString(.short))/s")
       total += current
       current = 0
     }
@@ -177,6 +177,6 @@ private class ReadFileOperation: StreamOperation {
 
 private func print(_ text: String) {
   guard SomeSettings.stream.debugFileProgress else { return }
-  Swift.print(text)
+  _print(text)
 }
 #endif

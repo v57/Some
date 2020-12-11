@@ -74,7 +74,7 @@ extension StreamOperation {
     if !prefix.isEmpty {
       prefix = "\(prefix)."
     }
-    Swift.print("server: \(prefix)\(path)\(string)")
+    _print("server: \(prefix)\(path)\(string)")
   }
   
   func debug(to string: inout String, prefix: String, running: Bool) {

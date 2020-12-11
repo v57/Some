@@ -47,12 +47,12 @@ class StreamConnection: NSObject, StreamDelegate {
     super.init()
     
     streams += 1
-    Swift.print("streams: \(streams)")
+    _print("streams: \(streams)")
   }
   
   deinit {
     streams -= 1
-    Swift.print("streams: \(streams)")
+    _print("streams: \(streams)")
   }
   
   func process(_ path: KeyPath<Response, Bool>, _ value: Bool) {
@@ -236,7 +236,7 @@ class StreamConnection: NSObject, StreamDelegate {
   
   func print(_ string: String) {
     guard SomeSettings.stream.debugStream else { return }
-    Swift.print("stream \(id): \(string)")
+    _print("stream \(id): \(string)")
   }
   
   func read(completion: @escaping (StreamDataResponse)->()) {

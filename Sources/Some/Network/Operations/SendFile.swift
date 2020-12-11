@@ -53,7 +53,7 @@ private class SendFileOperation: StreamOperation {
     stream.send(stream: {
       let cancelled = progress?.isCancelled ?? false
       guard !cancelled else {
-        Swift.print("sendfile: cancelled")
+        _print("sendfile: cancelled")
         return nil }
       print("sendfile: sended \(progress!.completed)/\(progress!.total)")
       print("sendfile: offset: \(offset), size: \(size)")
@@ -97,6 +97,6 @@ private class SendFileOperation: StreamOperation {
 
 private func print(_ text: String) {
   guard SomeSettings.stream.debugFileProgress else { return }
-  Swift.print(text)
+  _print(text)
 }
 #endif
