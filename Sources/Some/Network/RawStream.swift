@@ -128,8 +128,8 @@ class StreamConnection: NSObject, StreamDelegate {
       
       self.input.delegate = self
       self.output.delegate = self
-      self.input.schedule(in: .main, forMode: .default)
-      self.output.schedule(in: .main, forMode: .default)
+      self.input.schedule(in: .main, forMode: .common)
+      self.output.schedule(in: .main, forMode: .common)
       self.input.open()
       self.output.open()
     }
