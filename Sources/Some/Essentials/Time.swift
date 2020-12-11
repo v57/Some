@@ -340,3 +340,6 @@ public struct Microseconds: RawRepresentable, Hashable, Comparable {
   public static func >= (l: Self, r: Self) -> Bool { l.rawValue >= r.rawValue }
   public static func > (l: Self, r: Self) -> Bool { l.rawValue > r.rawValue }
 }
+extension Microseconds: CustomStringConvertible {
+  public var description: String { rawValue.string(unitDecimals: 6, decimals: 6, options: .stripZeroes)+"s" }
+}
