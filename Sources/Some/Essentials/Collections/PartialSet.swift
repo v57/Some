@@ -154,6 +154,12 @@ public struct PartialSet<R: Indexable> {
   public subscript(_ index: Int) -> R? {
     body.last(where: { $0.range.contains(index) })
   }
+  public func contains(_ index: Int) -> Bool {
+    body.reversed().contains(where: { $0.range.contains(index) })
+  }
+  public func contains(_ range: Range<Int>) -> Bool {
+    body.reversed().contains(where: { $0.range.overlaps(range) })
+  }
   @discardableResult
   public mutating func insert(_ set: R) -> InsertResult {
     var result = InsertResult(set: set)
