@@ -31,10 +31,10 @@ public extension Cell {
   static let cache = CellCache()
   var cache: CellCache { return Cell.cache }
   func remove() {
-    table!.remove(cell: self, animated: Animator.isAnimating)
+    table?.remove(cell: self, animated: Animator.isAnimating)
   }
   func move(to index: Int) {
-    table!.move(cell: self, to: index, animated: Animator.isAnimating)
+    table?.move(cell: self, to: index, animated: Animator.isAnimating)
   }
 }
 public extension Array where Element: Cell {
