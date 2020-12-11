@@ -45,6 +45,12 @@ extension UIImageView {
     })
   }
   @discardableResult
+  public func center() -> Self {
+    contentMode = .center
+    clipsToBounds = true
+    return self
+  }
+  @discardableResult
   public func aspectFill() -> Self {
     contentMode = .scaleAspectFill
     clipsToBounds = true
