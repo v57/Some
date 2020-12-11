@@ -7,8 +7,14 @@
 //  Copyright © 2018 Димасик. All rights reserved.
 //
 
-//import UIKit
+import Some
 import UIKit.UIGestureRecognizerSubclass
+
+public extension SomeSettings {
+  struct touch {
+    public static var enableForceTouch: Bool = true
+  }
+}
 
 public class ForceTouchGestureRecognizer: UILongPressGestureRecognizer {
   public private(set) var previousForce: CGFloat = 0.0
@@ -45,9 +51,11 @@ public class ForceTouchGestureRecognizer: UILongPressGestureRecognizer {
   }
   
   private func update(_ touches: Set<UITouch>) {
-    guard let touch = touches.first else { return }
-    previousForce = force
-    force = touch.force / touch.maximumPossibleForce
+    if SomeSettings.touch.enableForceTouch {
+      guard let touch = touches.first else { return }
+      previousForce = force
+      force = touch.force / touch.maximumPossibleForce
+    }
   }
   
   public override func reset() {
