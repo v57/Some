@@ -23,6 +23,13 @@ extension Indexed: CustomStringConvertible {
   public var description: String { "\(index)/\(value)" }
 }
 public extension Indexed {
+  func compactMap<U>() -> Indexed<U>? where Value == Optional<U> {
+    if let value = self.value {
+      return Indexed<U>(index, value)
+    } else {
+      return nil
+    }
+  }
   func map<U>(_ transform: (Value)->(U)) -> Indexed<U> {
     Indexed<U>(index, transform(value))
   }
