@@ -216,6 +216,14 @@ class StreamConnection: NSObject, StreamDelegate {
   }
   
   func send(data: Data, completion: @escaping (StreamResponse)->()) {
+    switch streamStatus {
+    case .atEnd, .closed, .error, .notOpen:
+      completion(.lostConnection)
+    case .opening, .open, .reading, .writing:
+      break
+    @unknown default:
+      break
+    }
     onSpaceAvailable { [unowned self] success in
       guard success else {
         completion(.lostConnection)
@@ -240,6 +248,14 @@ class StreamConnection: NSObject, StreamDelegate {
   }
   
   func read(completion: @escaping (StreamDataResponse)->()) {
+    switch streamStatus {
+    case .atEnd, .closed, .error, .notOpen:
+      completion(.lostConnection)
+    case .opening, .open, .reading, .writing:
+      break
+    @unknown default:
+      break
+    }
     onBytesAvailable { [unowned self] success in
       guard success else {
         completion(.lostConnection)
