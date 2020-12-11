@@ -323,13 +323,13 @@ public struct Microseconds: RawRepresentable, Hashable, Comparable {
     Microseconds(sec * 1_000_000)
   }
   public static func m(_ min: Int) -> Self {
-    s(60)
+    s(min*60)
   }
   public static func h(_ min: Int) -> Self {
-    m(60)
+    m(min*60)
   }
   public static func d(_ day: Int) -> Self {
-    h(24)
+    h(day*24)
   }
   public static func -(l: Self, r: Self) -> Self { Self(l.rawValue - r.rawValue) }
   public static func /(l: Self, r: Self) -> Self { Self(l.rawValue / r.rawValue) }
