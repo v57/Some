@@ -127,6 +127,13 @@ extension RangeReplaceableCollection where Index == Int {
   }
 }
 
+public extension PartialSet where R == Range<Int> {
+  @discardableResult
+  mutating func insert(_ index: Int) -> InsertResult {
+    insert(index..<index+1)
+  }
+}
+
 public struct PartialSet<R: Indexable> {
   public var body = [R]()
   public var count: Int { body.reduce(0, { $0 + $1.count }) }
