@@ -19,6 +19,9 @@ public struct Indexed<Value> {
     self.value = value
   }
 }
+extension Indexed: CustomStringConvertible {
+  public var description: String { "\(index)/\(value)" }
+}
 public extension Indexed {
   func map<U>(_ transform: (Value)->(U)) -> Indexed<U> {
     Indexed<U>(index, transform(value))
