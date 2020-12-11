@@ -263,6 +263,11 @@ public extension Constraints {
   func `switch`() -> ConstraintsSwitch {
     return ConstraintsSwitch(self)
   }
+  func `switch`(make: (Constraints)->()) -> ConstraintsSwitch {
+    let constraintsSwitch = ConstraintsSwitch(self)
+    make(constraintsSwitch.with())
+    return constraintsSwitch
+  }
   func toggle(with constraints: Constraints) -> ConstraintsSwitch {
     return ConstraintsSwitch(self, constraints)
   }
