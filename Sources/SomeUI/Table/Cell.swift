@@ -140,7 +140,8 @@ open class Cell: TableCell, Cachable {
   }
   
   open func hide(animator: Animator?, removed: Bool) {
-    assert(isVisible)
+    guard isVisible else { return }
+//    assert(isVisible)
     if removed {
       purged()
     } else if isCachable {
