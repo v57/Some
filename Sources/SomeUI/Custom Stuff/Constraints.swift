@@ -536,6 +536,30 @@ public extension Constraints {
   @discardableResult func t(_ view: UIView, _ c: C = Constraints.e) -> Self {
     return make(v.t, view.b, 0, false, c)
   }
+  
+  /// Left to view right with offset
+  @discardableResult func l(_ layout: LayoutX, _ o: CGFloat, _ c: C = Constraints.e) -> Self {
+    return make(v.l, layout, o, false, c)
+  }
+  /// Right to view left with negative offset
+  @discardableResult func r(_ layout: LayoutX, _ o: CGFloat, _ c: C = Constraints.e) -> Self {
+    return make(v.r, layout, o, true, c)
+  }
+  /// Bottom to view top with negative offset
+  @discardableResult func b(_ layout: LayoutY, _ o: CGFloat, _ c: C = Constraints.e) -> Self {
+    return make(v.b, layout, o, true, c)
+  }
+  /// Top to view top with offset
+  @discardableResult func t(_ layout: LayoutY, _ o: CGFloat, _ c: C = Constraints.e) -> Self {
+    return make(v.t, layout, o, false, c)
+  }
+  
+  @discardableResult func cx(_ layout: LayoutX, _ o: CGFloat, _ c: C = Constraints.e) -> Self {
+    return make(v.cx, layout, o, false, c)
+  }
+  @discardableResult func cy(_ layout: LayoutY, _ o: CGFloat, _ c: C = Constraints.e) -> Self {
+    return make(v.cy, layout, o, false, c)
+  }
 }
 // MARK: Comparsion functions
 public extension Constraints {
