@@ -45,9 +45,9 @@ public extension CGPoint {
   func direction(to point: CGPoint) -> CGVector {
     let dx = x - point.x
     let dy = y - point.y
-    let dist2 = dx * dx + dy * dy
-    let x = dx * dx / dist2
-    let y = dy * dy / dist2
+    let dist = sqrt(dx * dx + dy * dy)
+    let x = dx / dist
+    let y = dy / dist
     return CGVector(dx: x, dy: y)
   }
   func angle(to point: CGPoint) -> CGFloat {
