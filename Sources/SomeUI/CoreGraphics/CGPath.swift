@@ -43,6 +43,7 @@ public extension Array where Element == CGPoint {
 }
 public extension CGMutablePath {
   func addCurvedLines(_ points: [CGPoint]) {
+    guard !points.isEmpty else { return }
     move(to: points.first!)
     points.cv.forEach {
       addCurve(to: $0.0, control1: $0.1, control2: $0.2)
