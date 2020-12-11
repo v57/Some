@@ -8,7 +8,7 @@
 
 import CoreGraphics
 
-extension Array where Element == Int {
+public extension Array where Element == Int {
   func points(size: CGSize, max: Int?, min: Int?, offsetX: CGFloat = 0, offsetY: CGFloat = 0) -> [CGPoint] {
     let min = min ?? self.min()!
     let max = max ?? self.max()!
@@ -24,7 +24,7 @@ extension Array where Element == Int {
     return points
   }
 }
-extension Array where Element == CGPoint {
+public extension Array where Element == CGPoint {
   var curves: [(CGPoint, CGPoint, CGPoint)] {
     var f = first!
     return dropFirst().map {
@@ -41,7 +41,7 @@ extension Array where Element == CGPoint {
     curves
   }
 }
-extension CGMutablePath {
+public extension CGMutablePath {
   func addCurvedLines(_ points: [CGPoint]) {
     move(to: points.first!)
     points.cv.forEach {
