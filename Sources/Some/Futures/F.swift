@@ -9,6 +9,13 @@ import Foundation
 
 public typealias FutureResult<T> = Swift.Result<T, Error>
 public extension Result {
+  init(_ value: @autoclosure () -> Success, _ error: Failure?) {
+    if let error = error {
+      self = .failure(error)
+    } else {
+      self = .success(value())
+    }
+  }
   var value: Success! {
     guard case let .success(value) = self else { return nil }
     return value
