@@ -655,9 +655,9 @@ private enum Alignment {
 private enum Dimension {
   case width, height
 }
-typealias LayoutX = NSLayoutXAxisAnchor
-typealias LayoutY = NSLayoutYAxisAnchor
-typealias LayoutD = NSLayoutDimension
+public typealias LayoutX = NSLayoutXAxisAnchor
+public typealias LayoutY = NSLayoutYAxisAnchor
+public typealias LayoutD = NSLayoutDimension
 struct LayoutPosition {
   let x: LayoutX
   let y: LayoutY
