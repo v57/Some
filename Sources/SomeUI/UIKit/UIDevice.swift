@@ -23,6 +23,12 @@ public extension UIDevice {
   }
 }
 public extension UIApplication {
+  func canOpenSettings() -> Bool {
+    canOpenURL(URL(string: UIApplication.openSettingsURLString)!)
+  }
+  func openSettings() {
+    open(URL(string: UIApplication.openSettingsURLString)!)
+  }
   static var version: String {
     do {
       return try AnyReader(Bundle.main.infoDictionary)
