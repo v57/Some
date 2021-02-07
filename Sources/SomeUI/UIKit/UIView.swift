@@ -68,24 +68,29 @@ extension UIView {
 }
 
 // MARK: - functions
-extension UIView {
-  public convenience init(size: CGSize) {
+public extension UIView {
+  convenience init(size: CGSize) {
     self.init(frame: CGRect(origin: .zero, size: size))
   }
-  public func addTap(_ selector: Selector?) {
+  func addTap(_ selector: Selector?) {
     isUserInteractionEnabled = true
     let gesture = UITapGestureRecognizer(target: self, action: selector)
     addGestureRecognizer(gesture)
   }
-  public func addTap(_ target: Any?, _ selector: Selector?) {
+  func addTap(_ target: Any?, _ selector: Selector?) {
     isUserInteractionEnabled = true
     let gesture = UITapGestureRecognizer(target: target, action: selector)
     addGestureRecognizer(gesture)
   }
-  public func removeSubviews() {
+  func removeSubviews() {
     subviews.forEach { $0.removeFromSuperview() }
   }
-  public func addCircleLayer(_ color: UIColor ,width: CGFloat) {
+  @discardableResult
+  func arabic() -> Self {
+    semanticContentAttribute = .forceLeftToRight
+    return self
+  }
+  func addCircleLayer(_ color: UIColor ,width: CGFloat) {
     let o: CGFloat = 4
     let rect = CGRect(-o,-o,bounds.w+o+o,bounds.h+o+o)
     let layer = CAShapeLayer()
@@ -96,14 +101,19 @@ extension UIView {
     layer.frame = bounds
     self.layer.addSublayer(layer)
   }
-  public func optimizeCorners() {
+  @discardableResult
+  func clips(_ clips: Bool) -> Self {
+    clipsToBounds = clips
+    return self
+  }
+  func optimizeCorners() {
     // Huge change in performance by explicitly setting the below (even though default is supposedly NO)
     layer.masksToBounds = false
     // Performance improvement here depends on the size of your view
     layer.shouldRasterize = true
     layer.rasterizationScale = UIScreen.main.scale
   }
-  public func bounce(from: CGFloat, vibrate: Bool = true) {
+  func bounce(from: CGFloat, vibrate: Bool = true) {
     guard animationsAvailable() else { return }
     if vibrate {
       if #available(iOS 10.0, *) {
@@ -115,10 +125,10 @@ extension UIView {
       self.scale(1.0)
     }
   }
-  public func bounce() {
+  func bounce() {
     bounce(from: 1.1)
   }
-  public func bounce(completion: @escaping ()->()) {
+  func bounce(completion: @escaping ()->()) {
     guard animationsAvailable() else { return }
     vibrate()
     scale(1.2)
@@ -126,7 +136,7 @@ extension UIView {
       self.scale(1.0)
     }, completion)
   }
-  public func shetBounce() {
+  func shetBounce() {
     guard animationsAvailable() else { return }
     let animation = CABasicAnimation(keyPath: "transform.scale")
     animation.fromValue = NSNumber(value: 1.5 as Float)
@@ -136,29 +146,35 @@ extension UIView {
     animation.isRemovedOnCompletion = true
     layer.add(animation, forKey: "bounceAnimation")
   }
-  public func errorAnimation() {
+  func errorAnimation() {
     layer.position.x += 10
     UIView.animate(withDuration: 1, delay: 0, usingSpringWithDamping: 0.1, initialSpringVelocity: 10, options: [], animations: {
       self.layer.position.x -= 10
     }, completion: nil)
   }
-  public func scale(_ s: CGFloat) {
+  func scale(_ s: CGFloat) {
     transform = CGAffineTransform(scaleX: s, y: s)
   }
-  public func rotate(_ a: CGFloat) {
+  func scale(_ s: CGFloat, rotate: CGFloat) {
+    transform = CGAffineTransform(scaleX: s, y: s).rotated(by: rotate)
+  }
+  func scale(_ s: CGFloat, degrees: CGFloat) {
+    transform = CGAffineTransform(scaleX: s, y: s).rotated(by: .pi / 180 * degrees)
+  }
+  func rotate(_ a: CGFloat) {
     transform = CGAffineTransform(rotationAngle: a)
   }
-  public func replaceWithCopy() -> UIView {
   func rotate(degrees: CGFloat) {
     transform = CGAffineTransform(rotationAngle: .pi / 180 * degrees)
   }
+  func replaceWithCopy() -> UIView {
     guard let view = snapshotView(afterScreenUpdates: false) else { return self }
     view.frame.origin = frame.origin
     superview?.insertSubview(view, aboveSubview: self)
     removeFromSuperview()
     return view
   }
-  public func scale(from: Float, to: Float, animated: Bool, remove: Bool = true) {
+  func scale(from: Float, to: Float, animated: Bool, remove: Bool = true) {
     if animated && animationsAvailable() {
       let animation = CABasicAnimation(keyPath: "transform.scale")
       animation.fromValue = NSNumber(value: from)
@@ -172,7 +188,7 @@ extension UIView {
       transform = CGAffineTransform(scaleX: CGFloat(to), y: CGFloat(to))
     }
   }
-  public func downAnimation(to value: Float = 0.95) {
+  func downAnimation(to value: Float = 0.95) {
     let animation = CABasicAnimation(keyPath: "transform.scale")
     animation.fromValue = NSNumber(value: 1.0)
     animation.toValue = NSNumber(value: value)
@@ -182,7 +198,7 @@ extension UIView {
     animation.fillMode = CAMediaTimingFillMode.forwards
     layer.add(animation, forKey: "touch")
   }
-  public func upAnimation(from value: Float = 0.95) {
+  func upAnimation(from value: Float = 0.95) {
     let animation = CABasicAnimation(keyPath: "transform.scale")
     animation.fromValue = NSNumber(value: value)
     animation.toValue = NSNumber(value: 1.0)
@@ -191,7 +207,7 @@ extension UIView {
     animation.isRemovedOnCompletion = true
     layer.add(animation, forKey: "touch")
   }
-  public func hideAnimation() {
+  func hideAnimation() {
     let animation = CABasicAnimation(keyPath: "transform.scale")
     animation.fromValue = NSNumber(value: 1)
     animation.toValue = NSNumber(value: 0.5)
@@ -199,7 +215,7 @@ extension UIView {
     animation.isRemovedOnCompletion = true
     layer.add(animation, forKey: "hide")
   }
-  public func showsAnimation() {
+  func showsAnimation() {
     let animation = CABasicAnimation(keyPath: "transform.scale")
     animation.fromValue = NSNumber(value: 0.0)
     animation.toValue = NSNumber(value: 1.0)
@@ -207,22 +223,22 @@ extension UIView {
     animation.isRemovedOnCompletion = true
     layer.add(animation, forKey: "hide")
   }
-  public func addSubviews(_ subviews: [UIView]) {
+  func addSubviews(_ subviews: [UIView]) {
     for view in subviews {
       addSubview(view)
     }
   }
-  public func addSubviews(_ subviews: UIView...) {
+  func addSubviews(_ subviews: UIView...) {
     for view in subviews {
       addSubview(view)
     }
   }
-  public func addSubviews(_ subviews: UIView?...) {
+  func addSubviews(_ subviews: UIView?...) {
     for view in subviews {
       if view != nil {addSubview(view!)}
     }
   }
-  public class func optimize(_ views: [UIView], backgroundColor: UIColor) {
+  class func optimize(_ views: [UIView], backgroundColor: UIColor) {
     for view in views {
       view.isOpaque = true
       view.clipsToBounds = true
@@ -230,32 +246,32 @@ extension UIView {
       view.clearsContextBeforeDrawing = false
     }
   }
-  public class func backgroundColor(_ views: [UIView]) {
+  class func backgroundColor(_ views: [UIView]) {
     for view in views {
       view.backgroundColor = view.superview?.backgroundColor
     }
   }
-  public func circle() {
+  func circle() {
     clipsToBounds = true
     layer.cornerRadius = frame.size.min / 2
   }
   
   /// blur
-  public func addBlur(_ style: UIBlurEffect.Style = .light) {
+  func addBlur(_ style: UIBlurEffect.Style = .light) {
     let effect = UIBlurEffect(style: .dark)
     let view = UIVisualEffectView(effect: effect)
     view.frame = frame
     addSubview(view)
   }
-  public func addDarkBlur() {
+  func addDarkBlur() {
     addBlur(.dark)
   }
-  public func addLightBlur() {
+  func addLightBlur() {
     addBlur(.extraLight)
   }
   
   /// centering views
-  public func centerViewsVertically(_ views: [UIView], offset: CGFloat = .margin) {
+  func centerViewsVertically(_ views: [UIView], offset: CGFloat = .margin) {
     var vheight: CGFloat = 0
     for view in views {
       vheight += view.frame.h + offset
@@ -267,7 +283,7 @@ extension UIView {
       y += view.frame.h + offset
     }
   }
-  public func centerViewsHorisontally(_ views: [UIView], offset: CGFloat = .margin) {
+  func centerViewsHorisontally(_ views: [UIView], offset: CGFloat = .margin) {
     var hwidth: CGFloat = -offset
     for view in views {
       hwidth += view.frame.w + offset
@@ -283,7 +299,7 @@ extension UIView {
   
   /// shadows
   @discardableResult
-  public func dropShadow(opacity: Float = 0.2, offset: CGFloat = 0, radius: CGFloat? = nil, color: UIColor = UIColor.black, usePath: Bool = true) -> Self {
+  func dropShadow(opacity: Float = 0.2, offset: CGFloat = 0, radius: CGFloat? = nil, color: UIColor = UIColor.black, usePath: Bool = true) -> Self {
     layer.masksToBounds = false
     layer.shadowColor = color.cgColor
     layer.shadowOffset = CGSize(width: 0.0, height: offset)
@@ -300,14 +316,14 @@ extension UIView {
     guard bounds.size != .zero else { return }
     layer.shadowPath = UIBezierPath(rect: bounds).cgPath
   }
-  public func dropShadow(opacity: Float, offset: CGFloat, cornerRadius: CGFloat) {
+  func dropShadow(opacity: Float, offset: CGFloat, cornerRadius: CGFloat) {
     layer.masksToBounds = false
     layer.shadowColor = UIColor.black(0.2).cgColor
     layer.shadowOffset = CGSize(width: 0.0, height: offset)
     layer.shadowOpacity = opacity
     updateShadow(cornerRadius: cornerRadius)
   }
-  public func updateShadow(cornerRadius: CGFloat) {
+  func updateShadow(cornerRadius: CGFloat) {
     var frame = bounds
     frame.x += 1
     frame.y += 1
@@ -317,25 +333,25 @@ extension UIView {
     let shadowPath = UIBezierPath(roundedRect: frame, byRoundingCorners: .allCorners, cornerRadii: CGSize(cornerRadius,cornerRadius))
     layer.shadowPath = shadowPath.cgPath
   }
-  public func dropCircleShadow(_ opacity: Float, offset: CGFloat) {
+  func dropCircleShadow(_ opacity: Float, offset: CGFloat) {
     layer.masksToBounds = false
     layer.shadowColor = UIColor.black(0.2).cgColor
     layer.shadowOffset = CGSize(width: 0.0, height: offset)
     layer.shadowOpacity = opacity
     updateCircleShadow()
   }
-  public func updateCircleShadow() {
+  func updateCircleShadow() {
     layer.shadowPath = UIBezierPath(ovalIn: bounds).cgPath
   }
   
   /// border
   @discardableResult
-  public func setBorder(_ color: UIColor, _ width: CGFloat) -> Self {
+  func setBorder(_ color: UIColor, _ width: CGFloat) -> Self {
     layer.borderColor = color.cgColor
     layer.borderWidth = width
     return self
   }
-  public func set(borderWidth: CGFloat, animated: Bool) {
+  func set(borderWidth: CGFloat, animated: Bool) {
     if animated {
       let animation = CABasicAnimation(keyPath: "borderWidth")
       animation.fromValue = layer.borderWidth
@@ -347,7 +363,7 @@ extension UIView {
     layer.borderWidth = borderWidth
   }
   
-  public func roundCorners(_ corners: UIRectCorner, radius: CGFloat) {
+  func roundCorners(_ corners: UIRectCorner, radius: CGFloat) {
     let path = UIBezierPath(roundedRect: self.bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
     let mask = CAShapeLayer()
     mask.path = path.cgPath
@@ -355,12 +371,12 @@ extension UIView {
   }
   
   /// lines
-  public class func vline(_ pos: Pos, anchor: Anchor, height: CGFloat, color: UIColor) -> UIView {
+  class func vline(_ pos: Pos, anchor: Anchor, height: CGFloat, color: UIColor) -> UIView {
     let view = UIView(frame: CGRect(pos, anchor, Size(1/UIScreen.main.scale, height)))
     view.backgroundColor = color
     return view
   }
-  public class func hline(_ pos: Pos, anchor: Anchor, width: CGFloat, color: UIColor) -> UIView {
+  class func hline(_ pos: Pos, anchor: Anchor, width: CGFloat, color: UIColor) -> UIView {
     let view = UIView(frame: CGRect(pos, anchor, Size(width, 1/UIScreen.main.scale)))
     view.backgroundColor = color
     return view
@@ -369,7 +385,7 @@ extension UIView {
   /// options default: .fade
   /// animated default: true
   @discardableResult
-  public func destroy(options: DisplayOptions = .fade, animated: Bool = true) -> Self? {
+  func destroy(options: DisplayOptions = .fade, animated: Bool = true) -> Self? {
     if animated && animationsAvailable() {
       switch options {
       case .fadeZoom(let zoom):
@@ -434,7 +450,7 @@ extension UIView {
     }
     return nil
   }
-  public func display(_ view: UIView, options: DisplayOptions = .fade, animated: Bool = true) {
+  func display(_ view: UIView, options: DisplayOptions = .fade, animated: Bool = true) {
     addSubview(view)
     if animated && animationsAvailable() {
       switch options {
@@ -485,7 +501,7 @@ extension UIView {
       }
     }
   }
-  public func addSubviewSafe(_ view: UIView) {
+  func addSubviewSafe(_ view: UIView) {
     guard view.superview == nil else { return }
     addSubview(view)
   }
