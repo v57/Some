@@ -149,6 +149,9 @@ extension UIView {
     transform = CGAffineTransform(rotationAngle: a)
   }
   public func replaceWithCopy() -> UIView {
+  func rotate(degrees: CGFloat) {
+    transform = CGAffineTransform(rotationAngle: .pi / 180 * degrees)
+  }
     guard let view = snapshotView(afterScreenUpdates: false) else { return self }
     view.frame.origin = frame.origin
     superview?.insertSubview(view, aboveSubview: self)
