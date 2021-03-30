@@ -33,6 +33,33 @@ public extension UIScrollView {
   var offsetTop: CGFloat {
     return contentOffset.y + contentInset.top
   }
+  var bottomOffset: CGFloat { contentOffset.y + frame.size.height }
+  var rightOffset: CGFloat { contentOffset.x + frame.size.width }
+  var maxWidth: CGFloat { max(contentSize.width + contentInset.right, frame.size.width) }
+  var maxHeight: CGFloat { max(contentSize.height + contentInset.bottom, frame.size.height) }
+  var isHorizontal: Bool {
+    alwaysBounceHorizontal || (!alwaysBounceVertical && contentSize.width + contentInset.width > frame.w) ? true : false
+  }
+  var boundHit: Direction? {
+    if contentOffset.x < -contentInset.left {
+      return .left
+    } else if rightOffset > maxWidth {
+      return .right
+    } else if contentOffset.y < -contentInset.top {
+      return .top
+    } else if bottomOffset > maxHeight {
+      return .bottom
+    } else {
+      return nil
+    }
+  }
+  var isOutsideOfTheBounds: Bool {
+    if isHorizontal {
+      return contentOffset.x < -contentInset.left || rightOffset > maxWidth
+    } else {
+      return contentOffset.y < -contentInset.top || bottomOffset > maxHeight
+    }
+  }
   var page: Int {
     get {
       Int(round(pageProgress))
