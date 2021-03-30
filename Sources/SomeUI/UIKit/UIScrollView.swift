@@ -71,7 +71,7 @@ public extension UIScrollView {
   }
   func scrollToBottom() {
     if contentSize.height > bounds.h - contentInset.bottom {
-      contentOffset.y = contentSize.height + contentInset.bottom + safeAreaInsets.bottom - frame.h
+      contentOffset.y = contentSize.height + contentInset.bottom - frame.h
     }
   }
 }
