@@ -188,9 +188,6 @@ open class SomeCeo {
     if manager is Saveable && !(manager is CustomPath) {
       saveableManagers += 1
     }
-    if manager is Saveable {
-      _print(className(manager))
-    }
   }
   
   open func encrypt(data: DataWriter) {
