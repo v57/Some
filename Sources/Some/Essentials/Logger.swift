@@ -121,3 +121,88 @@ public struct LogContainer: CustomStringConvertible {
     return messages.joined(separator: "\n")
   }
 }
+
+
+// MARK:- Logs
+@dynamicCallable
+public class Logs {
+  public static var all = [Logs]()
+  public var name: String
+  public var logs = [Log]()
+  public var shouldPrint = true
+  public let lock = NSLock()
+  public init(_ name: String) {
+    self.name = name
+    Logs.all.append(self)
+  }
+  public func warning(_ text: String) {
+    let old = shouldPrint
+    shouldPrint = true
+    defer { shouldPrint = old }
+    print(["[warning]", text])
+  }
+  public func debug(_ items: Any...) {
+    let old = shouldPrint
+    shouldPrint = false
+    defer { shouldPrint = old }
+    print(items)
+  }
+  public func dynamicallyCall(withArguments args: [Any]) {
+    self.print(args)
+  }
+  
+  public func stdPrint() {
+    #if os(iOS)
+    
+    #else
+    var out = FileHandle.standardOutput
+    logs.forEach {
+      let date = $0.time.fromMcs.date
+      Swift.print("[\(logFormat2.string(from: date))] [\(name)] \($0.body)", to: &out)
+    }
+    #endif
+  }
+  public func stdPrint(last: Int) {
+    logs.last(last).forEach {
+      rawPrint($0.log(name), nil)
+    }
+  }
+  public func print(_ items: [Any], separator: String = " ", terminator: String = "\n") {
+    let output = items.map { "\($0)" }.joined(separator: separator)
+    let log = Log(time: .mcs, body: output)
+    lock.lock {
+      logs.append(log)
+      let out = log.log(name)
+      if shouldPrint {
+        rawPrint(out, nil)
+      }
+      #if os(macOS) || os(Linux)
+      if let secondOutput = FileHandle.secondOutput {
+        rawPrint(out, secondOutput)
+      }
+      #endif
+    }
+  }
+  private func rawPrint(_ string: String, _ handle: FileHandle?) {
+    #if os(iOS)
+    Swift.print(string)
+    #else
+    var handle = handle ?? FileHandle.standardOutput
+    Swift.print(string, to: &handle)
+    #endif
+  }
+  public func pause() { shouldPrint = false }
+  public func resume() { shouldPrint = true }
+  
+  public struct Log {
+    public var time: Time
+    public var body: String
+    func log(_ name: String) -> String {
+      #if os(macOS) || os(Linux)
+      return "[\(logFormat.string(from: time.fromMcs.date))] [\(name)] \(body)"
+      #else
+      return "[\(name)] \(body)"
+      #endif
+    }
+  }
+}
