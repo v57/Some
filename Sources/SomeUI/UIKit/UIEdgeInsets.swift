@@ -83,5 +83,9 @@ public extension UIEdgeInsets {
   var height: CGFloat {
     return top + bottom
   }
+  @inline(__always)
+  func inset(rect: CGRect) -> CGRect {
+    return rect.inset(by: self)
+  }
 }
 #endif
