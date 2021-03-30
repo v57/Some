@@ -74,5 +74,14 @@ public extension UIEdgeInsets {
   func fs(_ inset: CGFloat) -> UIEdgeInsets {
     lr(inset).tb(inset)
   }
+  var topLeft: CGPoint {
+    return CGPoint(left,top)
+  }
+  var width: CGFloat {
+    return left + right
+  }
+  var height: CGFloat {
+    return top + bottom
+  }
 }
 #endif
