@@ -21,6 +21,10 @@ extension Id {
     id.hash(into: &hasher)
   }
 }
+public protocol HashableClass: class, Id {}
+extension HashableClass {
+  public var id: ObjectIdentifier { ObjectIdentifier(self) }
+}
 
 
 public protocol MutableId: class, Id {
