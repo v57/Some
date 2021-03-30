@@ -240,18 +240,37 @@ func animationsAvailable() -> Bool {
 private var delegates = Set<AnimationDelegate>()
 private final class AnimationDelegate: NSObject, CAAnimationDelegate {
   let callback: () -> Void
+  var didStart = false
+  var didStop = false {
+    didSet {
+      guard didStop != oldValue else { return }
+      if didStop {
+        callback()
+        delegates.remove(self)
+        if didStart {
+          AnimationDelegate.stopped += 1
+        }
+      }
+    }
+  }
   init(callback: @escaping () -> Void) {
     self.callback = callback
   }
-  
+  static var started = 0
+  static var stopped = 0
+  func animationDidStart(_ anim: CAAnimation) {
+    didStart = true
+    AnimationDelegate.started += 1
+  }
   func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
-    self.callback()
-    delegates.remove(self)
+    didStop = true
   }
   
   @objc func animationDidStop(_ animationId: String?, finished: NSNumber, context: UnsafeMutableRawPointer) {
-    self.callback()
-    delegates.remove(self)
+    didStop = true
+  }
+  deinit {
+    didStop = true
   }
 }
 
@@ -260,6 +279,9 @@ public extension CAAnimation {
     let delegate = AnimationDelegate(callback: completion)
     delegates.insert(delegate)
     self.delegate = delegate
+    wait(duration) {
+      delegate.didStop = true
+    }
   }
 }
 
