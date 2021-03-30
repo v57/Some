@@ -37,11 +37,15 @@ public extension UIScrollView {
     get {
       Int(round(pageProgress))
     } set {
-      contentOffset.x = frame.w * CGFloat(newValue)
+      if isHorizontal {
+        contentOffset.x = frame.w * CGFloat(newValue)
+      } else {
+        contentOffset.y = frame.h * CGFloat(newValue)
+      }
     }
   }
   var pageProgress: CGFloat {
-    frame.w == 0 ? 0 : contentOffset.x / frame.w
+    pageProgress(for: contentOffset)
   }
   var isScrollable: Bool {
     var a = contentSize.height
