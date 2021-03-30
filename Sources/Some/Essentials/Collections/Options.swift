@@ -413,3 +413,13 @@ extension Options: CustomStringConvertible {
 extension Options where RawValue: FixedWidthInteger {
   public var count: Int { rawValue.nonzeroBitCount }
 }
+
+extension Options: Codable where RawValue: Codable {
+  public init(from decoder: Decoder) throws {
+    rawValue = try decoder.singleValueContainer().decode(RawValue.self)
+  }
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.unkeyedContainer()
+    try container.encode(rawValue)
+  }
+}
