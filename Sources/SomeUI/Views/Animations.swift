@@ -367,7 +367,7 @@ public func noAnimation(_ actionsWithoutAnimation: ()->()) {
     actionsWithoutAnimation()
   }
 }
-public var isAnimating: Bool = false
+var isAnimating: Bool = false
 
 public func animateif(_ animated: Bool, _ animations: () -> ()) {
   animated ? animate(animations) : animations()
