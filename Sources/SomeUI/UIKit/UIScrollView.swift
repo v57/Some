@@ -47,6 +47,13 @@ public extension UIScrollView {
   var pageProgress: CGFloat {
     pageProgress(for: contentOffset)
   }
+  func pageProgress(for offset: CGPoint) -> CGFloat {
+    if isHorizontal {
+      return frame.w == 0 ? 0 : offset.x / frame.w
+    } else {
+      return frame.h == 0 ? 0 : offset.y / frame.h
+    }
+  }
   var isScrollable: Bool {
     var a = contentSize.height
     a += contentInset.top
