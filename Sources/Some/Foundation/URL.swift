@@ -254,6 +254,18 @@ public struct FileURL {
       }
     }
   }
+  public func createTemp(keepName: Bool) -> FileURL {
+    let new: FileURL
+    if keepName {
+      let directory = Data.random(32).base58(.bitcoin).tempURL
+      directory.create(directory: true, subdirectories: true)
+      new = directory + fileName
+    } else {
+      new = "\(Data.random(32).base58(.bitcoin)).\(self.extension)".tempURL
+    }
+    copy(to: new)
+    return new
+  }
   public func copy(to url: FileURL) {
     if url.exists {
       url.delete()
