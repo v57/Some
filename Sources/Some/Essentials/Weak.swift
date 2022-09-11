@@ -13,6 +13,8 @@ public struct Unowned<T: AnyObject> { // 8 bytes
     self.value = value
   }
 }
+extension Unowned: Equatable where T: Equatable {}
+extension Unowned: Hashable where T: Hashable {}
 public struct Weak<T: AnyObject> { // 40 bytes
   public weak var value : T?
   public init (_ value: T) {
@@ -30,6 +32,9 @@ public struct Weak<T: AnyObject> { // 40 bytes
 public class WeakArray<T: AnyObject> {
   private var content = [Weak<T>]()
   public init() {}
+  public init<C: Collection>(_ collection: C) where C.Element == T {
+    content = collection.map { Weak($0) }
+  }
   public var isEmpty: Bool { count == 0 }
   public var count: Int {
     update()
