@@ -17,12 +17,22 @@ extension Int {
   }
 }
 extension Array where Element: Hashable {
-  public func unique() -> [Element] {
+  public func removeDuplicates() -> [Element] {
     var set = Set<Element>()
     return compactMap { set.insert($0).inserted ? $0 : nil }
   }
   public func set() -> Set<Element> {
     return Set(self)
+  }
+}
+
+public extension Array {
+  @discardableResult
+  mutating func removeFirst(where condition: (Element)->Bool) -> Element? {
+    guard let index = firstIndex(where: condition) else { return nil }
+    let element = self[index]
+    remove(at: index)
+    return element
   }
 }
 
@@ -32,9 +42,13 @@ extension Array where Element: Equatable {
       self.remove(object)
     }
   }
-  public mutating func remove(_ object: Element) {
+  @discardableResult
+  public mutating func remove(_ object: Element) -> Bool {
     if let index = self.firstIndex(of: object) {
       self.remove(at: index)
+      return true
+    } else {
+      return false
     }
   }
   public mutating func insert(_ object: Element) {
@@ -98,22 +112,26 @@ extension Array {
     return self[index]
   }
   public func first(_ n: Int) -> ArraySlice<Element> {
+    guard n > 0 else { return [] }
     guard !isEmpty else { return [] }
     let end: Int = Swift.min(n, count)
     return self[0..<end]
   }
   public func first(_ n: Int, after: Int) -> ArraySlice<Element> {
+    guard n > 0 else { return [] }
     guard !isEmpty else { return [] }
     let start: Int = Swift.min(after, count - 1)
     let end: Int = Swift.min(after + n, count)
     return self[start..<end]
   }
   public func last(_ n: Int) -> ArraySlice<Element> {
+    guard n > 0 else { return [] }
     guard !isEmpty else { return [] }
     let start = Swift.max(count-n, 0)
     return self[start..<count]
   }
   public func last(_ n: Int, after: Int) -> ArraySlice<Element> {
+    guard n > 0 else { return [] }
     guard !isEmpty else { return [] }
     let start = Swift.max(count-n-after, 0)
     let end = Swift.max(0, count - after)
@@ -156,9 +174,16 @@ extension Array {
     }
     return dictionary
   }
+  public func dictionary<Key: Hashable, Value>(key: (Element)->(Key), value: (Element)->Value) -> [Key: Value] {
+    var dictionary = [Key: Value]()
+    forEach {
+      dictionary[key($0)] = value($0)
+    }
+    return dictionary
+  }
 }
 
-// MARK:- Binary search
+// MARK: - Binary search
 public extension Array {
   @discardableResult
   mutating func binaryInsert<T: Comparable>(_ element: Element, _ value: (Element)->(T)) -> Index {
@@ -166,6 +191,19 @@ public extension Array {
     insert(element, at: index)
     return index
   }
+  func binaryIndexRange<T: Comparable>(_ range: Range<T>, _ value: (Element)->(T)) -> Range<Index> {
+    binaryClosest(range.lowerBound, value)..<binaryClosest(range.upperBound, value)
+  }
+  func binaryIndexRange<T: Comparable>(_ range: ClosedRange<T>, _ value: (Element)->(T)) -> ClosedRange<Index> {
+    binaryClosest(range.lowerBound, value)...binaryClosest(range.upperBound, value)
+  }
+  func binaryRange<T: Comparable>(_ range: Range<T>, _ value: (Element)->(T)) -> SubSequence {
+    self[binaryIndexRange(range, value)]
+  }
+  func binaryRange<T: Comparable>(_ range: ClosedRange<T>, _ value: (Element)->(T)) -> SubSequence {
+    self[binaryIndexRange(range, value)]
+  }
+
   func binarySearch<T: Comparable>(_ e: T, _ value: (Element)->(T)) -> Index? {
     var l = 0
     var h = self.count - 1
@@ -217,9 +255,16 @@ public extension Array where Element: Comparable {
     }
   }
   func binarySearch(_ e: Element) -> Index? {
+    guard count > 0 else { return nil }
     var l = 0
-    var h = self.count - 1
-    return binarySearch(e, &l, &h)
+    var h = count - 1
+    if e == self[l] {
+      return l
+    } else if e == self[h] {
+      return h
+    } else {
+      return binarySearch(e, &l, &h)
+    }
   }
   func binaryClosest(_ element: Element) -> Index {
     guard count > 0 else { return 0 }

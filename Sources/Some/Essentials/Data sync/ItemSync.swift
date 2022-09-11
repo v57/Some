@@ -18,7 +18,7 @@ extension SingleItemSync {
     if let loading = loading {
       return loading
     } else if let local = local, !isOutdated(local) {
-      return O(local)
+      return O<Value>(local)
     } else {
       let h = O(local)
       load().pipe(h)
@@ -30,7 +30,7 @@ extension SingleItemSync {
     if let loading = loading {
       return loading
     } else if let local = local, !isOutdated(local) {
-      return O(local)
+      return O<Value>(local)
     } else {
       let h = O(local)
       load().pipe(h)

@@ -41,6 +41,13 @@ public func json(_ object: Any?) -> Data! {
 }
 
 extension Data {
+  public func bytes<T>(_ body: (UnsafeRawBufferPointer) throws -> T) rethrows -> T {
+    try self.withUnsafeBytes(body)
+  }
+  public mutating func mutableBytes<T>(_ body: (UnsafeMutableRawBufferPointer) throws -> T) rethrows -> T {
+    try self.withUnsafeMutableBytes(body)
+  }
+  public static var randomDataSalt = EncryptionKey("salt\(Time.mcs ^ Int.random(in: Int.min..<Int.max))").generator
   public var json: Any! {
     try? JSONSerialization.jsonObject(with: self, options: [.mutableContainers, .mutableLeaves])
   }
@@ -59,13 +66,12 @@ extension Data {
     success = result == errSecSuccess
     #endif
     guard !success else { return data }
-    data.withUnsafeMutableBytes { bytes in
+    data.mutableBytes { bytes in
       for i in 0..<length {
-        #if canImport(Darwin)
-        bytes[i] = UInt8(arc4random() & 0xff)
-        #else
-        bytes[i] = UInt8(rand() & 0xff)
-        #endif
+        var value = UInt64.random(in: UInt64.min..<UInt64.max) ^ randomDataSalt.next()
+        Swift.withUnsafeBytes(of: &value) {
+          $0.forEach { bytes[i] ^= $0 }
+        }
       }
     }
     return data
@@ -81,6 +87,14 @@ public extension Data {
     }
     self = data
   }
+  init(u64: [UInt64]) {
+    self.init(count: u64.count * 8)
+    u64.withUnsafeBytes { pointer in
+      self.withUnsafeMutableBytes {
+        $0.copyMemory(from: pointer)
+      }
+    }
+  }
   mutating func append<T>(_ value: T) where T: RawRepresentable, T.RawValue: FixedWidth {
     append(value.rawValue)
   }
@@ -95,7 +109,7 @@ public extension Data {
   }
   mutating func normalize(to blockSize: Int) {
     let a = blockSize - count % blockSize
-    guard a > 0 else { return }
+    guard a > 0 && a != blockSize else { return }
     append(Data(count: a))
   }
   mutating func replace<T>(at index: Int, with value: T) where T: DataRepresentable {

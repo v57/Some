@@ -25,7 +25,12 @@ open class CompletionQueue: SomeOperationQueue {
 }
 
 public enum OverrideMode {
-  case none, weak, strong
+  /// No override
+  case none
+  /// Do not add item if it already exists.
+  case weak
+  /// Replace existed item.
+  case strong
 }
 open class SomeOperation {
   open var name: String { String(describing: type(of: self)) }
@@ -51,8 +56,8 @@ open class SomeOperation {
     queue?.reset()
     queue?.cancel()
   }
-  open func pause() {
-    queue?.pause()
+  open func suspend() {
+    
   }
   open func failed(error: Error) {
     queue?.failed(error: error)

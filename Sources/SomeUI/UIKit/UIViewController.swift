@@ -21,8 +21,8 @@ public extension UIViewController {
   }
   func replace(_ viewController: UIViewController?) {
     guard let viewController = viewController else { return }
-    let navigation = self as? UINavigationController ?? navigationController
-    navigation?.setViewControllers([viewController], animated: true)
+    guard let navigation = self as? UINavigationController ?? navigationController else { return }
+    navigation.setViewControllers(navigation.viewControllers.dropLast() + [viewController], animated: true)
   }
   func present(_ viewController: UIViewController?) {
     guard let viewController = viewController else { return }

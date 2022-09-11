@@ -99,6 +99,10 @@ public extension FixedWidthInteger {
     self &+= 1
     return self
   }
+  mutating func decrement() -> Self {
+    self &-= 1
+    return self
+  }
 }
 
 // MARK: - To String with radix

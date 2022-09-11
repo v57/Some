@@ -15,6 +15,22 @@ public extension URL {
     URLSession.some.downloadImage(url: self)
   }
 }
+public extension Future where T == UIImage {
+  func decode() -> Future<UIImage> {
+    map(operationQueue: .images) {
+      $0.decode()
+      return $0
+    }
+  }
+}
+public extension Future where T == UIImage? {
+  func decode() -> Future<UIImage?> {
+    map(operationQueue: .images) {
+      $0?.decode()
+      return $0
+    }
+  }
+}
 public extension URLSession {
   func downloadImage(url: URL) -> Future<UIImage?> {
     let cache = URLSession.cache

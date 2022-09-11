@@ -87,8 +87,18 @@ extension Range where Bound == Int {
 //  }
   mutating func remove(_ range: Range<Int>) -> Bool {
     if range.lowerBound < lowerBound {
-      move(by: -range.count)
-      return false
+      if range.upperBound > lowerBound {
+        if range.upperBound >= upperBound {
+          self = range.lowerBound..<range.lowerBound
+          return true
+        } else {
+          self = lowerBound..<lowerBound+upperBound-range.upperBound
+          return true
+        }
+      } else {
+        move(by: -range.count)
+        return false
+      }
     } else if range.lowerBound < upperBound {
       reduceRight(by: (range.lowerBound..<Swift.min(range.upperBound, upperBound)).count)
       return true
@@ -143,7 +153,7 @@ extension Range where Bound == Int {
 //      upRight()
 //    }
 //  }
-//  
+//
 //  mutating func insert2(_ element: Int) {
 //    if element <= lowerBound {
 //      right()

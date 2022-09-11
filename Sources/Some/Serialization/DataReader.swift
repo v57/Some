@@ -14,6 +14,11 @@ public enum DataOptions {
   // read
   case preview
 }
+public extension Data {
+  var reader: DataReader {
+    DataReader(data: self)
+  }
+}
 open class DataReader: DataRepresentable {
   public var data: Data {
     didSet {
@@ -57,6 +62,11 @@ open class DataReader: DataRepresentable {
 
 // MARK: Reading
 public extension DataReader {
+  func preview(_ build: (DataReader)throws->()) rethrows {
+    let p = self.position
+    try build(self)
+    self.position = p
+  }
   func offset(by offset: Int) throws -> Range<Int> {
     let start = position
     let end = position + offset
@@ -97,10 +107,6 @@ public extension DataReader {
   }
   func next<T>(_ version: DataVersion) throws -> T where T: DataDecodableVersionable & Versionable {
     try T.init(data: self, version: version.version(for: T.self))
-  }
-  func next<T>(version: Int) throws -> T? where T: DataDecodableVersionable {
-    guard try bool() else { return nil }
-    return try T.init(data: self, version: version)
   }
   func next<T>(_ version: DataVersion) throws -> T? where T: DataDecodableVersionable & Versionable {
     guard try bool() else { return nil }

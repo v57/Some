@@ -12,6 +12,15 @@ public protocol ComparableValue: Comparable {
   var comparableValue: Element { get }
 }
 public extension Comparable {
+  func limit(in range: ClosedRange<Self>) -> Self {
+    if self < range.lowerBound {
+      return range.lowerBound
+    } else if self > range.upperBound {
+      return range.upperBound
+    } else {
+      return self
+    }
+  }
   func limit(in range: Range<Self>) -> Self {
     if self < range.lowerBound {
       return range.lowerBound

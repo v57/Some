@@ -24,6 +24,37 @@ func when<T>(fulfilled promises: [Future<T>]) -> Future<[T]> {
 public func group<T>(_ futures: [Future<T>]) -> Future<[T]> {
   return Future<T>.group(futures)
 }
+public extension Array where Element == Future<Void> {
+  func future() -> Future<Void> {
+    let future = Future<Void>()
+    var left = count
+    var error: Error?
+    forEach {
+      if let result = $0.result {
+        left -= 1
+        if let e = result.error {
+          error = e
+        }
+      } else {
+        $0.pipe {
+          left -= 1
+          if left == 0 {
+            future.resolve($0)
+          }
+        }
+      }
+    }
+    if left == 0 {
+      if let error = error {
+        return .failed(error)
+      } else {
+        return .success
+      }
+    } else {
+      return future
+    }
+  }
+}
 extension Future {
   public static func groupSkipErrors<T>(_ futures: [Future<T>]) -> Future<[T]> {
     let future = Future<[T]>()
@@ -97,6 +128,7 @@ extension Future {
   }
   public func map<U>(on queue: DispatchQueue, _ transform: @escaping (T) throws -> (U)) -> Future<U> {
     let future = Future<U>()
+    future.progress = progress
     pipe(on: queue) { result in
       switch result {
       case .success(let value):
@@ -109,6 +141,7 @@ extension Future {
   }
   public func map<U>(operationQueue queue: OperationQueue, _ transform: @escaping (T) throws -> (U)) -> Future<U> {
     let future = Future<U>()
+    future.progress = progress
     pipe(on: queue) { result in
       switch result {
       case .success(let value):
@@ -121,6 +154,7 @@ extension Future {
   }
   public func then<U>(on queue: DispatchQueue, _ makeFuture: @escaping (T) throws -> (Future<U>)) -> Future<U> {
     let future = Future<U>()
+    future.progress = progress
     pipe(on: queue) { value in
       switch value {
       case .success(let value):
@@ -184,7 +218,20 @@ public class Future<T> {
   public init(value: T) {
     self.result = .success(value)
   }
+  public init(_ task: @escaping () async throws -> T) {
+    Task {
+      do {
+        let value = try await task()
+        self.success(value)
+      } catch {
+        self.fail(error)
+      }
+    }
+  }
   
+  public func removePipes() {
+    pipes.removeAll()
+  }
   public var `do`: P<T> {
     let pipe = Pipes.SingleResult<T>()
     success { [weak pipe] in
@@ -201,6 +248,14 @@ public class Future<T> {
     return pipe
   }
   @discardableResult
+  public func await() async throws -> T {
+    try await withUnsafeThrowingContinuation { task in
+      pipe { result in
+        task.resume(with: result)
+      }
+    }
+  }
+  @discardableResult
   public func pipe(_ callback: @escaping (FutureResult<T>) throws -> ()) -> Self {
     append(pipe: AnyPipe<T>(callback))
     return self
@@ -214,6 +269,14 @@ public class Future<T> {
   public func pipe(on queue: OperationQueue, _ callback: @escaping (FutureResult<T>) throws -> ()) -> Self {
     append(pipe: AnyPipe<T>.Queue(on: queue, callback))
     return self
+  }
+  @discardableResult
+  public func alwaysSuccess() -> Future<Void> {
+    let future = Future<Void>()
+    pipe { result in
+      future.success()
+    }
+    return future
   }
   @discardableResult
   public func success(_ callback: @escaping (T) throws -> ()) -> Self {
@@ -282,10 +345,12 @@ public class Future<T> {
   }
   @discardableResult
   public func pipe(_ pipe: P<T>) -> Self {
-    success(pipe.send)
+    self.pipe().add(pipe)
+    return self
   }
   public func mapNil<U>(_ transform: @escaping (T) throws -> (U?)) -> Future<U> {
     let future = Future<U>()
+    future.progress = progress
     pipe { result in
       switch result {
       case .success(let value):
@@ -302,6 +367,7 @@ public class Future<T> {
   }
   public func mapError(_ transform: @escaping (Error) -> (Error)) -> Future<T> {
     let future = Future<T>()
+    future.progress = progress
     pipe { result in
       switch result {
       case .success(let value):
@@ -318,8 +384,17 @@ public class Future<T> {
   public func mapNullable<U>(_ keyPath: KeyPath<T,U>) -> Future<U?> {
     return map { $0[keyPath: keyPath] }
   }
+  public func mapResult<U>(_ transform: @escaping (FutureResult<T>) -> (FutureResult<U>)) -> Future<U> {
+    let future = Future<U>()
+    future.progress = progress
+    pipe { result in
+      future.resolve(transform(result))
+    }
+    return future
+  }
   public func map<U>(_ transform: @escaping (T) throws -> (U)) -> Future<U> {
     let future = Future<U>()
+    future.progress = progress
     pipe { result in
       switch result {
       case .success(let value):
@@ -336,6 +411,7 @@ public class Future<T> {
   }
   public func then<U>(_ makeFuture: @escaping (T) throws -> (Future<U>)) -> Future<U> {
     let future = Future<U>()
+    future.progress = progress
     pipe { value in
       switch value {
       case .success(let value):
@@ -349,13 +425,15 @@ public class Future<T> {
   }
   @discardableResult
   public func wait() throws -> T {
-    var result: FutureResult<T>!
-    let semaphore = DispatchSemaphore(value: 0)
-    pipe {
-      result = $0
-      semaphore.signal()
+    var result: FutureResult<T>! = self.result
+    if result == nil {
+      let semaphore = DispatchSemaphore(value: 0)
+      pipe {
+        result = $0
+        semaphore.signal()
+      }
+      semaphore.wait()
     }
-    semaphore.wait()
     switch result! {
     case .success(let value):
       return value

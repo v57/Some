@@ -39,12 +39,21 @@ open class Var<T>: P<T>, RawRepresentable, CustomStringConvertible {
     (child as? P<T>)?.send(rawValue)
   }
   open override func request(from child: S) {
-    send(rawValue)
+    (child as? P<T>)?.send(rawValue)
   }
   public var description: String { "\(rawValue)" }
 }
 
-open class O<T>: P<T>, RawRepresentable, CustomStringConvertible {
+open class O<T>: _O<T>, RawRepresentable {
+  public override init(_ value: T? = nil) {
+    super.init(value)
+  }
+  required public init(rawValue: T?) {
+    super.init(rawValue)
+  }
+}
+
+open class _O<T>: P<T>, CustomStringConvertible {
   open override var storesValues: Bool { true }
   
   public private(set) var rawValue: T?
@@ -57,15 +66,15 @@ open class O<T>: P<T>, RawRepresentable, CustomStringConvertible {
   public init(_ value: T?) {
     self.rawValue = value
   }
-  required public init(rawValue: T?) {
-    self.rawValue = rawValue
-  }
   open override func send(_ content: T) {
     rawValue = content
     super.send(content)
   }
   public func set(_ value: T) {
     send(value)
+  }
+  public func removeValue() {
+    self.rawValue = nil
   }
   open override func add(child: S) {
     super.add(child: child)
@@ -75,7 +84,7 @@ open class O<T>: P<T>, RawRepresentable, CustomStringConvertible {
   }
   open override func request(from child: S) {
     guard let rawValue = rawValue else { return }
-    send(rawValue)
+    (child as? P<T>)?.send(rawValue)
   }
   public var description: String {
     if let rawValue = rawValue {

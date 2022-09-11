@@ -31,6 +31,18 @@ public protocol SomeSymmetricKey: SomeSeedGenerator {
   func encrypt(data: inout Data, salt: UInt64)
   func decrypt(data: inout Data, salt: UInt64)
 }
+public extension SomeSymmetricKey {
+  func encrypt(data: Data, salt: UInt64) -> Data {
+    var data = data
+    encrypt(data: &data, salt: salt)
+    return data
+  }
+  func decrypt(data: Data, salt: UInt64) -> Data {
+    var data = data
+    decrypt(data: &data, salt: salt)
+    return data
+  }
+}
 
 extension SomeSymmetricKey {
   public func encrypt(data: inout Data, salt: UInt64 = 0xf85967b6a6d24cb4) {
@@ -100,6 +112,13 @@ public struct EncryptionKey: SomeSymmetricKey, SomeKeyHasher {
     self.c = c
     self.d = d
   }
+  public init(_ string: String) {
+    let n = UInt256(string.sha256)
+    a = n.raw.0
+    b = n.raw.1
+    c = n.raw.2
+    d = n.raw.3
+  }
   @inline(__always)
   public func seed(_ i: UInt64, _ e: UInt64 = 0xf539244bad9d0282) -> UInt64 {
     return (i &+ e) &* (i &* (i &+ d) &* a &+ b) &* c
@@ -165,7 +184,7 @@ extension Data {
   public mutating func encrypt(password: UInt64, from: Int) {
     //    print("encrypting \(hex)\n with \(password), from: \(from)")
     let count = self.count
-    withUnsafeMutableBytes { bytes in
+    mutableBytes { bytes in
       for i in from..<count {
         let v = UInt64.seed(password, UInt64(i))
         let b = UInt8(v & 0xFF)
@@ -176,7 +195,7 @@ extension Data {
   public mutating func decrypt(password: UInt64, from: Int) {
     //    print("decrypting \(hex)\n with \(password), from: \(from)")
     let count = self.count
-    withUnsafeMutableBytes { bytes in
+    mutableBytes { bytes in
       for i in from..<count {
         let v = UInt64.seed(password, UInt64(i))
         let b = UInt8(v & 0xFF)
@@ -187,7 +206,7 @@ extension Data {
   public mutating func encrypt(password: UInt64, offset: Int = 0) {
     //    print("encrypting \(hex)\n with \(password), offset: \(offset)")
     let count = self.count
-    withUnsafeMutableBytes { bytes in
+    mutableBytes { bytes in
       for i in 0..<count {
         let v = UInt64.seed(password, UInt64(i+offset))
         let b = UInt8(v & 0xFF)
@@ -198,7 +217,7 @@ extension Data {
   public mutating func decrypt(password: UInt64, offset: Int = 0) {
     //    print("decrypting \(hex)\n with \(password), offset: \(offset)")
     let count = self.count
-    withUnsafeMutableBytes { bytes in
+    mutableBytes { bytes in
       for i in 0..<count {
         let v = UInt64.seed(password, UInt64(i+offset))
         let b = UInt8(v & 0xFF)
@@ -230,5 +249,16 @@ public extension DataWriter {
   }
   func encrypt(using key: SomeSymmetricKey, password: UInt64) {
     key.encrypt(data: &data, salt: password)
+  }
+}
+
+public struct SomeRandomNumberGenerator: RandomNumberGenerator {
+  let name: String
+  var offset = 0
+  public init(_ name: String) {
+    self.name = name
+  }
+  public mutating func next() -> UInt64 {
+    "\(name)-\(offset.increment())".sha256.uint64
   }
 }

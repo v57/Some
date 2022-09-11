@@ -38,7 +38,7 @@ open class Button: UIButton {
       return alpha > 0
     }
     set {
-      animateif(superview != nil) {
+      animateif(superview != nil) { [self] in
         alpha = newValue ? 1.0 : 0.0
       }
     }
@@ -157,18 +157,6 @@ open class Button: UIButton {
   required public init?(coder aDecoder: NSCoder) {
     super.init(coder: aDecoder)
   }
-}
-
-open class DFButton2: Button, DynamicFrame {
-  public var dynamicFrame: DFrame?
-}
-
-open class DPButton2: Button, DynamicPos {
-  public var dpos: DPos? { didSet { updateFrame() } }
-}
-
-open class DCButton2: Button, DynamicCenter {
-  public var dcenter: DCenter? { didSet { updateFrame() } }
 }
 
 extension UIButton {

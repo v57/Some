@@ -38,7 +38,14 @@ public class TableCamera {
   var cells: Cells {
     return table.cells
   }
-  var loadedRange = Range<Int>()
+  public var loadedRange = Range<Int>()
+  public var isEnabled = true
+  func update(_ doUpdates: ()->()) {
+    let old = isEnabled
+    isEnabled = false
+    doUpdates()
+    isEnabled = old
+  }
   func open() -> UpdateResult {
     return update()
   }
@@ -47,7 +54,7 @@ public class TableCamera {
   }
   func update() -> UpdateResult {
     let result = UpdateResult()
-    if !cells.isEmpty {
+    if !cells.isEmpty && isEnabled {
     //  print("camera: updating \(cells)")
       check(result)
     }

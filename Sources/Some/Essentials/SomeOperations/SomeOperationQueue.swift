@@ -69,6 +69,21 @@ open class SomeOperationQueue: SomeOperation {
     guard overrideIfNeedeed(operation: operation) else { return }
     self.operations.append(operation)
   }
+  open func start() {
+    guard !isEnabled else { return }
+    isEnabled = true
+    reset()
+    retry()
+  }
+  open func stop() {
+    guard isEnabled else { return }
+    isEnabled = false
+    isRunning = false
+    reset()
+    operations.forEach {
+      $0.suspend()
+    }
+  }
   open func resume() {
     guard isEnabled else { return }
     guard !isRunning else { return }
@@ -109,10 +124,6 @@ open class SomeOperationQueue: SomeOperation {
     isRunning = false
     queue?.reset()
     queue?.cancel()
-  }
-  open override func pause() {
-    isRunning = false
-    queue?.pause()
   }
   open override func failed(error: Error) {
     isRunning = false

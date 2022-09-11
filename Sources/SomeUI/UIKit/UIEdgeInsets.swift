@@ -47,22 +47,22 @@ public extension UIEdgeInsets {
   
   func l(_ inset: CGFloat) -> UIEdgeInsets {
     var insets = self
-    insets.left = inset
+    insets.left += inset
     return insets
   }
   func r(_ inset: CGFloat) -> UIEdgeInsets {
     var insets = self
-    insets.right = inset
+    insets.right += inset
     return insets
   }
   func t(_ inset: CGFloat) -> UIEdgeInsets {
     var insets = self
-    insets.top = inset
+    insets.top += inset
     return insets
   }
   func b(_ inset: CGFloat) -> UIEdgeInsets {
     var insets = self
-    insets.bottom = inset
+    insets.bottom += inset
     return insets
   }
   func lr(_ inset: CGFloat) -> UIEdgeInsets {

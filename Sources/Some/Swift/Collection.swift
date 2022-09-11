@@ -35,7 +35,13 @@ public extension Collection {
   }
 }
 
-public extension Collection {
+public extension LazySequence {
+  func compactMap<T>(as type: T.Type) -> LazyMapSequence<LazyFilterSequence<LazyMapSequence<Base, T?>>, T> {
+    compactMap { $0 as? T }
+  }
+}
+
+public extension Sequence {
   func compactMap<T>(as type: T.Type) -> [T] {
     compactMap { $0 as? T }
   }
@@ -64,3 +70,4 @@ public extension Collection {
     return nil
   }
 }
+

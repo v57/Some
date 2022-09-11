@@ -339,51 +339,43 @@ public func animateKeyboard(_ time: TimeInterval = 0.25, block: @escaping () -> 
   if time == 0 {
     UIView.animate(withDuration: 0.1, animations: block)
   } else {
-    UIView.beginAnimations(nil, context: nil)
-    UIView.setAnimationDuration(time)
-    UIView.setAnimationCurve(UIView.AnimationCurve(rawValue: 7)!)
-    UIView.setAnimationBeginsFromCurrentState(true)
-    block()
-    UIView.commitAnimations()
+    UIView.animate(withDuration: time, animations: block)
   }
 }
 
-public func animate(time: TimeInterval, curve: UIView.AnimationCurve, animations: () -> Void, completion: (() -> Void)? = nil) {
+public func animate(time: TimeInterval, curve: UIView.AnimationCurve, animations: @escaping () -> Void, completion: (() -> Void)? = nil) {
   guard animationsAvailable() else {
     animations()
     completion?()
     return
   }
-  
-  UIView.beginAnimations(nil, context: nil)
-  
-  if let completion = completion {
-    let wrapper = AnimationDelegate(callback: completion)
-    delegates.insert(wrapper)
-    UIView.setAnimationDelegate(wrapper)
-    UIView.setAnimationDidStop(#selector(AnimationDelegate.animationDidStop(_:finished:context:)))
-  }
-  
-  UIView.setAnimationDuration(time)
-  UIView.setAnimationDelay(0)
-  UIView.setAnimationCurve(curve)
   let a = isAnimating
   isAnimating = true
+  let options: UIView.AnimationOptions
+  switch curve {
+  case .easeIn: options = .curveEaseIn
+  case .easeOut: options = .curveEaseOut
+  case .easeInOut: options = .curveEaseInOut
+  case .linear: options = .curveLinear
+  @unknown default: options = .curveEaseInOut
+  }
+  UIView.animate(withDuration: time, delay: 0, options: options, animations: animations, completion: { _ in
+    completion?()
+  })
   animations()
   isAnimating = a
-  UIView.commitAnimations()
 }
-public func animate(_ animations: () -> ()) {
+public func animate(_ animations: @escaping () -> ()) {
   animate(time: atime, curve: .default, animations: animations, completion: nil)
 }
 
-public func animate(_ time: Double, _ animations: () -> ()) {
+public func animate(_ time: Double, _ animations: @escaping () -> ()) {
   animate(time: time, curve: .default, animations: animations, completion: nil)
 }
-public func animate(_ time: Double, _ animations: () -> (), completion: @escaping () -> ()) {
+public func animate(_ time: Double, _ animations: @escaping () -> (), completion: @escaping () -> ()) {
   animate(time: time, curve: .default, animations: animations, completion: completion)
 }
-public func animate(_ animations: () -> (), completion: @escaping () -> ()) {
+public func animate(_ animations: @escaping () -> (), completion: @escaping () -> ()) {
   animate(time: atime, curve: .default, animations: animations, completion: completion)
 }
 public func noAnimation(_ actionsWithoutAnimation: ()->()) {
@@ -399,10 +391,10 @@ public func noAnimation(_ actionsWithoutAnimation: ()->()) {
 }
 var isAnimating: Bool = false
 
-public func animateif(_ animated: Bool, _ animations: () -> ()) {
+public func animateif(_ animated: Bool, _ animations: @escaping () -> ()) {
   animated ? animate(animations) : animations()
 }
-public func animateif(_ animated: Bool, _ animations: () -> (), _ completion: @escaping ()->()) {
+public func animateif(_ animated: Bool, _ animations: @escaping () -> (), _ completion: @escaping ()->()) {
   if animated {
     animate(animations, completion: completion)
   } else {
@@ -411,36 +403,36 @@ public func animateif(_ animated: Bool, _ animations: () -> (), _ completion: @e
   }
 }
 
-private func _animate(time: TimeInterval, curve: UIView.AnimationCurve, animations: () -> Void, completion: (() -> Void)? = nil) {
+private func _animate(time: TimeInterval, curve: UIView.AnimationCurve, animations: @escaping () -> Void, completion: (() -> Void)? = nil) {
   animate(time: time, curve: curve, animations: animations, completion: completion)
 }
-private func _animate(_ animations: () -> ()) {
+private func _animate(_ animations: @escaping () -> ()) {
   animate(animations)
 }
-private func _animate(_ time: Double, _ animations: () -> ()) {
+private func _animate(_ time: Double, _ animations: @escaping () -> ()) {
   animate(time,animations)
 }
-private func _animate(_ time: Double, _ animations: () -> (), completion: @escaping () -> ()) {
+private func _animate(_ time: Double, _ animations: @escaping () -> (), completion: @escaping () -> ()) {
   animate(time,animations,completion: completion)
 }
-private func _animate(_ animations: () -> (), completion: @escaping () -> ()) {
+private func _animate(_ animations: @escaping () -> (), completion: @escaping () -> ()) {
   animate(animations, completion: completion)
 }
 
 extension UIView {
-  public func animate(time: TimeInterval, curve: UIView.AnimationCurve, animations: () -> Void, completion: (() -> Void)? = nil) {
+  public func animate(time: TimeInterval, curve: UIView.AnimationCurve, animations: @escaping () -> (), completion: (() -> Void)? = nil) {
     _animate(time: time, curve: curve, animations: animations, completion: completion)
   }
-  public func animate(_ animations: () -> ()) {
+  public func animate(_ animations: @escaping () -> ()) {
     _animate(animations)
   }
-  public func animate(_ time: Double, _ animations: () -> ()) {
+  public func animate(_ time: Double, _ animations: @escaping () -> ()) {
     _animate(time,animations)
   }
-  public func animate(_ time: Double, _ animations: () -> (), completion: @escaping () -> ()) {
+  public func animate(_ time: Double, _ animations: @escaping () -> (), completion: @escaping () -> ()) {
     _animate(time,animations,completion: completion)
   }
-  public func animate(_ animations: () -> (), completion: @escaping () -> ()) {
+  public func animate(_ animations: @escaping () -> (), completion: @escaping () -> ()) {
     _animate(animations, completion: completion)
   }
   
@@ -487,6 +479,15 @@ public func jellyAnimation(_ a: @escaping ()->()) {
 }
 public func jellyAnimation(_ a: @escaping ()->(), _ c: @escaping ()->()) {
   UIView.an(0.5, 0, 0.5, 3, [.allowUserInteraction], a, { _ in c() })
+}
+public func jellyAnimation(delay: Double, _ a: @escaping ()->()) {
+  UIView.an(0.5, delay, 0.5, 3, [.allowUserInteraction], a, nil)
+}
+public func fastSmoothAnimation(_ a: @escaping ()->(), _ c: @escaping ()->()) {
+  UIView.an(0.37, 0, 1, 1, [.allowUserInteraction], a, { _ in c() })
+}
+public func fastSmoothAnimation(_ a: @escaping ()->()) {
+  UIView.an(0.37, 0, 1, 1, [.allowUserInteraction], a, nil)
 }
 public func smoothAnimation(_ a: @escaping ()->(), _ c: @escaping ()->()) {
   UIView.an(0.5, 0, 1, 1, [.allowUserInteraction], a, { _ in c() })

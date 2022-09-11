@@ -33,14 +33,20 @@ open class SomeAppNotifications: NSObject {
   }
   
   open func didRegister(deviceToken: Data) {
-    print("didRegister(deviceToken:)")
     guard token == nil else { return }
     token = deviceToken
     registered()
   }
+
+  open func willPresent(notification: UNNotification) -> UNNotificationPresentationOptions {
+    .badge
+  }
 }
 
 extension SomeAppNotifications: UNUserNotificationCenterDelegate {
+  public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    completionHandler(willPresent(notification: notification))
+  }
   public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
     defer { completionHandler() }
     guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
@@ -60,16 +66,8 @@ extension SomeAppNotifications {
   
   public func didReceive(remote userInfo: [AnyHashable : Any]) {
     let notification = PushNotification(userInfo: userInfo)
-    var mainLoaded = true
-    if let main = _main {
-      mainLoaded = main.isLoaded
-    }
-    if mainLoaded {
-      if ceo.isPaused {
-        try? opened(remote: notification)
-      }
-    }
     history.append(notification)
+    try? opened(remote: notification)
   }
 }
 

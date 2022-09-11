@@ -11,6 +11,8 @@ import UIKit
 
 public protocol TableControllerDelegate: AnyObject {
   var view: UIView! { get }
+  var tableInfo: TableInfo? { get }
+  var parent: TableController? { get }
   var cells: TableController.Cells { get set }
   
   var contentSize: CGFloat { get set }
@@ -23,6 +25,7 @@ public protocol TableControllerDelegate: AnyObject {
   var cameraInsets: UIEdgeInsets { get }
   
   var isVisible: Bool { get }
+  var isUpdating: Bool { get set }
   
   var camera: TableCamera { get }
   var layout: TableLayout { get }
@@ -31,7 +34,7 @@ public protocol TableControllerDelegate: AnyObject {
   var isInitialised: Bool { get set }
   var animator: Animator? { get set }
   
-  func animate(animations: @escaping ()->(), completion: @escaping ()->())
+  func animate(delay: Double, animations: @escaping ()->(), completion: @escaping ()->())
 }
 
 public class TableController {
@@ -69,6 +72,10 @@ public class TableController {
   public func remove(cell: Cell, animated: Bool) -> Animator? {
     guard cell.tableInfo?.table === self else { return nil }
     return remove(range: cell.index..<cell.index+1, animated: animated)
+  }
+  @discardableResult
+  public func removeAll(animated: Bool) -> Animator? {
+    remove(range: 0..<cells.count, animated: animated)
   }
   @discardableResult
   public func remove(range: Range<Int>, animated: Bool) -> Animator? {
@@ -118,14 +125,14 @@ public class TableController {
     
     for index in result.changedCells {
       let cell = cells[index]
-      // в ренже могут быть целки, которые не менялись
+      // range may contain unchanged cells
       guard cell.view != nil else { continue }
       if cell.shouldUpdateFrame {
         animator.animate(cell.updateFrame)
       }
     }
     
-    let context = DisplayContext(animator: nil, created: false, from: .remove)
+    let context = DisplayContext(animator: nil, created: false, from: .remove, group: range.count)
     cameraResult.loaded.loop { index in
       let cell = cells[index]
       guard !cell.isVisible else { return }
@@ -137,6 +144,8 @@ public class TableController {
   
   @discardableResult
   public func resize(range: Range<Int>, animated: Bool) -> Animator? {
+    table.isUpdating = true
+    defer { table.isUpdating = false }
     let resizedCells = cells[range]
     
     // Поменял next(range.lowerBound) на next(range) потому что не работало
@@ -157,7 +166,6 @@ public class TableController {
     
     cameraResult.unloaded.loop { index in
       let cell = cells[index]
-      assert(cell.shouldUpdateFrame)
       animator.animate(cell.updateFrame)
       animator.completion {
         if cell.isVisible {
@@ -167,13 +175,13 @@ public class TableController {
     }
     for index in layoutResult.changedCells {
       let cell = cells[index]
-      // в ренже могут быть целки, которые не менялись
+      // range may contain unchanged cells
       guard cell.view != nil else { continue }
       if cell.shouldUpdateFrame {
         animator.animate(cell.updateFrame)
       }
     }
-    let context = DisplayContext(animator: nil, created: false, from: .resize)
+    let context = DisplayContext(animator: nil, created: false, from: .resize, group: range.count)
     cameraResult.loaded.loop { index in
       let cell = cells[index]
       if !cell.isVisible {
@@ -197,8 +205,39 @@ public class TableController {
     return cells[range]
   }
   
+  public func updateCamera(animator: Animator, result: TableLayout.Result, context: (Int) -> (DisplayContext)) {
+    let cameraResult = camera.update()
+    let view = table.view!
+    cameraResult.unloaded.loop { index in
+      let cell = cells[index]
+      if cell.shouldUpdateFrame {
+        animator.animate(cell.updateFrame)
+      }
+      animator.completion {
+        if cell.isVisible {
+          cell.hide(animator: nil, removed: false)
+        }
+      }
+    }
+    for index in result.changedCells {
+      let cell = cells[index]
+      // range may contain unchanged cells
+      guard cell.view != nil else { continue }
+      if cell.shouldUpdateFrame {
+        animator.animate(cell.updateFrame)
+      }
+    }
+    cameraResult.loaded.loop { index in
+      let cell = cells[index]
+      if !cell.isVisible {
+        cell.display(to: view, context: context(index))
+      }
+    }
+  }
+  
   @discardableResult
   public func insert(cells newCells: [Cell], at index: Int, animated: Bool) -> Animator? {
+    guard !newCells.isEmpty else { return nil }
     for (i,cell) in newCells.enumerated() {
       cell.tableInfo = TableInfo(table: self, index: index + i)
     }
@@ -212,7 +251,7 @@ public class TableController {
       cell.size = frame.size
     }
     let result = layout.update(cells: cells[range], data: data)
-    contentSize += result.offset
+    defer { contentSize += result.offset }
     
     guard isLoaded else { return nil }
     let animator = self.animator(animated)
@@ -220,7 +259,7 @@ public class TableController {
     let view = table.view!
     let oldValue = camera.loadedRange
     if camera.loadedRange.insert(range) {
-      let context = DisplayContext(animator: animator, created: true, from: .insert)
+      let context = DisplayContext(animator: animator, created: true, from: .insert, group: range.count)
       for cell in newCells {
         if !cell.isVisible {
           cell.display(to: view, context: context)
@@ -245,7 +284,6 @@ public class TableController {
     }
     for index in result.changedCells {
       let cell = cells[index]
-      // в ренже могут быть целки, которые не менялись
       guard cell.view != nil else { continue }
       if cell.shouldUpdateFrame {
         animator.animate(cell.updateFrame)
@@ -255,7 +293,7 @@ public class TableController {
       let cell = cells[index]
       let created = range.contains(index)
       if !cell.isVisible {
-        let context = DisplayContext(animator: created ? animator : nil, created: created, from: .insert)
+        let context = DisplayContext(animator: created ? animator : nil, created: created, from: .insert, group: range.count)
         cell.display(to: view, context: context)
       }
     }
@@ -266,6 +304,7 @@ public class TableController {
   
   @discardableResult
   public func append(cells newCells: [Cell], animated: Bool) -> Animator? {
+    guard !newCells.isEmpty else { return nil }
     for (i,cell) in newCells.enumerated() {
       cell.tableInfo = TableInfo(table: self, index: cells.count + i)
     //  print("settings cell index \(cell.index)")
@@ -293,7 +332,7 @@ public class TableController {
     cameraResult.loaded.loop { index in
       let cell = cells[index]
       if !cell.isVisible {
-        let context = DisplayContext(animator: animator, created: true, from: .append)
+        let context = DisplayContext(animator: animator, created: true, from: .append, group: range.count)
         cell.display(to: view, context: context)
       }
     }
@@ -316,7 +355,7 @@ public class TableController {
   private func animate(_ animator: Animator) {
     guard !animator.ignoreAnimations else { return }
     animator.animate { animations, completion in
-      table.animate(animations: animations, completion: completion)
+      table.animate(delay: animator.delay, animations: animations, completion: completion)
     }
   }
   @discardableResult
@@ -339,6 +378,9 @@ public class TableController {
   
   @discardableResult
   public func tableUpdated(animated: Bool) -> Animator? {
+    guard !table.isUpdating else { return nil }
+    table.isUpdating = true
+    defer { table.isUpdating = false }
     var action: TableLayout.Data.Action = .resized
     if !isInitialised {
       table.isInitialised = true
@@ -369,7 +411,6 @@ public class TableController {
     }
     for index in layoutResult.changedCells {
       let cell = cells[index]
-      // в ренже могут быть целки, которые не менялись
       guard cell.view != nil else { continue }
       if cell.shouldUpdateFrame {
         animator.animate(cell.updateFrame)
@@ -378,7 +419,7 @@ public class TableController {
     cameraResult.loaded.loop { index in
       let cell = cells[index]
       guard !cell.isVisible else { return }
-      let context = DisplayContext(animator: nil, created: false, from: .update)
+      let context = DisplayContext(animator: nil, created: false, from: .update, group: 0)
       cell.display(to: view, context: context)
     }
     animate(animator)
@@ -386,12 +427,23 @@ public class TableController {
   }
 }
 
-extension TableController {
-  public func scrolled() {
-    let context = DisplayContext(animator: nil, created: false, from: .scroll)
+public extension TableController {
+  func scrolled() {
+    let context = DisplayContext(animator: nil, created: false, from: .scroll, group: 0)
     scrolled(context: context)
   }
-  public func scrolled(context: DisplayContext) {
+  func update(_ doUpdates: ()->()) {
+    camera.update(doUpdates)
+    guard isLoaded else { return }
+    let result = camera.update()
+    let context = DisplayContext(animator: nil, created: false, from: .scroll, group: cells.count)
+    display(result.loadedTop, context: context)
+    display(result.loadedBottom, context: context)
+    hide(result.unloadedTop)
+    hide(result.unloadedBottom)
+  }
+  func scrolled(context: DisplayContext) {
+    guard isInitialised else { return }
     guard isLoaded else { return }
   //  print("scrolling from \(camera.loadedRange)")
     

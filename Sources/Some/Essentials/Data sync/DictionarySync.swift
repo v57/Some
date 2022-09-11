@@ -83,12 +83,15 @@ public extension DictionarySync {
       }
     }
     loading = keys
-    load(keys).next { result in
+    load(keys).forEach { result in
       result.onSuccess(self.loaded)
       result.onFailure(self.failed)
     }.store(in: bag)
   }
   private func loaded(data: [Key: Value]) {
+    data.forEach { key, value in
+      items[key] = value
+    }
     subscribers.removeAll { subscriber in
       if let value = data[subscriber.key] {
         subscriber.send(value)

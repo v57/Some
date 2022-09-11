@@ -113,9 +113,9 @@ public extension ArraySyncQueuedClient {
     guard queue.appendSending.isEmpty else { return }
     guard !queue.appendQueued.isEmpty else { return }
     queue.appendSending = queue.appendQueued
-    add(items: queue.appendSending).next { error in
+    add(items: queue.appendSending).first().sink { error in
       self.added(error: error)
-    }.storeSingle()
+    }.store()
   }
   private func added(error: Error?) {
     if let error = error {

@@ -18,7 +18,8 @@ import Foundation
  print(array) // prints [1,5,6]
  ```
  */
-public struct SortedArray<Element: Comparable>: EasierCollection, Equatable {
+public struct SortedArray<E: Comparable>: EasierCollection, Equatable {
+  public typealias Element = E
   public typealias SubSequence = ArraySlice<Element>
   
   public var array: [Element]
@@ -47,8 +48,8 @@ public extension SortedArray {
     try SortedArray(sorted: array.filter(isIncluded))
   }
   @discardableResult
-  mutating func insert(_ element: Element) -> Int {
-    self.array.binaryInsert(element)
+  mutating func insert(_ element: Element, replace: Bool = true) -> Int {
+    self.array.binaryInsert(element, replace: replace)
   }
   @discardableResult
   mutating func remove(_ element: Element) -> Indexed<Element>? {
@@ -82,13 +83,13 @@ public extension SortedArray {
 }
 extension SortedArray: Hashable where Element: Hashable {}
 public extension SortedArray where Element: ComparsionValue {
-  mutating func at(_ value: Element.ValueToCompare, create: ()->(Element)) -> (index: Index, element: Element) {
+  mutating func at(_ value: Element.ValueToCompare, create: ()->(Element)) -> Indexed<Element> {
     if let index = index(of: value) {
-      return (index, array[index])
+      return Indexed(index, array[index])
     } else {
       let value = create()
-      let index = insert(value)
-      return (index, value)
+      let index = insert(value, replace: false)
+      return Indexed(index, value)
     }
   }
   func at(_ value: Element.ValueToCompare) -> Element? {
@@ -98,14 +99,10 @@ public extension SortedArray where Element: ComparsionValue {
       return nil
     }
   }
-  mutating func at(_ value: Element.ValueToCompare, default: ()->(Element)) -> Element {
-    if let index = index(of: value) {
-      return array[index]
-    } else {
-      let element = `default`()
-      insert(element)
-      return element
-    }
+  mutating func mutate(_ value: Element.ValueToCompare, _ create: @autoclosure ()->(Element), edit: (inout Element)->()) {
+    var item = self.at(value, create: create)
+    edit(&item.value)
+    array[item.index] = item.value
   }
   func contains(_ value: Element.ValueToCompare) -> Bool {
     return at(value) != nil
@@ -148,11 +145,15 @@ public extension SortedArray where Element: ComparsionValue {
     array[select(range)]
   }
   
-  // MARK:- Closed range functions
-  func select(_ range: ClosedRange<Element.ValueToCompare>) -> ClosedRange<Int> {
+  // MARK: - Closed range functions
+  func select(_ range: ClosedRange<Element.ValueToCompare>) -> Range<Int> {
     let start = array.binaryClosest(range.lowerBound, \._valueToCompare)
     let end = array.binaryClosest(range.upperBound, \._valueToCompare)
-    return start...end
+    if start == end {
+      return start..<end
+    } else {
+      return start..<Swift.min(end+1, count)
+    }
   }
   @discardableResult
   mutating func remove(_ range: ClosedRange<Element.ValueToCompare>) -> [Element] {
@@ -174,5 +175,30 @@ extension SortedArray: DataRepresentable where Element: DataRepresentable {
   }
   public func save(data: DataWriter) {
     data.append(array)
+  }
+}
+
+// Resorting extension
+public extension SortedArray {
+  var isSorted: Bool {
+    guard count > 1 else { return true }
+    for i in 1..<count {
+      if self[i-1] > self[i] {
+        return false
+      }
+    }
+    return true
+  }
+  mutating func resortIfNeeded() {
+    guard !isSorted else { return }
+    array.sort()
+  }
+  mutating func resortIfNeeded(_ update: (Indexed<Element>)->()) {
+    guard !isSorted else { return }
+    let a = array.enumerated().map { Indexed($0.offset, $0.element) }.sorted { $0.value < $1.value }
+    a.forEach {
+      array[$0.index] = $0.value
+      update($0)
+    }
   }
 }

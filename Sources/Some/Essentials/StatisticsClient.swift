@@ -5,20 +5,22 @@
 //  Created by Dmitry Kozlov on 29/10/2020.
 //
 
+#if canImport(Combine)
 import Foundation
 
 extension Statistics {
-  public class CLManager {
+  open class CLManager {
     public var items = [String: CLItems]()
-    public func added(items: Items) {
+    public init() { }
+    open func added(items: Items) {
       self.items[items.name] = CLItems(items.items.map(CLItem.init))
     }
-    public func updated(item: Item, for path: Path) {
+    open func updated(item: Item, for path: Path) {
       if let clItem = items[path.name] {
         clItem.items[path.index].item = item
       }
     }
-    public func added(value: Int, transaction: Transaction?, path: Path) {
+    open func added(value: Int, transaction: Indexed<Int?>, path: Path) {
       items[path.name]?.items[path.index].item.added(value: value, transaction: transaction)
     }
   }
@@ -29,7 +31,7 @@ extension Statistics {
     }
   }
   public class CLItem {
-    @V var item: Item
+    @Published var item: Item
     public init() {
       item = Item(accumulator: .max(nil), storage: .unlimited([]), start: .now, interval: .s(1))
     }
@@ -42,8 +44,8 @@ extension Statistics {
   }
 }
 public extension Statistics.Item {
-  mutating func added(value: Int, transaction: Statistics.Transaction?) {
-    if let transaction = transaction {
+  mutating func added(value: Int, transaction: Indexed<Int?>) {
+    if let transaction = transaction.compactMap() {
       storage.append(transaction)
       self.current = transaction.index + 1
       self.accumulator.set(nil)
@@ -86,13 +88,13 @@ class TestStatisticsServer: Statistics.Manager {
   let testQueue = DispatchQueue(label: "test")
   override init() {
     super.init()
-    add(name: "test", type: .total(nil), intervals: .custom(0, .ms(1000/60)), from: .now)
+    add(name: "test", type: .total(nil), start: .now, intervals: .custom(0, .ms(1000/60)), from: .now)
   }
   public func connect() -> Statistics.Items {
     start()
     return self.items["test"]!
   }
-  override func added(value: Int, transaction: Statistics.Transaction?, path: Statistics.Path) {
+  override func added(value: Int, transaction: Indexed<Int?>, path: Statistics.Path) {
     DispatchQueue.main.async {
       testStatisticsManager.added(value: value, transaction: transaction, path: path)
     }
@@ -113,7 +115,7 @@ public extension Statistics.Item {
     let previous: Statistics.Transaction?
     var i = storage.count-1
     if let value = accumulator.value {
-      previous = Statistics.Transaction(value: value, index: current)
+      previous = Statistics.Transaction(index: current, value: value)
     } else if let transaction = storage.at(i) {
       previous = transaction
       i -= 1
@@ -144,3 +146,4 @@ public extension Statistics.Item {
   }
 }
 
+#endif

@@ -37,7 +37,7 @@ extension ProgressProtocol {
   }
 }
 
-open class LoadingView: DCView {
+open class LoadingView: UIView {
   open var disableAnimations = false {
     didSet {
       if disableAnimations != oldValue && animating {

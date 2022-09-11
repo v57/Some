@@ -105,6 +105,19 @@ public extension DispatchQueue {
   func write(execute: @escaping ()->()) {
     async(flags: .barrier, execute: execute)
   }
+  
+  #if os(iOS) // DispatchQueue doesn't conforms to Hashable on Linux
+  private static var nextOperations = [DispatchQueue: [()->()]]()
+  /// Executes multiple callbacks on the next async event
+  func next(_ execute: @escaping ()->()) {
+    guard DispatchQueue.nextOperations.mutate(at: self, default: { [] }, mutate: {
+      $0.append(execute)
+    }).count == 1 else { return }
+    self.async {
+      DispatchQueue.nextOperations.removeValue(forKey: self)?.forEach { $0() }
+    }
+  }
+  #endif
 }
 
 /// Class that allows to call multple waits and executes only the last one
@@ -133,8 +146,41 @@ public class Waiter {
       }
     }
   }
+  /// Repeats `execute` function in time interval.
+  /// You can sefely use `[unowned self]` if waiter is only stores in self
+  public func `repeat`(_ time: Double, _ count: Int, _ execute: @escaping ()->()) {
+    guard count >= 0 else { return }
+    wait(time) { [weak self] in
+      guard let self = self else { return }
+      // storing current version, so you could cancel repeater inside execute function
+      let version = self.version
+      execute()
+      if self.version == version {
+        self.repeat(time, count - 1, execute)
+      }
+    }
+  }
   public func external() -> External {
     External(waiter: self)
+  }
+  public class WithStatus: Waiter {
+    public var isWaiting = false
+    override var version: Int {
+      didSet {
+        isWaiting = false
+      }
+    }
+    public override func wait(_ time: Double, _ execute: @escaping () -> ()) {
+      version += 1
+      let v = version
+      isWaiting = true
+      queue.wait(time) { [weak self] in
+        guard let self = self else { return }
+        guard v == self.version else { return }
+        self.isWaiting = false
+        execute()
+      }
+    }
   }
   public struct External {
     public weak var waiter: Waiter?
@@ -148,6 +194,179 @@ public class Waiter {
       guard let waiter = waiter else { return }
       guard waiter.version == version else { return }
       action()
+    }
+  }
+}
+
+public class Throttle {
+  public let queue: DispatchQueue
+  public var time: Double
+  public private(set) var operations = [()->(Bool)]()
+  public private(set) var isWaiting = false
+  private var selfOwned: Throttle?
+  private var isIdle: Bool { !isWaiting }
+  public init(_ time: Double, on queue: DispatchQueue = .main) {
+    self.time = time
+    self.queue = queue
+  }
+  public func run(_ operation: @escaping ()->()) {
+    if isIdle {
+      operation()
+      wait()
+    } else {
+      operations.append {
+        operation()
+        return true
+      }
+    }
+  }
+  public func run(_ object: AnyObject, _ operation: @escaping ()->()) {
+    if isIdle {
+      operation()
+      wait()
+    } else {
+      operations.append { [weak object] in
+        guard object != nil else { return false }
+        operation()
+        return true
+      }
+    }
+  }
+  public func skippableRun(_ object: AnyObject, _ operation: @escaping ()->(Bool)) {
+    if isIdle {
+      if operation() {
+        wait()
+      }
+    } else {
+      operations.append { [weak object] in
+        guard object != nil else { return false }
+        return operation()
+      }
+    }
+  }
+  public func autorelease() {
+    guard operations.count > 0 else { return }
+    selfOwned = self
+  }
+  private func wait() {
+    isWaiting = true
+    queue.wait(time) { [weak self] in
+      guard let self = self else { return }
+      guard self.isWaiting else { return }
+      self.isWaiting = false
+      self.next()
+    }
+  }
+  private func next() {
+    guard operations.count > 0 else {
+      selfOwned = nil
+      return }
+    let shouldWait = operations.removeFirst()()
+    if shouldWait {
+      wait()
+    } else {
+      next()
+    }
+  }
+  public class Pausable: Throttle {
+    var isRunning = true
+    override var isIdle: Bool { isRunning && !isWaiting }
+    public func resume() {
+      guard !isRunning else { return }
+      guard !isWaiting else { return }
+      isRunning = true
+      next()
+    }
+    public func pause() {
+      guard isRunning else { return }
+      isRunning = false
+      isWaiting = false
+    }
+    override func next() {
+      guard isRunning else { return }
+      guard !isWaiting else { return }
+      super.next()
+    }
+  }
+  public class SafePausable: Throttle {
+    private var links = 0 {
+      didSet {
+        if links == 0 {
+          _resume()
+        } else if links == 1 && oldValue == 0 {
+          _pause()
+        }
+      }
+    }
+    private var isRunning = true
+    override var isIdle: Bool { isRunning && !isWaiting }
+    public func pause() -> Link {
+      let link = Link()
+      link.parent = self
+      return link
+    }
+    private func _resume() {
+      guard !isRunning else { return }
+      guard !isWaiting else { return }
+      isRunning = true
+      next()
+    }
+    private func _pause() {
+      guard isRunning else { return }
+      isRunning = false
+      isWaiting = false
+    }
+    override func next() {
+      guard isRunning else { return }
+      guard !isWaiting else { return }
+      super.next()
+    }
+    public class Link {
+      public weak var parent: SafePausable? {
+        didSet {
+          parent?.links += 1
+          oldValue?.links -= 1
+        }
+      }
+      public init() {}
+      public func attach(_ parent: SafePausable) {
+        self.parent = parent
+      }
+      public func detach() {
+        parent = nil
+      }
+      deinit {
+        parent = nil
+      }
+    }
+  }
+  public class Skip {
+    public private(set) var lastOperation: (()->())?
+    public let queue: DispatchQueue
+    public var time: Double
+    public private(set) var isWaiting = false
+    public init(_ time: Double, on queue: DispatchQueue = .main) {
+      self.time = time
+      self.queue = queue
+    }
+    public func run(_ operation: @escaping ()->()) {
+      if isWaiting {
+        lastOperation = operation
+      } else {
+        operation()
+        isWaiting = true
+        queue.wait(time) { [weak self] in
+          guard let self = self else { return }
+          self.isWaiting = false
+          if let lastOperation = self.lastOperation {
+            self.lastOperation = nil
+            self.run(lastOperation)
+          }
+        }
+      }
+    }
+    public func cancel() {
+      lastOperation = nil
     }
   }
 }

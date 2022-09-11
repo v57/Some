@@ -14,6 +14,10 @@ public extension UIView {
     addMotionEffect(group)
     return group
   }
+  func motion(vertical: CGFloat) -> Self {
+    motion().cx(vertical)
+    return self
+  }
 }
 
 public extension UIMotionEffectGroup {
@@ -49,25 +53,25 @@ public extension UIMotionEffectGroup {
 
 public extension UIMotionEffect {
   static func centerY(_ amount: CGFloat = 10) -> UIMotionEffect {
-    let effect = UIInterpolatingMotionEffect(keyPath: "center.x", type: .tiltAlongHorizontalAxis)
-    effect.minimumRelativeValue = -amount
-    effect.maximumRelativeValue = amount
-    return effect
-  }
-  static func centerX(_ amount: CGFloat = 10) -> UIMotionEffect {
     let effect = UIInterpolatingMotionEffect(keyPath: "center.y", type: .tiltAlongVerticalAxis)
     effect.minimumRelativeValue = -amount
     effect.maximumRelativeValue = amount
     return effect
   }
+  static func centerX(_ amount: CGFloat = 10) -> UIMotionEffect {
+    let effect = UIInterpolatingMotionEffect(keyPath: "center.x", type: .tiltAlongHorizontalAxis)
+    effect.minimumRelativeValue = -amount
+    effect.maximumRelativeValue = amount
+    return effect
+  }
   static func rotateX(_ amount: CGFloat = 1) -> UIMotionEffect {
-    let effect = UIInterpolatingMotionEffect(keyPath: "transform.rotation.y", type: .tiltAlongHorizontalAxis)
+    let effect = UIInterpolatingMotionEffect(keyPath: "transform.rotation.x", type: .tiltAlongHorizontalAxis)
     effect.minimumRelativeValue = -amount
     effect.maximumRelativeValue = amount
     return effect
   }
   static func rotateY(_ amount: CGFloat = 1) -> UIMotionEffect {
-    let effect = UIInterpolatingMotionEffect(keyPath: "transform.rotation.x", type: .tiltAlongVerticalAxis)
+    let effect = UIInterpolatingMotionEffect(keyPath: "transform.rotation.y", type: .tiltAlongVerticalAxis)
     effect.minimumRelativeValue = -amount
     effect.maximumRelativeValue = amount
     return effect

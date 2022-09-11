@@ -179,7 +179,7 @@ extension Optional: DataRepresentable where Wrapped: DataRepresentable {
 //       throw corrupted
 //     }
 //   }
-//   
+//
 //   public func save(data: DataWriter) {
 //     data.append(rawValue)
 //   }
@@ -195,6 +195,24 @@ extension String: DataRepresentable {
   }
   public func save(data: DataWriter) {
     data.append(self.data(using: .utf8)!)
+  }
+}
+
+extension URL: DataRepresentable {
+  public init(data: DataReader) throws {
+    self = try URL(string: data.next()) ?? URL(fileURLWithPath: "/")
+  }
+  public func save(data: DataWriter) {
+    data.append(absoluteString)
+  }
+}
+
+extension Date: DataRepresentable {
+  public init(data: DataReader) throws {
+    self = try data.int().date
+  }
+  public func save(data: DataWriter) {
+    data.append(time)
   }
 }
 
@@ -237,6 +255,26 @@ extension Array: DataRepresentableVersionable where Element: DataRepresentableVe
     }
   }
 }
+
+extension Dictionary: DataRepresentableVersionable where Key: DataRepresentable, Value: DataRepresentableVersionable {
+  public init(data: DataReader, version: Int) throws {
+    let count = try data.intCount()
+    self.init()
+    for _ in 0..<count {
+      let key: Key = try data.next()
+      let value: Value = try data.next(version: version)
+      self[key] = value
+    }
+  }
+  public func save(data: DataWriter, version: Int) {
+    data.append(count)
+    forEach {
+      data.append($0)
+      data.append($1, version: version)
+    }
+  }
+}
+
 extension SortedArray: DataRepresentableVersionable where Element: DataRepresentableVersionable {
   public init(data: DataReader, version: Int) throws {
     array = try data.next(version: version)

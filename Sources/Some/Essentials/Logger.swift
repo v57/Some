@@ -8,6 +8,12 @@
 
 import Foundation
 
+public let someLog = SomeLog()
+public struct SomeLog {
+  public let http = Logs("http")
+  public let ceo = Logs("ceo")
+}
+
 #if os(macOS) || os(Linux)
 extension FileHandle: TextOutputStream {
   public static var secondOutput: FileHandle?
@@ -141,6 +147,12 @@ public class Logs {
     defer { shouldPrint = old }
     print(["[warning]", text])
   }
+  public func error(_ text: String) {
+    let old = shouldPrint
+    shouldPrint = true
+    defer { shouldPrint = old }
+    print(["[error]", text])
+  }
   public func debug(_ items: Any...) {
     let old = shouldPrint
     shouldPrint = false
@@ -191,6 +203,10 @@ public class Logs {
     Swift.print(string, to: &handle)
     #endif
   }
+  public func disabled() -> Self {
+    shouldPrint = false
+    return self
+  }
   public func pause() { shouldPrint = false }
   public func resume() { shouldPrint = true }
   
@@ -199,10 +215,11 @@ public class Logs {
     public var body: String
     func log(_ name: String) -> String {
       #if os(macOS) || os(Linux)
-      return "[\(logFormat.string(from: time.fromMcs.date))] [\(name)] \(body)"
+      let prefix = "[\(logFormat.string(from: time.fromMcs.date))] [\(name)] "
       #else
-      return "[\(name)] \(body)"
+      let prefix = "\(Time.log) [\(name)] "
       #endif
+      return prefix + body.replacingOccurrences(of: "\n", with: "\n\(prefix)")
     }
   }
 }

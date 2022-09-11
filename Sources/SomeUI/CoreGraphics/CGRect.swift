@@ -42,6 +42,9 @@ extension CGRect {
     return CGRect(size: CGSize(w,h))
   }
   
+  public var bounds: CGRect {
+    return CGRect(origin: .zero, size: size)
+  }
   public var x: CGFloat {
     get { origin.x }
     set { origin.x = newValue }
@@ -63,10 +66,22 @@ extension CGRect {
     set { origin = newValue }
   }
   
+  public mutating func normalize() {
+    origin.x.round(.toNearestOrAwayFromZero)
+    origin.y.round(.toNearestOrAwayFromZero)
+    size.width.round(.down)
+    size.height.round(.down)
+  }
+  
+  public func normalized() -> CGRect {
+    var frame = self
+    frame.normalize()
+    return frame
+  }
   
   public var top: CGPoint {
     get {
-      return CGPoint(x-w*0.5,y)
+      return CGPoint(x+w*0.5,y)
     }
     set {
       origin = CGPoint(newValue.x-w*0.5,newValue.y)

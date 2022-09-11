@@ -19,10 +19,18 @@ public struct CellScrollContext {
   public var y: CGFloat
   public var offset: CGFloat
   public var scrollView: UIScrollView?
+  public init(y: CGFloat, offset: CGFloat, scrollView: UIScrollView?) {
+    self.y = y
+    self.offset = offset
+    self.scrollView = scrollView
+  }
 }
 
-open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollViewCore {
-  open unowned var table: Table
+open class TableUIScrollView: PScrollView, UIScrollViewDelegate, TableScrollViewCore {
+  open weak var table: Table?
+  public var _contentOffset: CGFloat { y(contentOffset) }
+  public var transformContentSize: (CGFloat)->(CGFloat) = { $0 }
+  var tableIsHorizontal: Bool { table?.isHorizontal ?? false }
   public init(table: Table) {
     self.table = table
     super.init(frame: CGRect(table.position,table.size))
@@ -30,7 +38,12 @@ open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollVie
       frame.size[keyPath: _height] = table.contentSize
     }
     contentSize[keyPath: _height] = table.contentSize
-    delegate = self
+    pipe.didScroll.forEach { [unowned self] in
+      self.scrollViewDidScroll($0)
+    }.store(in: self)
+    pipe.didEndDecelerating.forEach { [unowned self] in
+      self.scrollViewDidEndDecelerating($0)
+    }.store(in: self)
   }
   var previousScrollOffset: CGFloat = 0
   lazy var heightConstraint: NSLayoutConstraint = {
@@ -40,6 +53,9 @@ open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollVie
     return constraint
   }()
   open override func layoutSubviews() {
+    guard let table = table else {
+      super.layoutSubviews()
+      return }
     if table.hasAutolayout {
       let size = table._sizeThatFits(frame.size)
       if size != frame.size {
@@ -49,6 +65,7 @@ open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollVie
     super.layoutSubviews()
   }
   open override func sizeThatFits(_ size: CGSize) -> CGSize {
+    guard let table = table else { return .zero }
     if table.hasAutolayout {
       return table._sizeThatFits(size)
     } else {
@@ -56,6 +73,7 @@ open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollVie
     }
   }
   open override var intrinsicContentSize: CGSize {
+    guard let table = table else { return .zero }
     if table.hasAutolayout {
       _ = heightConstraint
       return table._intrinsicContentSize
@@ -67,10 +85,12 @@ open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollVie
   required public init(coder: NSCoder) { fatalError() }
   
   public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    guard let table = table else { return }
     let context = CellScrollContext(y: previousScrollOffset, offset: 0, scrollView: scrollView)
     table.scrolled(context: context)
   }
   open func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    guard let table = table else { return }
     defer { previousScrollOffset = y(scrollView.contentOffset) }
     guard !UIScrollView.isUpdating else { return }
     let newValue = y(scrollView.contentOffset)
@@ -90,20 +110,20 @@ open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollVie
     #endif
   }
   public func contentSizeChanged(from: CGFloat, to: CGFloat) {
-    contentSize[keyPath: _height] = to
+    contentSize[keyPath: _height] = transformContentSize(to)
   }
   public func contentOffsetChanged(from: CGFloat, to: CGFloat) {
     contentOffset[keyPath: _y] = to
   }
   func x(_ point: CGPoint) -> CGFloat {
-    return table.isHorizontal ? point.y : point.x
+    return tableIsHorizontal ? point.y : point.x
   }
   func y(_ point: CGPoint) -> CGFloat {
-    return table.isHorizontal ? point.x : point.y
+    return tableIsHorizontal ? point.x : point.y
   }
   
   private var _height: WritableKeyPath<CGSize,CGFloat> {
-    return table.isHorizontal ? \.width : \.height
+    return tableIsHorizontal ? \.width : \.height
   }
 //  private var _width: WritableKeyPath<CGSize,CGFloat> {
 //    return table.isHorizontal ? \.height : \.width
@@ -112,7 +132,7 @@ open class TableUIScrollView: UIScrollView, UIScrollViewDelegate, TableScrollVie
 //    return table.isHorizontal ? \.y : \.x
 //  }
   private var _y: WritableKeyPath<CGPoint,CGFloat> {
-    return table.isHorizontal ? \.x : \.y
+    return tableIsHorizontal ? \.x : \.y
   }
 }
 

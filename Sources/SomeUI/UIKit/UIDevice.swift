@@ -15,11 +15,11 @@ public extension UIDevice {
   /// - Note: I think its nullable and user can disable sharing its device id to developers.
   /// - Returns: id as Data. Also returns random id if identifierForVendor is nil
   var id: Data {
-    if var id = identifierForVendor?.uuid {
-      return Data(bytes: raw(&id), count: 16)
-    } else {
+//    if var id = identifierForVendor?.uuid {
+//      return Data(bytes: raw(&id), count: 16)
+//    } else {
       return .random(16)
-    }
+//    }
   }
 }
 public extension UIApplication {

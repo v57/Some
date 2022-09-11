@@ -35,8 +35,8 @@ public extension Table {
     #endif
   }
   func insert(_ newCells: [TableCell], at index: Int, animated: Bool = false) {
-    print("\n\ninserting \(newCells.count) cells")
     #if TableLogs
+    print("\n\ninserting \(newCells.count) cells")
     let oldRange = controller.camera.loadedRange
     #endif
     controller.insert(cells: newCells, at: index, animated: animated)
@@ -85,6 +85,23 @@ open class Table: Cell, TableControllerDelegate {
   public var animator: Animator?
   public var isHorizontal: Bool { orientation == .horizontal }
   
+  open override var customGap: CGFloat? { cells.isEmpty ? 0 : nil }
+  
+  open override var view: UIView! {
+    didSet {
+      guard let view = view else { return }
+      // Adding loaded cells to a new view
+      for cell in cells[camera.loadedRange] {
+        if let v = cell.view, cell.isVisible {
+          if v.superview != view {
+            view.addSubview(v)
+          } else {
+            return // Cell is already is this view, so we skipping this loop
+          }
+        }
+      }
+    }
+  }
   public var gap: UIOffset = .zero {
     didSet {
       guard gap != oldValue else { return }
@@ -92,20 +109,29 @@ open class Table: Cell, TableControllerDelegate {
       controller.tableUpdated(animated: false)
     }
   }
-  public override var size: CGSize {
+  open override var size: CGSize {
     didSet {
       guard size != oldValue else { return }
-      var _size = size
-      _size.width += cameraInsets.width
-      _size.height += cameraInsets.height
-      cameraSize = _size
+      if let table = tableInfo?.table.table {
+        cameraInsets = table.cameraInsets
+        cameraSize = table.cameraSize
+      } else {
+        var _size = size
+        _size.width += cameraInsets.width
+        _size.height += cameraInsets.height
+        cameraSize = _size
+      }
+      guard (isHorizontal && size.height > 0) || (!isHorizontal && size.width > 0) else { return }
       controller.tableUpdated(animated: false)
     }
   }
-  
+
+  public var nestedView: ()->UIView = { UIView() }
   public var cameraInsets = UIEdgeInsets.zero
   public var cameraSize: CGSize = .zero
   public var cameraOffset: CGPoint = .zero
+  public var parent: TableController? { tableInfo?.table }
+  public var didScroll = P<CellScrollContext>()
   
   public enum TableType {
     case table, grid
@@ -115,6 +141,9 @@ open class Table: Cell, TableControllerDelegate {
   public var contentSize: CGFloat = 0 {
     didSet {
       guard contentSize != oldValue else { return }
+      if let tableInfo = tableInfo, !tableInfo.table.table.isUpdating && !isResizing {
+        tableInfo.table.resize(range: tableInfo.index..<tableInfo.index+1, animated: false)
+      }
       _scrollView?.contentSizeChanged(from: oldValue, to: contentSize)
     }
   }
@@ -123,8 +152,10 @@ open class Table: Cell, TableControllerDelegate {
   public var layout: TableLayout = .vertical
   public var controller: TableController = TableController()
   public var isInitialised = false
+  public var isUpdating = false
+  public var isResizing = false
   
-  public var scrollView: UIScrollView! { return view as? UIScrollView }
+  public var scrollView: TableUIScrollView! { return view as? TableUIScrollView }
   public var autolayout: Autolayout = .none
   public var hasAutolayout: Bool {
     if case .none = autolayout {
@@ -171,7 +202,14 @@ open class Table: Cell, TableControllerDelegate {
       controller.tableUpdated(animated: false)
     }
   }
-  public override func scrolled(context: CellScrollContext) {
+  public func updateCameraPosition() {
+    guard let scrollView = scrollView else { return }
+    camera.frame.origin.y = scrollView._contentOffset - cameraInsets.top
+  }
+  open override func scrolled(context: CellScrollContext) {
+    defer {
+      didScroll.send(context)
+    }
     #if TableLogs
     let o = Int(context.offset)
     #endif
@@ -204,22 +242,29 @@ open class Table: Cell, TableControllerDelegate {
     layout.table = self
   }
   
-  public override func loaded() {
-    let context = DisplayContext(animator: nil, created: false, from: .loaded)
+  open override func loaded() {
+    let context = DisplayContext(animator: nil, created: false, from: .loaded, group: 0)
     controller.scrolled(context: context)
   }
   
-  public func animate(animations: @escaping () -> (), completion: @escaping () -> ()) {
-    UIView.animate(withDuration: 0.3, animations: animations, completion: { (_) in
+  public func animate(delay: Double, animations: @escaping () -> (), completion: @escaping () -> ()) {
+    UIView.animate(withDuration: 0.15, delay: delay, animations: animations, completion: { (_) in
       completion()
     })
   }
   
-  override public func size(fitting: CGSize, max: CGSize) -> CGSize {
+  override open func size(fitting: CGSize, max: CGSize) -> CGSize {
     return _sizeThatFits(max)
   }
-  override public func makeView() -> UIView {
-    return TableUIScrollView(table: self)
+  override open func makeView() -> UIView {
+    if let table = tableInfo?.table, table.isHorizontal == isHorizontal {
+      return nestedView()
+    } else {
+      return TableUIScrollView(table: self)
+    }
+  }
+  deinit {
+    cells.forEach { $0.tableInfo = nil }
   }
 }
 
@@ -272,11 +317,15 @@ public extension Table {
   }
   func _sizeThatFits(_ size: CGSize) -> CGSize {
     var size = size
+    isResizing = true
+    defer {
+      isResizing = false
+    }
     switch autolayout {
     case .none:
       self.size.width = size.width
-      self.size.height = contentSize
-      return self.size
+      size.height = contentSize
+      return size
     case .fullSize:
       self.size.width = size.width
       self.size.height = contentSize

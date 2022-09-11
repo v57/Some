@@ -11,6 +11,7 @@ import UIKit
 import Some
 
 public final class ButtonActions {
+  public static var touch = P<Void>()
   fileprivate var gesture: ButtonGesture
   fileprivate init(gesture: ButtonGesture) {
     self.gesture = gesture
@@ -18,33 +19,39 @@ public final class ButtonActions {
 }
 public extension ButtonActions {
   var toggle: B {
-    gesture.addTapGesture()
+    gesture.addTapGesture(hover: true)
     return gesture.toggleActions
   }
   @discardableResult
   func onToggle(action: @escaping (Bool)->()) -> Self {
-    toggle.next(action).store(in: gesture)
+    toggle.sink(receiveValue: action).store(in: gesture)
     return self
   }
-  var hold: E { return gesture.holdActions }
-  @discardableResult
-  func onHold(action: @escaping ()->()) -> Self {
-    hold.next(action).store(in: gesture)
-    return self
+  var forceTouch: E {
+    gesture.forceTouchActions
   }
-  var forceTouch: E { return gesture.forceTouchActions }
   @discardableResult
   func onForceTouch(action: @escaping ()->()) -> Self {
-    forceTouch.next(action).store(in: gesture)
+    gesture.forceTouchActions.sink(receiveValue: action).store(in: gesture)
     return self
   }
   var touch: E {
-    gesture.addTapGesture()
+    gesture.addTapGesture(hover: true)
     return gesture.touchActions
   }
   @discardableResult
-  func onTouch(action: @escaping ()->()) -> Self {
-    touch.next(action).store(in: gesture)
+  func replaceTouch(action: @escaping ()->()) -> Self {
+    removeTouch().onTouch(action: action)
+  }
+  @discardableResult
+  func onTouch(hover: Bool = true, action: @escaping ()->()) -> Self {
+    gesture.addTapGesture(hover: hover)
+    gesture.touchActions.sink(receiveValue: action).store(in: gesture)
+    return self
+  }
+  @discardableResult
+  func removeTouch() -> Self {
+    gesture.removeTapGesture()
     return self
   }
   @discardableResult
@@ -95,6 +102,21 @@ public extension ButtonActions {
 
 
 public extension UIView {
+  var buttonActionsInit: ButtonActions? {
+    if gestureRecognizers?.find(ButtonGesture.self) != nil {
+      return nil
+    } else {
+      let gesture = ButtonGesture(view: self)
+      addGestureRecognizer(gesture)
+      return ButtonActions(gesture: gesture)
+    }
+  }
+  func removeButtonActions() {
+    if let gesture = gestureRecognizers?.find(ButtonGesture.self) {
+      gesture.removeTapGesture()
+      removeGestureRecognizer(gesture)
+    }
+  }
   var buttonActions: ButtonActions {
     if let gesture = gestureRecognizers?.find(ButtonGesture.self) {
       return ButtonActions(gesture: gesture)
@@ -177,16 +199,20 @@ open class ButtonAnimations {
       push(manager: manager, force: force)
     }
     override func down(manager: ButtonGesture) {
-      push(manager: manager, force: 0.3)
+      push(manager: manager, force: 1)
     }
     override func up(manager: ButtonGesture) {
       push(manager: manager, force: 0.0)
+    }
+    func minScale(for view: UIView) -> CGFloat {
+      let size = (view.frame.size / view.transform.a).max
+      return max((size - 16) / size, 0.8)
     }
     func push(manager: ButtonGesture, force: CGFloat) {
       let force = min(force + manager.forceOffset,1.0)
       guard force != _force else { return }
       _force = force
-      let s = (1.0 - (force / 5))
+      let s = 1 - force * (1 - minScale(for: manager.currentView))
       manager.currentView.scale(s)
       if manager.options[.hasShadow] {
         manager.currentView.layer.shadowOpacity = 0.5 + 0.5 * Float(force)
@@ -223,8 +249,7 @@ private class ButtonHover: UIHoverGestureRecognizer {
   @objc func hover() {
     switch state {
     case .began:
-      let s = gesture.view!.frame.size.max
-      offset = 1 - s / (s + 20)
+      offset = 0.3
       gesture.forceOffset -= offset
       gesture.downAnimated(force: gesture.forceOffset)
     case .changed: break
@@ -236,7 +261,9 @@ private class ButtonHover: UIHoverGestureRecognizer {
 }
 
 public class ButtonGesture: ForceTouchGestureRecognizer, PipeStorage {
-  public var pipes: Set<S> = []
+  public static var willTap: Time = Time.mcs
+  public static var didTap: Time = Time.mcs
+  public var pipes: Set<C> = []
   public var options = ButtonOptions.Set64()
   unowned var currentView: UIView
   var toggleActions = B()
@@ -264,22 +291,36 @@ public class ButtonGesture: ForceTouchGestureRecognizer, PipeStorage {
 
 private extension ButtonGesture {
   func tapped() {
+    ButtonGesture.willTap = Time.mcs
+    defer { ButtonGesture.didTap = Time.mcs }
     let t = forceOffset
-    touch()
     if forceOffset != t {
       up()
+      touch()
     } else {
-      downUp()
+      self.touch()
+      downUp {
+        
+      }
     }
     vibrate(.light)
   }
   func holding() {
-    var force: CGFloat?
-    if screen?.forceTouchAvailable == true {
+    var force: CGFloat? = 0.5
+    if currentView.traitCollection.forceTouchCapability == .available {
       force = self.force
     }
     switch self.state {
     case .began:
+      if shouldForceTouch {
+        vibrate(.medium)
+        down(force: 0.2)
+        cancel()
+        downUp { [self] in
+          forceTouch()
+        }
+        return
+      }
       forceTriggered = false
       ignoreTouchEnded = false
       beganTime = Time.abs
@@ -313,7 +354,7 @@ private extension ButtonGesture {
             }
           } else {
             if force == 1.0 {
-              self.forceTriggered = true
+              forceTriggered = true
               vibrate(.medium)
             }
           }
@@ -330,17 +371,20 @@ private extension ButtonGesture {
     case .ended:
       guard isTouchInside else { return }
       isTouchInside = false
-      
-      if !ignoreTouchEnded {
-        touch()
-        vibrate(.light)
-      }
       let time = Time.abs - beganTime
       if time < 0.1 && self.force < 0.3 {
-        downUp()
+        downUp { [self] in
+          if !ignoreTouchEnded {
+            touch()
+          }
+        }
       } else {
         up()
+        if !ignoreTouchEnded {
+          touch()
+        }
       }
+      vibrate(.light)
     case .cancelled:
       guard isTouchInside else { return }
       isTouchInside = false
@@ -362,12 +406,18 @@ private extension ButtonGesture {
       return 0.1
     }
   }
-  func addTapGesture() {
+  func addTapGesture(hover: Bool) {
     guard tapGesture == nil else { return }
     tapGesture = ButtonTap(gesture: self)
-    if #available(iOS 13.0, *) {
+    if #available(iOS 13.0, *), hover {
       hoverGesture = ButtonHover(gesture: self)
     }
+  }
+  func removeTapGesture() {
+    tapGesture?.removeFromParent()
+    tapGesture = nil
+    hoverGesture?.removeFromParent()
+    hoverGesture = nil
   }
   func set(toggle: Bool, animated: Bool) {
     guard toggle != options[.isToggle] else { return }
@@ -396,6 +446,7 @@ private extension ButtonGesture {
     if shouldToggle {
       toggle()
     }
+    ButtonActions.touch.send()
     touchActions.send()
   }
 }
@@ -419,7 +470,7 @@ private extension ButtonGesture {
       self.animations.down(manager: self, force: force)
     }
   }
-  func downUp() {
+  func downUp(_ completion: @escaping ()->()) {
     version += 1
     let v = version
     animations.animate2(animation: {
@@ -427,6 +478,7 @@ private extension ButtonGesture {
     }, completion: { [weak self] in
       guard let self = self else { return }
       guard self.version == v else { return }
+      completion()
       self.animations.animate1 {
         self.animations.up(manager: self)
       }
@@ -437,13 +489,18 @@ private extension ButtonGesture {
 private extension UIView {
   @available(iOS 13.0, *)
   @objc func _hover(gesture: ButtonHover) {
-    // gesture.hover()
+    gesture.hover()
   }
   @objc func _tap(gesture: ButtonTap) {
     gesture.gesture.tapped()
   }
   @objc func _hold(gesture: ButtonGesture) {
     gesture.holding()
+  }
+}
+extension UIGestureRecognizer {
+  func removeFromParent() {
+    view?.removeGestureRecognizer(self)
   }
 }
 #endif

@@ -9,11 +9,11 @@
 
 import CoreGraphics
 
-extension CGSize {
-  public init(_ square: CGFloat) {
+public extension CGSize {
+  init(_ square: CGFloat) {
     self = CGSize(width: square, height: square)
   }
-  public init(_ width: CGFloat, _ height: CGFloat) {
+  init(_ width: CGFloat, _ height: CGFloat) {
     self = CGSize(width: width, height: height)
   }
   mutating func rotate() {
@@ -33,7 +33,15 @@ extension CGSize {
       width = height
     }
   }
-  public func fitting(_ minSize: CGFloat) -> CGSize {
+  func fitting(_ size: CGSize) -> CGSize {
+    let scale = Swift.min(size.width / width, size.height / height)
+    return self * scale
+  }
+  func filling(_ size: CGSize) -> CGSize {
+    let scale = Swift.max(size.width / width, size.height / height)
+    return self * scale
+  }
+  func fitting(_ minSize: CGFloat) -> CGSize {
     let min = self.min
     guard min > minSize else { return self }
     var scale = min / minSize
@@ -45,41 +53,55 @@ extension CGSize {
     scale = max / maxSize
     return self / scale
   }
-  public var frame: CGRect {
-    return CGRect(origin: .zero, size: self)
+  func verticalGrid(in container: CGSize, spacing: CGFloat) -> CGSize {
+    CGSize(container.width.fill(width, spacing: 16), height)
   }
-  public var center: CGPoint {
-    return CGPoint(width / 2, height / 2)
+  func verticalGrid(in containerWidth: CGFloat, spacing: CGFloat) -> CGSize {
+    CGSize(containerWidth.fill(width, spacing: 16), height)
   }
-  public var top: CGPoint {
-    return CGPoint(width/2,0)
+  func horizontalGrid(in container: CGSize, spacing: CGFloat) -> CGSize {
+    CGSize(width, container.height.fill(height, spacing: 16))
   }
-  public var left: CGPoint {
-    return CGPoint(0,height/2)
+  func horizontalGrid(in containerHeight: CGFloat, spacing: CGFloat) -> CGSize {
+    CGSize(width, containerHeight.fill(height, spacing: 16))
   }
-  public var right: CGPoint {
-    return CGPoint(width,height/2)
+  
+  var frame: CGRect { CGRect(origin: .zero, size: self) }
+  var minX: CGFloat { 0 }
+  var midX: CGFloat { width / 2 }
+  var maxX: CGFloat { width }
+  var minY: CGFloat { 0 }
+  var midY: CGFloat { height / 2 }
+  var maxY: CGFloat { height }
+  
+  var center: CGPoint { CGPoint(width / 2, height / 2) }
+  var top: CGPoint { CGPoint(width / 2, 0) }
+  var left: CGPoint { CGPoint(0, height / 2) }
+  var right: CGPoint { CGPoint(width,height / 2) }
+  var bottom: CGPoint { CGPoint(width / 2, height) }
+  var topRight: CGPoint { CGPoint(width, 0) }
+  var bottomRight: CGPoint { CGPoint(width, height) }
+  var topLeft: CGPoint { CGPoint(0, 0) }
+  var bottomLeft: CGPoint { CGPoint(0, height) }
+  var min: CGFloat { Swift.min(width, height) }
+  var max: CGFloat { Swift.max(width, height) }
+  static func + (left: CGSize, right: CGSize) -> CGSize {
+    CGSize(width: left.width + right.width, height: left.height + right.height)
   }
-  public var bottom: CGPoint {
-    return CGPoint(width/2,height)
+  static func - (left: CGSize, right: CGSize) -> CGSize {
+    CGSize(width: left.width - right.width, height: left.height - right.height)
   }
-  public var topRight: CGPoint {
-    return CGPoint(width, 0)
+  static func * (left: CGSize, right: CGSize) -> CGSize {
+    CGSize(left.width * right.width, left.height * right.height)
   }
-  public var bottomRight: CGPoint {
-    return CGPoint(width, height)
+  static func / (left: CGSize, right: CGSize) -> CGSize {
+    CGSize(left.width / right.width, left.height / right.height)
   }
-  public var topLeft: CGPoint {
-    return CGPoint(0, 0)
+  static func * (left: CGSize, right: CGFloat) -> CGSize {
+    CGSize(width: left.width * right, height: left.height * right)
   }
-  public var bottomLeft: CGPoint {
-    return CGPoint(0, height)
-  }
-  public var min: CGFloat {
-    return Swift.min(width,height)
-  }
-  public var max: CGFloat {
-    return Swift.max(width,height)
+  static func / (left: CGSize, right: CGFloat) -> CGSize {
+    CGSize(width: left.width / right, height: left.height / right)
   }
 }
 
@@ -96,22 +118,4 @@ extension CGSize: Hashable {
   }
 }
 
-public func + (left: CGSize, right: CGSize) -> CGSize {
-  return CGSize(width: left.width + right.width, height: left.height + right.height)
-}
-public func - (left: CGSize, right: CGSize) -> CGSize {
-  return CGSize(width: left.width - right.width, height: left.height - right.height)
-}
-public func * (left: CGSize, right: CGFloat) -> CGSize {
-  return CGSize(width: left.width * right, height: left.height * right)
-}
-public func * (left: CGSize, right: CGSize) -> CGSize {
-  return CGSize(left.width * right.width, left.height * right.height)
-}
-public func / (left: CGSize, right: CGFloat) -> CGSize {
-  return CGSize(width: left.width / right, height: left.height / right)
-}
-public func / (left: CGSize, right: CGSize) -> CGSize {
-  return CGSize(left.width / right.width, left.height / right.height)
-}
 #endif

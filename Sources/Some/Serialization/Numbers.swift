@@ -81,7 +81,10 @@ extension Bool: FixedWidth {}
 //
 extension Range: DataRepresentable where Element: DataRepresentable {
   public init(data: DataReader) throws {
-    self = try data.next()..<data.next()
+    let lower: Bound = try data.next()
+    let upper: Bound = try data.next()
+    guard upper >= lower else { throw corrupted }
+    self = lower..<upper
   }
   public func save(data: DataWriter) {
     data.append(lowerBound)
@@ -90,7 +93,10 @@ extension Range: DataRepresentable where Element: DataRepresentable {
 }
 extension ClosedRange: DataRepresentable where Element: DataRepresentable {
   public init(data: DataReader) throws {
-    self = try data.next()...data.next()
+    let lower: Bound = try data.next()
+    let upper: Bound = try data.next()
+    guard upper >= lower else { throw corrupted }
+    self = lower...upper
   }
   public func save(data: DataWriter) {
     data.append(lowerBound)

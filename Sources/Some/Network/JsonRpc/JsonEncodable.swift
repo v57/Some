@@ -12,6 +12,11 @@ import Foundation
 public protocol JsonEncodable {
   func jsonValue() -> Any
 }
+public extension JsonEncodable {
+  func jsonData() -> Data {
+    json(jsonValue())
+  }
+}
 
 extension Int: JsonEncodable {
   public func jsonValue() -> Any {
@@ -29,6 +34,16 @@ extension Bool: JsonEncodable {
   }
 }
 extension String: JsonEncodable {
+  public func jsonValue() -> Any {
+    return self
+  }
+}
+extension Double: JsonEncodable {
+  public func jsonValue() -> Any {
+    return self
+  }
+}
+extension Float: JsonEncodable {
   public func jsonValue() -> Any {
     return self
   }
@@ -53,7 +68,7 @@ extension Set: JsonEncodable where Element: JsonEncodable {
     return map { $0.jsonValue() }
   }
 }
-extension Dictionary: JsonEncodable where Value: JsonEncodable {
+extension Dictionary: JsonEncodable where Key: JsonEncodable, Value: JsonEncodable {
   public func jsonValue() -> Any {
     return mapValues { $0.jsonValue() }
   }
@@ -76,10 +91,13 @@ open class JsonValue: JsonEncodable {
     return raw
   }
 }
-open class JsonDictionary: JsonEncodable {
+open class JsonDictionary: JsonEncodable, ExpressibleByDictionaryLiteral {
   public var dictionary = [String: JsonEncodable]()
   
   public init() {}
+  public required init(dictionaryLiteral elements: (String, JsonEncodable)...) {
+    dictionary = .init(uniqueKeysWithValues: elements)
+  }
   
   @discardableResult
   open func at(_ key: String) -> JsonDictionaryKey {
@@ -89,6 +107,13 @@ open class JsonDictionary: JsonEncodable {
   @discardableResult
   open func set(_ value: JsonKeyedEncodable) -> Self {
     value.write(to: self)
+    return self
+  }
+  @discardableResult
+  open func dictionary(_ key: String, _ build: (JsonDictionary)->()) -> Self {
+    let dictionary = JsonDictionary()
+    build(dictionary)
+    set(key, dictionary)
     return self
   }
   
@@ -102,6 +127,12 @@ open class JsonDictionary: JsonEncodable {
   
   @discardableResult
   open func set(_ key: String, _ value: JsonEncodable) -> Self {
+    dictionary[key] = value
+    return self
+  }
+  @discardableResult
+  open func set(_ key: String, _ value: JsonEncodable, if condition: Bool) -> Self {
+    guard condition else { return self }
     dictionary[key] = value
     return self
   }

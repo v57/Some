@@ -17,7 +17,8 @@ public protocol AnyReaderDecodable {
  
  Used for easy dictionary parsing
  */
-public class AnyReader {
+@dynamicMemberLookup
+public struct AnyReader {
   /// Errors
   public enum Error: Swift.Error {
     /// Throws if key cannot be found in a dictionary
@@ -52,6 +53,9 @@ public class AnyReader {
   public init(json data: Data) throws {
     self.raw = try JSONSerialization.jsonObject(with: data, options: [])
   }
+  public subscript(dynamicMember key: String) -> AnyReaderPath {
+    AnyReaderPath(parent: self, path: [key])
+  }
   
   public func unconvertible(to expected: String) -> Error {
     return Error.unconvertible(value: raw, expected: expected)
@@ -80,6 +84,10 @@ public class AnyReader {
   public func optional(_ key: String, action: (AnyReader) throws -> ()) throws {
     guard let value = try optional(key) else { return }
     try action(value)
+  }
+
+  public func next<T: AnyReaderDecodable>() throws -> T {
+    try T(self)
   }
   
   /// Tries to represent raw as dictionary and calls forEach on it.
@@ -237,6 +245,8 @@ public class AnyReader {
   public func int() throws -> Int {
     if let value = raw as? Int {
       return value
+    } else if let value = raw as? Int64 {
+      return Int(value)
     } else if let value = raw as? String {
       if value.isHex {
         guard let value = Int(value.withoutHex, radix: 16) else { throw unconvertible(to: "Int") }
@@ -277,8 +287,7 @@ public class AnyReader {
       return UInt64(value)
     } else if let value = raw as? String {
       if value.isHex {
-        guard let value = UInt64(value.withoutHex, radix: 16) else { throw unconvertible(to: "UInt64") }
-        return value
+        return value.hex.uint64
       } else {
         guard let value = UInt64(value) else { throw unconvertible(to: "UInt64") }
         return value
@@ -302,15 +311,26 @@ public class AnyReader {
     return (try? at(key)) != nil
   }
   
-  public func json() throws -> Data {
-    return try JSONSerialization.data(withJSONObject: raw, options: .prettyPrinted)
+  public func json(options: JSONSerialization.WritingOptions = [.prettyPrinted, .fragmentsAllowed]) throws -> Data {
+    return try JSONSerialization.data(withJSONObject: raw, options: options)
+  }
+  public init(data: DataReader) throws {
+    self.raw = try JSONSerialization.jsonObject(with: data.next(), options: [])
+  }
+  public func save(data: DataWriter) {
+    let json = try? json(options: [.fragmentsAllowed])
+    data.append(json ?? Data())
   }
 }
 
 extension AnyReader: CustomStringConvertible {
   public var description: String {
-    return "\(raw)"
+    return (try? json(options: [.sortedKeys, .prettyPrinted, .fragmentsAllowed]).string) ?? "\(raw)"
   }
+}
+
+extension AnyReader: DataRepresentable {
+  
 }
 
 extension Dictionary where Key == String, Value == Any {
@@ -364,5 +384,70 @@ public extension String {
       throw ParsingError.stringEquals(string: self, shouldEqual: string)
     }
     return self
+  }
+}
+
+@dynamicMemberLookup
+public struct AnyReaderPath {
+  var parent: AnyReader
+  var path: [String]
+  public subscript(dynamicMember key: String) -> AnyReaderPath {
+    AnyReaderPath(parent: parent, path: path + [key])
+  }
+  private func resolve() throws -> AnyReader {
+    try path.reduce(parent, { try $0.at($1) })
+  }
+  public func string() throws -> String {
+    try resolve().string()
+  }
+  public func int() throws -> Int {
+    try resolve().int()
+  }
+  public func uint64() throws -> UInt64 {
+    try resolve().uint64()
+  }
+  public func data() throws -> Data {
+    try resolve().data()
+  }
+  public func bool() throws -> Bool {
+    try resolve().bool()
+  }
+  public func date() throws -> Date {
+    try resolve().date()
+  }
+  public func double() throws -> Double {
+    try resolve().double()
+  }
+  public func next<T: AnyReaderDecodable>() throws -> T {
+    try resolve().next()
+  }
+  public func url() throws -> URL {
+    try resolve().url()
+  }
+}
+
+extension String: AnyReaderDecodable {
+  public init(_ data: AnyReader) throws {
+    self = try data.string()
+  }
+}
+extension URL: AnyReaderDecodable {
+  public init(_ data: AnyReader) throws {
+    self = try data.url()
+  }
+}
+extension Int: AnyReaderDecodable {
+  public init(_ data: AnyReader) throws {
+    self = try data.int()
+  }
+}
+extension Date: AnyReaderDecodable {
+  public init(_ data: AnyReader) throws {
+    self = try data.date()
+  }
+}
+extension Array: AnyReaderDecodable where Element: AnyReaderDecodable {
+  public init(_ data: AnyReader) throws {
+    self = try data.array { try $0.next() }
   }
 }

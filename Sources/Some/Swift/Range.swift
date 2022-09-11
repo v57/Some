@@ -38,6 +38,12 @@ public extension Range {
       self = lowerBound..<newValue
     }
   }
+  static func & (l: Self, r: Self) -> Self {
+    l.clamped(to: r)
+  }
+  static func | (l: Self, r: Self) -> Self {
+    Swift.min(l.lowerBound, r.lowerBound)..<Swift.max(l.upperBound, r.upperBound)
+  }
 }
 public extension Range where Bound: BinaryInteger {
   var length: Bound {
@@ -45,6 +51,18 @@ public extension Range where Bound: BinaryInteger {
       return upperBound - lowerBound
     } set {
       self = lowerBound..<lowerBound + newValue
+    }
+  }
+  func shifted(by offset: Bound) -> Range<Bound> {
+    lowerBound + offset ..< upperBound + offset
+  }
+}
+public extension ClosedRange {
+  init(safe a: Bound, _ b: Bound) {
+    if a < b {
+      self = a...b
+    } else {
+      self = b...a
     }
   }
 }

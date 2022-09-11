@@ -16,6 +16,18 @@ public extension Result {
       self = .success(value())
     }
   }
+  func mapThrowing<NewSuccess>(_ transform: (Success)throws->(NewSuccess)) -> Result<NewSuccess, Error> {
+    do {
+      switch self {
+      case .success(let value):
+        return .success(try transform(value))
+      case .failure(let error):
+        return .failure(error)
+      }
+    } catch {
+      return .failure(error)
+    }
+  }
   var value: Success! {
     guard case let .success(value) = self else { return nil }
     return value
@@ -51,9 +63,9 @@ public extension Result {
 //       }
 //     }
 //   }
-//   
+//
 //   public override init() {
-//     
+//
 //   }
 //   public init(_ value: T) {
 //     self.value = value

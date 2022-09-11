@@ -19,8 +19,8 @@ public protocol NetworkRequest {
   var shouldRepeat: Bool { get }
   
   func prepare(queue: NetworkQueue)
-  func create() throws -> Request
-  func data(from request: Request) throws -> Data
+  func create() -> Request
+  func makeData() -> Data
   
   func response(from data: DataReader) throws -> Response
   func success(response: Response)
@@ -119,8 +119,7 @@ open class NetworkQueue: SomeOperationQueue {
     }
     open func addOperations() {
       send {
-        let value = try self.request.create()
-        return try self.request.data(from: value)
+        self.request.makeData()
       }
       read { data in
         let response = try self.request.response(from: data)
@@ -297,8 +296,7 @@ extension NetworkQueue {
     open override func addOperations() {
       add(Connect())
       add(Send {
-        let value = try self.request.create()
-        return try self.request.data(from: value)
+        self.request.makeData()
       })
       add(Read { data in
         let response = try self.request.response(from: data)

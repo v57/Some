@@ -18,7 +18,10 @@ public extension UISwitch {
     move(pos,anchor)
     isOn = on
   }
-  
+  func on(_ isOn: Bool) -> Self {
+    self.isOn = isOn
+    return self
+  }
   func onTouch(_ action: @escaping (Bool)->()) {
     add(on: .touchUpInside, action: action)
   }

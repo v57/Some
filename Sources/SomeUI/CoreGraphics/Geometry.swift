@@ -175,10 +175,4 @@ public func lerp(start: CGVector, end: CGVector, t: CGFloat) -> CGVector {
   CGVector(dx: start.dx + (end.dx - start.dx)*t, dy: start.dy + (end.dy - start.dy)*t)
 }
 
-// MARK:- Transform
-extension CGAffineTransform {
-  static func scale(_ s: CGFloat) -> CGAffineTransform {
-    return CGAffineTransform(scaleX: s, y: s)
-  }
-}
 #endif

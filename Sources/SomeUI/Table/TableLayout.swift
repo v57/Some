@@ -34,11 +34,17 @@ public protocol CellLayout {
   func size(fitting: CGSize, max: CGSize) -> CGSize
 }
 
-extension TableCell {
-  public var frame: CGRect { CGRect(origin: position, size: size) }
-}
-extension TableCell {
-  var index: Int {
+public extension TableCell {
+  var frame: CGRect { CGRect(origin: position, size: size) }
+  var previous: TableCell? {
+    guard let tableInfo = tableInfo else { return nil }
+    return tableInfo.table.cells.safe(tableInfo.index - 1)
+  }
+  var next: TableCell? {
+    guard let tableInfo = tableInfo else { return nil }
+    return tableInfo.table.cells.safe(tableInfo.index + 1)
+  }
+  internal var index: Int {
     get { tableInfo!.index }
     set { tableInfo!.index = newValue }
   }
@@ -48,7 +54,7 @@ extension TableCell {
 }
 extension TableCell {
   var shouldUpdateFrame: Bool {
-    return view.frame.origin != position || view.frame.size != size
+    view != nil && (view.frame.origin != position || view.frame.size != size)
   }
 }
 
@@ -124,7 +130,7 @@ open class TableLayout {
       cell.customGap ?? gap
     }
     var width: CGFloat {
-      return table.cameraSize.width - table.insets.width - table.safeArea.width
+      return table.size.width - table.insets.width - table.safeArea.width
     }
     var async: Bool { false }
     public override func update(cells: Cells, data: Data) -> Result {
@@ -141,95 +147,53 @@ open class TableLayout {
       }
       
       // updating current cell
-      if async {
-        let queue = OperationQueue()
-        let lock = NSLock()
-        switch data.action {
-        case .added:
-        for chunk in cells.chunks(30) {
-          queue.addOperation {
-            for cell in chunk {
-              cell.size = cell.size(fitting: fittingSize, max: fittingSize)
-            }
-          }
-        }
-        case .resized:
-          for chunk in cells.chunks(30) {
-            queue.addOperation {
-              var offset: CGFloat = 0
-              for cell in chunk {
-                let height = cell.size.height
-                cell.size = cell.size(fitting: fittingSize, max: fittingSize)
-                offset += cell.size.height - height
-              }
-              lock.lock()
-              result.offset += offset
-              lock.unlock()
-            }
-          }
-        case .removed: break
-        }
-        queue.waitUntilAllOperationsAreFinished()
-        switch data.action {
-        case .added:
-          for cell in cells {
-            let size = cell.size
-            
-            let offset = size.height + gap(for: cell)
-            result.offset += offset
-            data.update(cell,CGRect(position,size))
-            
-            position.y += offset
-          }
-        case .resized:
-          for cell in cells {
-            let size = cell.size
-            
-            if position != cell.position || offset != .zero {
-              data.update(cell,CGRect(position,size))
-            }
-            position.y += size.height + gap(for: cell)
-          }
-        case .removed:
-          for cell in cells {
-            let offset = cell.size.height + gap(for: cell)
-            result.offset -= offset
-          }
-        }
-      } else {
+      switch data.action {
+      case .added:
         for cell in cells {
-          switch data.action {
-          case .added:
-            let size = cell.size(fitting: fittingSize, max: fittingSize)
-            
-            let offset = size.height + gap(for: cell)
-            result.offset += offset
-            data.update(cell,CGRect(position,size))
-            
-            position.y += offset
-          case .resized:
-            let size = cell.size(fitting: fittingSize, max: fittingSize)
-            
-            let offset = size - cell.size
-            result.offset += offset.height
-            
-            if position != cell.position || offset != .zero {
-              data.update(cell,CGRect(position,size))
-            }
-            position.y += size.height + gap(for: cell)
-          case .removed:
-            let offset = cell.size.height + gap(for: cell)
-            result.offset -= offset
+          let size = cell.size(fitting: fittingSize, max: fittingSize)
+          
+          var offset = size.height
+          if !(data.next.isEmpty && data.previous.isEmpty && cell === cells.last) {
+            offset += gap(for: cell)
           }
+          result.offset += offset
+          data.update(cell,CGRect(position,size))
+          
+          position.y += offset
+        }
+      case .resized:
+        for cell in cells {
+          let oldSize = cell.size
+          let size = cell.size(fitting: fittingSize, max: fittingSize)
+          
+          let offset = size - oldSize
+          result.offset += offset.height
+          
+          if position != cell.position || offset != .zero {
+            data.update(cell,CGRect(position,size))
+          }
+          position.y += size.height + gap(for: cell)
+        }
+      case .removed:
+        for cell in cells {
+          var offset = cell.size.height
+          if !(cell === cells.last && data.previous.isEmpty && data.next.isEmpty) {
+            offset += gap(for: cell)
+          }
+          result.offset -= offset
         }
       }
       
+      
       // updating next cells if needed
+      guard let firstNext = data.next.first else { return result }
+      result.offset = position.y - firstNext.position.y
       guard result.offset != 0 else { return result }
       
       extendChangedRange(&result, cells, data: data)
       
-      for cell in data.next { data.update(cell,CGRect(cell.position+CGPoint(0,result.offset),cell.size))
+      for cell in data.next {
+        data.update(cell,CGRect(cell.position+CGPoint(0,result.offset),cell.size))
       }
       return result
     }
@@ -244,7 +208,7 @@ open class TableLayout {
       return table.gap.horizontal
     }
     var height: CGFloat {
-      return table.cameraSize.height - table.insets.height - table.safeArea.height
+      return table.size.height - table.insets.height - table.safeArea.height
     }
     
     public override func update(cells: Cells, data: Data) -> Result {
@@ -313,7 +277,9 @@ open class TableLayout {
     }
     
     func currentLineHeight(cells: Cells, data: Data) -> CGFloat {
-      let firstY = cells.first!.position.y
+      currentLineHeight(firstY: cells.first!.position.y, data: data)
+    }
+    func currentLineHeight(firstY: CGFloat, data: Data) -> CGFloat {
       var lineHeight: CGFloat = 0
       for cell in data.previous.reversed() {
         guard firstY == cell.position.y else { return lineHeight }
@@ -326,7 +292,7 @@ open class TableLayout {
       var result = Result()
       setChangedRange(&result, cells, data: data)
       
-      let fwidth = table.cameraSize.width - table.insets.right - table.safeArea.width
+      let fwidth = table.size.width - table.insets.right - table.safeArea.width
       let maxSize = CGSize(fwidth - table.insets.left,0)
       
       var position: CGPoint = self.offset
@@ -340,6 +306,8 @@ open class TableLayout {
       
       switch data.action {
       case .added:
+        oldLineHeight = currentLineHeight(firstY: position.y, data: data)
+        lineHeight = oldLineHeight
         for cell in cells {
           let fitting = CGSize(fwidth - position.x, lineHeight)
           let size = cell.size(fitting: fitting, max: maxSize)
@@ -396,9 +364,7 @@ open class TableLayout {
         result.offset += shouldReset
       case .resized:
         // Привет долбаеб из будущего. Короче такая хуйня. Нужно удалить result.offset += везде и заменить на сравнение position.y последней клетки + высота последней линии до и после изменений
-
         for cell in cells {
-          
           let fitting = CGSize(fwidth - position.x, lineHeight)
           let size = cell.size(fitting: fitting, max: maxSize)
           
@@ -423,6 +389,13 @@ open class TableLayout {
           }
           data.update(cell,CGRect(position,size))
           position.x += size.width + hgap
+          if fwidth < position.x {
+            oldLineHeight = 0
+            position.x = table.insets.left
+            position.y += lineHeight + vgap
+            lineHeight = 0
+            shouldReset = 0
+          }
         }
         shouldReset = lineHeight - oldLineHeight
         

@@ -118,6 +118,7 @@ extension String {
   public var words: [String] {
     return components(separatedBy: " ")
   }
+  public var notEmpty: Bool { !isEmpty }
   public var cleaned: String {
     return trimmingCharacters(in: .whitespacesAndNewlines)
   }
@@ -173,9 +174,6 @@ extension String {
   public mutating func addLine() {
     guard !isEmpty else { return }
     self += "\n"
-  }
-  public var localized: String {
-    return NSLocalizedString(self, comment: "")
   }
   
   
@@ -233,6 +231,20 @@ extension String {
     }
     return result
   }
+  public static func random(count: Int, set: String) -> String {
+    var rng = SystemRandomNumberGenerator()
+    return random(count: count, set: set, using: &rng)
+  }
+  public static func random<T: RandomNumberGenerator>(count: Int, set: String, using rng: inout T) -> String {
+    let characters = set
+    guard !characters.isEmpty else { return "" }
+    var result = ""
+    result.reserveCapacity(count)
+    for _ in 0..<count {
+      result.append(characters.randomElement(using: &rng)!)
+    }
+    return result
+  }
   public func wordRange(at lengthIndex: Int) -> NSRange {
     var offset = 0
     for string in components(separatedBy: .whitespacesAndNewlines) {
@@ -249,10 +261,10 @@ extension String {
     (self as NSString).substring(with: wordRange(at: lengthIndex))
   }
   public mutating func insert(_ string: String, every: Int) {
-    var currentIndex = startIndex
-    while let i = index(currentIndex, offsetBy: every, limitedBy: endIndex) {
-      currentIndex = index(i, offsetBy: string.count)
+    var offset = every
+    while let i = index(startIndex, offsetBy: offset, limitedBy: endIndex) {
       insert(contentsOf: string, at: i)
+      offset += string.count + every
     }
   }
   public func inserting(_ string: String, every: Int) -> Self {
@@ -298,6 +310,24 @@ public extension CharacterSet {
   static let separators: CharacterSet = CharacterSet(charactersIn: ", \n{}()[]'\u{fffc}")
   @inline(__always) func contains(_ character: Character) -> Bool {
     return contains(character.unicodeScalars.first!)
+  }
+}
+
+public extension Character {
+#if !os(Linux) && !os(macOS)
+  /// A simple emoji is one scalar and presented to the user as an Emoji
+  var isSimpleEmoji: Bool {
+    guard let firstScalar = unicodeScalars.first else { return false }
+    return firstScalar.properties.isEmoji && firstScalar.value > 0x238C
+  }
+
+  /// Checks if the scalars will be merged into an emoji
+  var isCombinedIntoEmoji: Bool { unicodeScalars.count > 1 && unicodeScalars.first?.properties.isEmoji ?? false }
+
+  var isEmoji: Bool { isSimpleEmoji || isCombinedIntoEmoji }
+#endif
+  var unicodeScalar: Unicode.Scalar {
+    Unicode.Scalar(unicodeScalars.lazy.map(\.value).reduce(0, +))!
   }
 }
 

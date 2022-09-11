@@ -22,6 +22,14 @@ open class TimeWatch: E {
   }
   open var time = DispatchTime.now()
   open var version = 0
+  
+  open override func add(child: S) {
+    super.add(child: child)
+    (child as? P<Void>)?.send()
+  }
+  open override func request(from child: S) {
+    (child as? P<Void>)?.send()
+  }
   open func run() {
     send()
     let version = self.version

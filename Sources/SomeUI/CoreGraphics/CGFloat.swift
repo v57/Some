@@ -23,19 +23,27 @@ postfix func ° (l: inout CGFloat) -> CGFloat {
   return l * degree
 }
 
-extension CGFloat {
-  public var degrees: CGFloat { self * radian }
-  public var radians: CGFloat { self * degree }
-  public static var margin: CGFloat = 12
-  public static var margin2: CGFloat = 24
-  public static var miniMargin: CGFloat = 8
-  public static var miniMargin2: CGFloat = 16
-  public static func random() -> CGFloat { .random(in: 0..<1) }
-  public static func seed(_ x: Int, _ y: Int) -> CGFloat {
+public extension CGFloat {
+  var int: Int { Int(self) }
+  var degrees: CGFloat { self * radian }
+  var radians: CGFloat { self * degree }
+  static var margin: CGFloat = 12
+  static var margin2: CGFloat = 24
+  static var miniMargin: CGFloat = 8
+  static var miniMargin2: CGFloat = 16
+  static func random() -> CGFloat { .random(in: 0..<1) }
+  static func seed(_ x: Int, _ y: Int) -> CGFloat {
     return CGFloat(NativeType.seed(x, y))
   }
-  public static func seed() -> CGFloat {
+  static func seed() -> CGFloat {
     return CGFloat(NativeType.seed())
+  }
+  func fill(_ itemSize: CGFloat) -> CGFloat {
+    let items = (self / itemSize).rounded(.down)
+    return (self / items).rounded(.down)
+  }
+  func fill(_ itemSize: CGFloat, spacing: CGFloat) -> CGFloat {
+    (self + spacing).fill(itemSize + spacing) - spacing
   }
 }
 

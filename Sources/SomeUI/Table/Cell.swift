@@ -23,7 +23,7 @@ public extension UIView {
     let size = cell.size(fitting: frame.size, max: frame.size)
     cell.position = .zero
     cell.size = size
-    cell.display(to: self, context: DisplayContext(animator: nil, created: true, from: .addSubview))
+    cell.display(to: self, context: DisplayContext(animator: nil, created: true, from: .addSubview, group: 0))
   }
 }
 
@@ -86,6 +86,14 @@ public struct DisplayContext {
   public var animator: Animator?
   public var created: Bool
   public var from: From
+  public var group: Int
+  
+  public init(animator: Animator? = nil, created: Bool, from: DisplayContext.From, group: Int) {
+    self.animator = animator
+    self.created = created
+    self.from = from
+    self.group = group
+  }
   public enum From {
     case remove, append, addSubview, scroll, move, picker, resize, insert, update, loaded
   }
@@ -93,7 +101,7 @@ public struct DisplayContext {
 
 open class Cell: TableCell, Cachable {
   
-  public var tableInfo: TableInfo?
+  open var tableInfo: TableInfo?
   open var position: CGPoint = .zero
   open var size: CGSize = .zero
   open var customGap: CGFloat? { nil }
@@ -117,8 +125,16 @@ open class Cell: TableCell, Cachable {
     
   }
   
+  open func reloadView() {
+    guard let view = self.view else { return }
+    guard let superview = view.superview else { return }
+    purged()
+    isVisible = false
+    display(to: superview, context: DisplayContext(animator: nil, created: true, from: .addSubview, group: 0))
+  }
   open func display(to superview: UIView, context: DisplayContext) {
-    assert(!isVisible)
+//    assert(!isVisible)
+    guard !isVisible else { return }
     if let view = view {
       if isCachable {
         view.isHidden = false
@@ -193,8 +209,4 @@ open class Cell: TableCell, Cachable {
   open var description: String { "\(frame)" }
 }
 
-func print(_ items: Any..., separator: String = " ", terminator: String = "\n") {
-  let output = items.map { "\($0)" }.joined(separator: separator)
-  Swift.print(output, terminator: terminator)
-}
 #endif

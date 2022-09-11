@@ -123,7 +123,7 @@ public class CellPicker: EmptyCell {
     
     table.cells[index] = cell
     if let view = superview {
-      cell.display(to: view, context: DisplayContext(animator: animator, created: false, from: .picker))
+      cell.display(to: view, context: DisplayContext(animator: animator, created: false, from: .picker, group: 1))
     }
     
     events.didPop(cell: cell, animator: animator)

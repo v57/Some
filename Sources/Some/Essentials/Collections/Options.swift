@@ -93,21 +93,15 @@ public extension Sequence where Element: RawRepresentable, Element.RawValue: Bin
   }
 }
 public extension Sequence where Element: BinaryInteger {
-  func options() -> Int {
-    var result = 0
-    for i in self {
-      result[i] = true
-    }
-    return result
+  func bitSet() -> Element {
+    reduce(0) { $0 | (1 << $1) }
   }
 }
 
 
 extension BinaryInteger {
   public subscript<T: BinaryInteger>(index: T) -> Bool {
-    get {
-      return self & (1 << index) != 0
-    }
+    get { self & (1 << index) != 0 }
     set {
       if newValue {
         self |= 1 << index
@@ -423,4 +417,10 @@ extension Options: Codable where RawValue: Codable {
     var container = encoder.unkeyedContainer()
     try container.encode(rawValue)
   }
+}
+
+public extension Bool {
+  static func & (l: Bool, r: Bool) -> Bool { l && r }
+  static func | (l: Bool, r: Bool) -> Bool { l || r }
+  static func ^ (l: Bool, r: Bool) -> Bool { (l || r) && !(l && r) }
 }

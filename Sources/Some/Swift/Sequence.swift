@@ -17,11 +17,35 @@ public extension Sequence {
       }
     }
   }
+  func enumerateChunks(_ chunkSize: Int, _ block: ([Element], inout Bool)->()) {
+    var stop = false
+    var chunk = [Element]()
+    chunk.reserveCapacity(chunkSize)
+    for element in self {
+      chunk.append(element)
+      if chunk.count == chunkSize {
+        block(chunk, &stop)
+        if stop {
+          return
+        }
+        chunk.removeAll(keepingCapacity: true)
+      }
+    }
+  }
   func enumerateFilter(_ block: (Element, inout Bool)->(Bool)) -> [Element] {
     var array = [Element]()
     enumerate { element, stop in
       if block(element, &stop) {
         array.append(element)
+      }
+    }
+    return array
+  }
+  func enumerateCompactMap<T>(_ block: (Element, inout Bool)->(T?)) -> [T] {
+    var array = [T]()
+    enumerate { element, stop in
+      if let mapped = block(element, &stop) {
+        array.append(mapped)
       }
     }
     return array
@@ -38,6 +62,16 @@ public extension Sequence {
     }
   }
 }
+public extension Sequence where Element: Hashable {
+  func countHashable() -> [Element: Int] {
+    var dictionary = [Element: Int]()
+    forEach {
+      dictionary.mutate(at: $0, default: { 0 }, mutate: { $0 += 1 })
+    }
+    return dictionary
+  }
+}
+
 public extension Sequence where Iterator.Element == UInt8 {
   var data: Data {
     if let data = self as? Data {

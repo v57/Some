@@ -5,8 +5,8 @@
 //  Created by Dmitry Kozlov on 25/11/2020.
 //
 
+#if canImport(Combine)
 import Foundation
-
 
 public class DynamicSortedArrayPipe<T: Comparable> {
   public var array: [T] {
@@ -14,10 +14,10 @@ public class DynamicSortedArrayPipe<T: Comparable> {
       count = array.count
     }
   }
-  @V public var count: Int
+  @Published public var count: Int
   public lazy var input: P<SetOperation<T>> = {
     let pipe = P<SetOperation<T>>()
-    pipe.next { [unowned self] in
+    pipe.forEach { [unowned self] in
       switch $0 {
       case let .insert(item):
         self.insert(item)
@@ -99,7 +99,7 @@ public class DynamicSortedArrayPipe<T: Comparable> {
   }
   /// Updates or inserts element
   public func update(_ element: T) {
-    if let index = array.binarySearch(sorter.comparable(for: element), sorter.comparable) {
+    if let index = array.firstIndex(of: element) {
       array[index] = element
       output.send(.update(index.indexed(element)))
     } else {
@@ -110,13 +110,14 @@ public class DynamicSortedArrayPipe<T: Comparable> {
     insert(element, replace: true)
   }
   public func insert(_ element: T, replace: Bool) {
+    guard filter(element) else { return }
     guard !array.contains(element) else { return }
     let index = array.binaryInsert(element, using: sorter, replace: replace)
     output.send(.insert(index.indexed(element)))
   }
   @discardableResult
   public func remove(_ element: T) -> Indexed<T>? {
-    if let index = array.binarySearch(sorter.comparable(for: element), sorter.comparable) {
+    if let index = array.firstIndex(where: { $0 == element }) {
       let removed = Indexed(index, array.remove(at: index))
       output.send(.remove(removed))
       return removed
@@ -155,3 +156,23 @@ public extension SortedArrayPipe {
     DynamicSortedArrayPipe(parent: self, sorter: sorter, filter: filter)
   }
 }
+public extension DynamicSortedArrayPipe {
+  var isSorted: Bool {
+    guard count > 1 else { return true }
+    for i in 1..<count {
+      if sorter.compare(array[i-1], array[i]) == .greater {
+        return false
+      }
+    }
+    return true
+  }
+  func resortIfNeeded() {
+    guard !isSorted else { return }
+    let a = array.enumerated().map { Indexed($0.offset, $0.element) }.sorted { sorter.sort($0.value, $1.value) }
+    a.forEach {
+      array[$0.index] = $0.value
+      output.send(.update($0))
+    }
+  }
+}
+#endif

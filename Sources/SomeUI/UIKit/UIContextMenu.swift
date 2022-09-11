@@ -8,20 +8,25 @@
 
 import UIKit
 
-public extension UIView {
-  func contextMenu() -> ContextMenu? {
-    guard #available(iOS 13.0, *) else { return nil }
-    if let menu = interactions.firstMap(as: ContextMenuInteraction.self) {
-      return menu.controller
-    } else {
-      let menu = ContextMenuInteraction(0)
-      addInteraction(menu)
-      return menu.controller
-    }
-  }
-}
+//public extension UIView {
+//  func contextMenu() -> ContextMenu? {
+//    if let menu = interactions.firstMap(as: ContextMenuInteraction.self) {
+//      return menu.controller
+//    } else {
+//      let menu = ContextMenuInteraction()
+//      addInteraction(menu)
+//      return menu.controller
+//    }
+//  }
+//  func removeContextMenu() {
+//    guard #available(iOS 13.0, *) else { return }
+//    if let interaction = interactions.first(where: { $0 is UIContextMenuInteraction }) {
+//      removeInteraction(interaction)
+//    }
+//  }
+//}
 
-protocol ContextMenuProtocol: class {
+protocol ContextMenuProtocol: AnyObject {
   var title: String { get set }
   @available(iOS 13.0, *)
   var items: [UIMenuElement] { get set }
@@ -35,9 +40,19 @@ public struct SystemIcon: ExpressibleByStringLiteral {
   public init(stringLiteral value: String) {
     self.rawValue = value
   }
+  public var image: UIImage? {
+    if #available(iOS 13.0, *) {
+      return UIImage(systemName: rawValue)
+    } else {
+      return nil
+    }
+  }
 }
 public extension SystemIcon {
   static var copy: SystemIcon = "doc.on.doc"
+  static var reply: SystemIcon = "arrowshape.turn.up.left.fill"
+  static var delete: SystemIcon = "trash"
+  static var edit: SystemIcon = "square.and.pencil"
 }
 
 public struct ContextMenu {
@@ -50,19 +65,24 @@ public struct ContextMenu {
     case off, on, mixed
   }
   public enum Attributes: UInt8 {
-    case disabled, destructive, hidden
+    case destructive
   }
   @discardableResult
-  public func menu(_ title: String, _ image: SystemIcon?, _ attributes: Attributes.Set = 0, state: State = .off, action: @escaping ()->()) -> ContextMenu {
+  @available(iOS 13.0, *)
+  public func menu(action: UIMenuElement) -> ContextMenu {
+    guard !parent.items.contains(where: { $0.title == action.title }) else { return self }
+    parent.items.append(action)
+    return self
+  }
+  @discardableResult
+  public func _menu(_ title: String, _ image: UIImage?, _ attributes: Attributes.Set = 0, state: State = .off, action: @escaping ()->()) -> ContextMenu {
     guard #available(iOS 13.0, *) else { return self }
     guard !parent.items.contains(where: { $0.title == title }) else { return self }
     
     var _attributes: UIMenuElement.Attributes = []
     attributes.forEach {
       switch $0 {
-      case .disabled: _attributes.insert(.disabled)
       case .destructive: _attributes.insert(.destructive)
-      case .hidden: _attributes.insert(.hidden)
       }
     }
     var _state = UIMenuElement.State.off
@@ -71,18 +91,25 @@ public struct ContextMenu {
     case .off: _state = .off
     case .on: _state = .on
     }
-    let _image: UIImage?
-    if let image = image {
-      _image = UIImage(systemName: image.rawValue)
-    } else {
-      _image = nil
-    }
-    
-    let action = UIAction(title: title, image: _image, identifier: nil, discoverabilityTitle: nil, attributes: _attributes, state: _state) { _ in
+    let action = UIAction(title: title, image: image, identifier: nil, discoverabilityTitle: nil, attributes: _attributes, state: _state) { _ in
       action()
     }
     parent.items.append(action)
     return self
+  }
+  @discardableResult
+  public func _menu(_ title: String, _ image: SystemIcon?, _ attributes: Attributes.Set = 0, state: State = .off, action: @escaping ()->()) -> ContextMenu {
+    var _image: UIImage?
+    if let image = image {
+      if #available(iOS 13.0, *) {
+        _image = UIImage(systemName: image.rawValue)
+      }
+    }
+    return _menu(title, _image, attributes, state: state, action: action)
+  }
+  @available(iOS 13.0, *)
+  public var lastAction: UIAction? {
+    parent.items.last as? UIAction
   }
 }
 
@@ -92,7 +119,7 @@ class ContextMenuInteraction: UIContextMenuInteraction, ContextMenuProtocol {
   let _delegate = Delegate()
   var controller: ContextMenu { ContextMenu(parent: self) }
   var items = [UIMenuElement]()
-  init(_ v: Int) {
+  init() {
     super.init(delegate: _delegate)
     _delegate.parent = self
   }
@@ -104,6 +131,15 @@ class ContextMenuInteraction: UIContextMenuInteraction, ContextMenuProtocol {
         return UIMenu(title: parent.title, image: nil, identifier: nil, options: .displayInline, children: parent.items)
         
       }
+    }
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, previewForHighlightingMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+      guard let parent = parent else { return nil }
+      guard let view = parent.view else { return nil }
+      guard let superview = view.superview else { return nil }
+      let target = UIPreviewTarget(container: superview, center: view.center)
+      let parameters = UIPreviewParameters()
+      parameters.backgroundColor = .clear
+      return UITargetedPreview(view: view, parameters: parameters, target: target)
     }
   }
 }

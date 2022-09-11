@@ -52,6 +52,7 @@ public class Animator {
   public var isAnimating: Bool = false
   public var isCompleted: Bool = false
   public var ignoreAnimations: Bool = false
+  public var delay: Double = 0.0
   
   #if DEBUG
   public let createdAt: FunctionInfo

@@ -31,33 +31,6 @@ extension CGRect {
   }
 }
 
-// public // should be internal in when you use it with Some Framework
-extension UIEdgeInsets {
-  var topLeft: CGPoint {
-    return CGPoint(left,top)
-  }
-  var width: CGFloat {
-    return left + right
-  }
-  var height: CGFloat {
-    return top + bottom
-  }
-  @inline(__always)
-  func inset(rect: CGRect) -> CGRect {
-    return rect.inset(by: self)
-  }
-}
-
-// public // should be internal in when you use it with Some Framework
-extension CGRect {
-  @inline(__always)
-  func inset(using insets: UIEdgeInsets) -> CGRect {
-    return insets.inset(rect: self)
-  }
-}
-
-
-
 public struct FunctionInfo: CustomStringConvertible {
   public var function: String
   public var file: String

@@ -148,8 +148,8 @@ public extension ArraySyncClient {
   }
 }
 
-// MARK:- Server
-public protocol ArraySyncServer: class {
+// MARK: - Server
+public protocol ArraySyncServer: AnyObject {
   associatedtype Item
   // Settings
   var blockSize: Int { get }

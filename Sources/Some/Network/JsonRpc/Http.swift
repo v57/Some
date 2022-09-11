@@ -9,9 +9,17 @@
 #if !os(Linux)
 import Foundation
 
-public enum HttpError: Error {
+public enum HttpError: Error, CustomStringConvertible {
   case failed(Int,String)
   case responseIsNotInJsonFormat
+  public var description: String {
+    switch self {
+    case .failed(_, let description):
+      return description
+    case .responseIsNotInJsonFormat:
+      return "Response is not in json format"
+    }
+  }
 }
 public class CustomHttp<Response> {
   public typealias RequestMap = (JsonDictionary,(JsonDictionary)->()) -> ()
@@ -36,101 +44,215 @@ public class CustomHttp<Response> {
   }
 }
 
-public class JsonHttp {
-  public var http: Http
-  var _auth: (() -> Future<String>?)?
-  var responseDataPath: String?
-  public func auth(_ auth: @escaping () -> Future<String>?) -> Self {
-    _auth = auth
-    return self
+public class JsonRpcHttp {
+  var responseDataPath: String = "data"
+  let http: JsonHttp
+  public init(_ address: String, _ requestBuilder: @escaping (inout URLRequest)->()) {
+    http = JsonHttp(address, requestBuilder)
   }
-  public init(_ address: String) {
-    http = Http(address)
-  }
+  
+  @discardableResult
   public func get(_ api: String) -> Future<AnyReader> {
-    if let auth = _auth?() {
-      return auth.then { session -> Future<AnyReader> in
-        self.http.get(api, session: session).map(self.map)
-      }
-    } else {
-      return http.get(api).map(map)
-    }
+    http.get(api).map(map)
   }
-  public func post(_ api: String, body: @escaping (JsonDictionary)->()) -> Future<AnyReader> {
-    if let auth = _auth?() {
-      return auth.then { session -> Future<AnyReader> in
-        self.http.post(api, session: session, body: body).map(self.map)
-      }
-    } else {
-      return http.post(api, body: body).map(map)
-    }
+  @discardableResult
+  public func post(_ api: String, body: @escaping () -> ([String : JsonEncodable])) -> Future<AnyReader> {
+    http.post(api, body: body).map(map)
   }
-  private func map(data: AnyReader) throws -> AnyReader {
+  @discardableResult
+  public func post(_ api: String, body: @escaping (JsonDictionary) -> () = { _ in }) -> Future<AnyReader> {
+    http.post(api, body: body).map(map)
+  }
+  @discardableResult
+  public func post(_ api: String, filteredBody: [String: Any?]) -> Future<AnyReader> {
+    http.post(api, filteredBody: filteredBody).map(map)
+  }
+  @discardableResult
+  public func post(_ api: String, body: Any) -> Future<AnyReader> {
+    http.post(api, body: body).map(map)
+  }
+  @discardableResult
+  public func get(_ api: String) async throws -> AnyReader {
+    try await map(http.get(api))
+  }
+  @discardableResult
+  public func post(_ api: String, body: @escaping (JsonDictionary)->() = { _ in }) async throws -> AnyReader {
+    try await map(http.post(api, body: body))
+  }
+  @discardableResult
+  public func post(_ api: String, body: Any) async throws -> AnyReader {
+    try await map(http.post(api, body: body))
+  }
+  @discardableResult
+  public func post(_ api: String, filteredBody: [String: Any?]) async throws -> AnyReader {
+    try await map(http.post(api, filteredBody: filteredBody))
+  }
+  @discardableResult
+  public func post(_ api: String, body: @escaping ()->([String: JsonEncodable])) async throws -> AnyReader {
+    try await map(http.post(api, body: body))
+  }
+
+  private func map(_ data: AnyReader) throws -> AnyReader {
     if let error = try? data.at("error") {
       let code = try error.at("code").int()
       let message = try error.at("message").string()
       throw HttpError.failed(code,message)
     } else {
-      guard let path = responseDataPath else { return data }
-      return try data.at(path)
+      return try data.at(responseDataPath)
     }
   }
 }
 
+public class JsonHttp {
+  public var http: Http
+  var _auth: (() async throws -> String?)?
+  public func auth(_ auth: @escaping () async throws -> String?) -> Self {
+    _auth = auth
+    return self
+  }
+  public init(_ address: String, _ requestBuilder: @escaping (inout URLRequest)->()) {
+    http = Http(address, requestBuilder)
+  }
+  @discardableResult
+  public func get(_ api: String) -> Future<AnyReader> {
+    Future { try await self.get(api) }
+  }
+  @discardableResult
+  public func post(_ api: String, body: @escaping (JsonDictionary)->() = { _ in }) -> Future<AnyReader> {
+    Future { try await self.post(api, body: body) }
+  }
+  @discardableResult
+  public func post(_ api: String, body: Any) -> Future<AnyReader> {
+    Future { try await self.post(api, body: body) }
+  }
+  @discardableResult
+  public func post(_ api: String, filteredBody: [String: Any?]) -> Future<AnyReader> {
+    post(api, body: filteredBody.compactMapValues { $0 })
+  }
+  @discardableResult
+  public func post(_ api: String, body: @escaping ()->([String: JsonEncodable])) -> Future<AnyReader> {
+    Future { try await self.post(api, body: body) }
+  }
+  @discardableResult
+  public func get(_ api: String) async throws -> AnyReader {
+    try await http.get(api, session: _auth?())
+  }
+  @discardableResult
+  public func post(_ api: String, body: @escaping (JsonDictionary)->() = { _ in }) async throws -> AnyReader {
+    try await http.post(api, session: _auth?(), body: body)
+  }
+  @discardableResult
+  public func post(_ api: String, body: Any) async throws -> AnyReader {
+    try await http.post(api, session: _auth?(), body: body)
+  }
+  @discardableResult
+  public func post(_ api: String, filteredBody: [String: Any?]) async throws -> AnyReader {
+    try await post(api, body: filteredBody.compactMapValues { $0 })
+  }
+  @discardableResult
+  public func post(_ api: String, body: @escaping ()->([String: JsonEncodable])) async throws -> AnyReader {
+    try await http.post(api, session: _auth?(), body: { $0.dictionary = body() })
+  }
+}
+
 public struct Http {
-  public static func jsonRpc(_ address: String) -> JsonHttp {
-    return JsonHttp(address)
+  public static func jsonRpc(_ address: String, requestBuilder: @escaping (inout URLRequest)->()) -> JsonRpcHttp {
+    return JsonRpcHttp(address, requestBuilder)
   }
   public var address: String
   public var urlSession: URLSession = .some
-  public init(_ address: String) {
+  public let requestBuilder: (inout URLRequest)->()
+  public init(_ address: String, _ requestBuilder: @escaping (inout URLRequest)->() = { _ in }) {
+    self.requestBuilder = requestBuilder
     self.address = address
+    if address.last != "/" && address.last != "?" {
+      self.address.append("/")
+    }
   }
-  public func get(_ api: String, session: String? = nil) -> Future<AnyReader> {
+  func createRequest(_ url: URL) -> URLRequest {
+    URLRequest(url: url, cachePolicy: .reloadIgnoringCacheData)
+  }
+  struct ApiLog {
+    let prefix: String
+    init(_ api: String) {
+      prefix = "\(api) "
+    }
+    func print(_ string: String) {
+      someLog.http("\(prefix)\(string.replacingOccurrences(of: "\n", with: "\n\(prefix)"))")
+    }
+  }
+  public func get(_ api: String, session: String? = nil, silent: Bool = false) -> Future<AnyReader> {
+    Future {
+      try await self.get(api, session: session, silent: silent)
+    }
+  }
+  public func post(_ api: String, session: String? = nil, body: (JsonDictionary)->()) -> Future<AnyReader> {
+    let dictionary = JsonDictionary()
+    body(dictionary)
+    let body = dictionary.jsonValue()
+    return post(api, session: session, body: body)
+  }
+  public func post(_ api: String, session: String? = nil, body: Any) -> Future<AnyReader> {
+    Future {
+      try await self.post(api, session: session, body: body)
+    }
+  }
+  public func get(_ api: String, session: String? = nil, silent: Bool = false) async throws -> AnyReader {
+    let log = ApiLog(api)
     let address = self.address + api
-    var urlRequest = URLRequest(url: URL(string: address)!, cachePolicy: .reloadIgnoringCacheData)
+    var urlRequest = createRequest(URL(string: address)!)
     urlRequest.httpMethod = "GET"
     if let session = session {
       urlRequest["Authorization"] = "Bearer " + session
     }
-    print("{http} \(address) sending")
-    return urlSession.send(request: urlRequest).map { data in
-      print("{http} \(address) response: \(data.string)")
-      do {
-        return try AnyReader(json: data)
-      } catch {
-        print("{http} \(address) failed: cannot convert response to json")
-        throw error
+    if !silent {
+      log.print("sending")
+    }
+    requestBuilder(&urlRequest)
+    let data = try await urlSession.send(request: urlRequest, progress: nil)
+    if !silent {
+      log.print("response: \(data.string)")
+    }
+    do {
+      return try AnyReader(json: data)
+    } catch {
+      if !silent {
+        log.print("failed: cannot convert response to json")
       }
+      throw error
     }
   }
-  public func post(_ api: String, session: String? = nil, body: (JsonDictionary)->()) -> Future<AnyReader> {
+  public func post(_ api: String, session: String? = nil, body: (JsonDictionary)->()) async throws -> AnyReader {
+    let dictionary = JsonDictionary()
+    body(dictionary)
+    let body = dictionary.jsonValue()
+    return try await post(api, session: session, body: body)
+  }
+  public func post(_ api: String, session: String? = nil, body: Any) async throws -> AnyReader {
+    let log = ApiLog(api)
     let address = self.address + api
-    var urlRequest = URLRequest(url: URL(string: address)!, cachePolicy: .reloadIgnoringCacheData)
+    var urlRequest = createRequest(URL(string: address)!)
     urlRequest.httpMethod = "POST"
     urlRequest["Content-Type"] = "application/json"
     urlRequest["Accept"] = "application/json"
     if let session = session {
       urlRequest["Authorization"] = "Bearer " + session
     }
-    let dictionary = JsonDictionary()
-    body(dictionary)
-    let body = dictionary.jsonValue()
     do {
       urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
-      print("{http} \(address) sending")
-      return urlSession.send(request: urlRequest).map { data in
-        print("{http} \(address) response: \(data.string)")
-        do {
-          return try AnyReader(json: data)
-        } catch {
-          print("{http} \(address) failed: cannot convert response to json")
-          throw HttpError.responseIsNotInJsonFormat
-        }
+      log.print("sending \(urlRequest.httpBody!.string)")
+      requestBuilder(&urlRequest)
+      let data = try await urlSession.send(request: urlRequest, progress: nil)
+      log.print("response: \(data.string)")
+      do {
+        return try AnyReader(json: data)
+      } catch {
+        log.print("failed: cannot convert response to json")
+        throw HttpError.responseIsNotInJsonFormat
       }
     } catch {
-      print("{http} \(address) failed: \(error)")
-      return Future(error: error)
+      log.print("failed: \(error)")
+      throw error
     }
   }
 }
@@ -162,6 +284,81 @@ public extension FutureRepeater {
       }
     }
     return self
+  }
+}
+
+public protocol HttpRequester {
+  associatedtype Request
+  associatedtype Response
+  var isAuthorized: Bool { get set }
+  func send(request: HttpRequest<Request>) -> Future<Response>
+  func shouldRepeat(on error: Error) -> Int // return maximum repeat count
+  func isAuthorizationError(_ error: Error) -> Bool
+  func authorization() -> Future<Response>?
+  func timeout(for attempt: Int) -> Double
+}
+protocol JsonRpcHttpRequester: HttpRequester {
+  
+}
+extension JsonRpcHttpRequester {
+  /// Returns 1000 repeats on lost connection and 3 on 'not in json format'
+  func shouldRepeat(on error: Error) -> Int {
+    guard let error = error as? HttpError else { return 1_000 }
+    switch error {
+    case .responseIsNotInJsonFormat:
+      return 3
+    case .failed:
+      return 0
+    }
+  }
+  func isAuthorizationError(_ error: Error) -> Bool {
+    guard let error = error as? HttpError else { return false }
+    switch error {
+    case let .failed(code, message):
+      return code == 401 || message == "authorization required"
+    default:
+      return false
+    }
+  }
+}
+public extension HttpRequester {
+  func timeout(for attempt: Int) -> Double {
+    Double(min(attempt, 15))
+  }
+  func send(request: HttpRequest<Request>, shouldRepeat: @escaping ()->Bool) -> Future<Response> {
+    let future = Future<Response>()
+    send(request: request, attempt: 1, shouldRepeat: shouldRepeat, future: future)
+    return future
+  }
+  func post(path: String, authorized: Bool = true, body: Request, shouldRepeat: @escaping ()->Bool) -> Future<Response> {
+    send(request: HttpRequest(path: path, type: .post(body), authorization: false, authorized: true), shouldRepeat: shouldRepeat)
+  }
+  func get(path: String, authorized: Bool = true, shouldRepeat: @escaping ()->Bool) -> Future<Response> {
+    send(request: HttpRequest(path: path, type: .get, authorization: false, authorized: true), shouldRepeat: shouldRepeat)
+  }
+  private func send(request: HttpRequest<Request>, attempt: Int, shouldRepeat: @escaping ()->Bool, future: Future<Response>){
+    send(request: request).pipe { result in
+      switch result {
+      case .success(let response):
+        future.success(response)
+      case .failure(let error):
+        if self.shouldRepeat(on: error) >= attempt && shouldRepeat() {
+          send(request: request, attempt: attempt + 1, shouldRepeat: shouldRepeat, future: future)
+        } else {
+          future.fail(error)
+        }
+      }
+    }
+  }
+}
+public struct HttpRequest<Body> {
+  public var path: String
+  public var type: RequestType
+  public var authorization: Bool
+  public var authorized: Bool
+  public enum RequestType {
+    case get
+    case post(Body)
   }
 }
 #endif

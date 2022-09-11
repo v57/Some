@@ -31,7 +31,13 @@ private let rigid: UIImpactFeedbackGenerator = {
   }
 }()
 private let notification = UINotificationFeedbackGenerator()
+public extension SomeSettings {
+  static var hapticsEnabled = true
+}
+var vibrationAvailable = true
 public func vibrate(_ style: VibrationStyle = .selection) {
+  guard vibrationAvailable else { return }
+  guard SomeSettings.hapticsEnabled else { return }
   if #available(iOS 10.0, *) {
     switch style {
     case .selection: selection.selectionChanged()
@@ -44,6 +50,10 @@ public func vibrate(_ style: VibrationStyle = .selection) {
     case .error: notification.notificationOccurred(.error)
     case .warning: notification.notificationOccurred(.warning)
     }
+  }
+  vibrationAvailable = false
+  DispatchQueue.main.async {
+    vibrationAvailable = true
   }
 }
 
@@ -116,9 +126,7 @@ public extension UIView {
   func bounce(from: CGFloat, vibrate: Bool = true) {
     guard animationsAvailable() else { return }
     if vibrate {
-      if #available(iOS 10.0, *) {
-        UISelectionFeedbackGenerator().selectionChanged()
-      }
+      SomeUI.vibrate(.selection)
     }
     scale(from)
     jellyAnimation {
@@ -398,14 +406,14 @@ public extension UIView {
           self.removeFromSuperview()
         }
       case .fade:
-        animate({
+        animate({ [self] in
           alpha = 0.0
         }) {
           self.removeFromSuperview()
           self.alpha = 1.0
         }
       case .slide:
-        animate({
+        animate({ [self] in
           alpha = 0.0
           frame.y += 10
         }) {
@@ -415,7 +423,7 @@ public extension UIView {
         }
       case .anchor(let anchor):
         let size = frame.size
-        animate({
+        animate({ [self] in
           resize(.zero, anchor)
         }) {
           self.removeFromSuperview()
@@ -423,7 +431,7 @@ public extension UIView {
         }
       case .vertical(let anchor):
         let size = frame.size
-        animate({
+        animate({ [self] in
           resize(Size(size.width,0), anchor)
         }) {
           self.removeFromSuperview()
@@ -431,14 +439,14 @@ public extension UIView {
         }
       case .horizontal(let anchor):
         let size = frame.size
-        animate({
+        animate({ [self] in
           resize(Size(0,size.height), anchor)
         }) {
           self.removeFromSuperview()
           self.resize(size, anchor)
         }
       case .scale(let s):
-        animate ({
+        animate ({ [self] in
           scale(s)
         }) {
           self.scale(1)

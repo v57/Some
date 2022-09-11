@@ -1,0 +1,3 @@
+  public var isActive = true {
+    didSet {
+      guard isActive != oldValue else { return }

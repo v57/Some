@@ -121,12 +121,6 @@ extension Saveable {
   public func reload(by: Saveable) {}
 }
 
-private func print(_ items: Any...) {
-  guard SomeSettings.ceo.debug else { return }
-  let output = items.map { "\($0)" }.joined(separator: " ")
-  _print("ceo:",output)
-}
-
 open class SomeCeo {
   public static var `default`: ()->SomeCeo = { SomeCeo() }
   public static let version: Int = 3
@@ -138,9 +132,15 @@ open class SomeCeo {
   
   public private(set) var managers = [Manager]()
   var versions = [String: Int]()
-  @V public var isLoaded = false
-  @V public var isPaused = false
-  @V public var isLoginned = false
+  #if canImport(Combine)
+  @Published public var isLoaded = false
+  @Published public var isPaused = false
+  @Published public var isLoginned = false
+  #else
+  public var isLoaded = false
+  public var isPaused = false
+  public var isLoginned = false
+  #endif
   var saveableManagers: Int = 0
   public var version: Int = 0
   public var dataPrefix: Data?
@@ -199,7 +199,6 @@ open class SomeCeo {
   
   open func start() {
     guard managers.count > 0 else { return }
-    print("starting \(managers.count) managers")
     
     createNotifications()
     
@@ -242,10 +241,10 @@ open class SomeCeo {
     return data
   }
   open func loadFailed(manager: Manager, error: Error) {
-    _print("ceo error: cannot load \(className(manager)). \(error)")
+    someLog.ceo.error("cannot load \(className(manager)). \(error)")
   }
   open func saveFailed(manager: Manager, error: Error) {
-    _print("ceo error: cannot save \(className(manager)). \(error)")
+    someLog.ceo.error("cannot save \(className(manager)). \(error)")
   }
   
   open func load() {
@@ -277,7 +276,7 @@ open class SomeCeo {
           i += 1
         }
       } catch {
-        print("ceo error: \(path) corrupted")
+        someLog.ceo.error("\(path) corrupted")
       }
       loaded(manager: nil, data: data)
     }
@@ -326,17 +325,6 @@ open class SomeCeo {
     data.append(SomeCeo.version)
     data.append(saveableManagers)
     for manager in managers {
-      //      let type: String
-      //      if manager is CustomSaveable {
-      //        type = "CustomSaveable"
-      //      } else if manager is CustomDBPath {
-      //        type = "CustomDBPath"
-      //      } else if manager is Saveable {
-      //        type = "Saveable"
-      //      } else {
-      //        type = "Not saveable"
-      //      }
-      //      print("ceo: saving \(className(manager)) \(type)")
       do {
         if let manager = manager as? CustomSaveable {
           manager.save()
@@ -354,7 +342,7 @@ open class SomeCeo {
     if saveableManagers > 0 {
       try? save(data: data, manager: nil, to: url)
     }
-    print("ceo saved for \(Time.abs - start) seconds")
+    someLog.ceo("Saved in \((Time.abs - start).string(precision: 2))s")
   }
   open func save(saveable: Saveable, to data: DataWriter) throws {
     data.append(hash: saveable)
@@ -407,6 +395,7 @@ open class SomeCeo {
     }
   }
   
+  #if os(iOS)
   @objc func _pause() {
     guard !isPaused else { return }
     isPaused = true
@@ -425,6 +414,26 @@ open class SomeCeo {
     managers.forEach { $0.close() }
     close()
   }
+  #else
+  func _pause() {
+    guard !isPaused else { return }
+    isPaused = true
+    managers.forEach { $0.pause() }
+    pause()
+  }
+  
+  func _resume() {
+    guard isPaused else { return }
+    isPaused = false
+    managers.forEach { $0.resume() }
+    resume()
+  }
+  
+  func _close() {
+    managers.forEach { $0.close() }
+    close()
+  }
+  #endif
 }
 
 private extension DataWriter {

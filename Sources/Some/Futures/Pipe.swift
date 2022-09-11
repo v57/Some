@@ -4,43 +4,49 @@
 //
 //  Created by Dmitry on 05.10.2019.
 //
-
 import Foundation
+
+
+#if canImport(Combine)
+import Combine
+#else
+public protocol Cancellable {
+  func cancel()
+}
+#endif
 
 typealias PResult<T> = Swift.Result<T, Error>
 public typealias E = P<Void>
 public typealias B = P<Bool>
 public typealias P2<A,B> = P<(A,B)>
 
-public protocol _PipeStorage {
-  func _insert(pipe: S)
-  func _remove(pipe: S)
+public protocol _PipeStorage: AnyObject {
+  func _insert(pipe: Cancellable)
+  func _remove(pipe: Cancellable)
 }
-public protocol PipeStorage: class, _PipeStorage {
-  var pipes: Set<S> { get set }
+public protocol PipeStorage: _PipeStorage {
+  var pipes: Set<C> { get set }
 }
 public extension PipeStorage {
-  func _insert(pipe: S) {
-    pipes.insert(pipe)
+  func _insert(pipe: Cancellable) {
+    pipes.insert(C(pipe))
   }
-  func _remove(pipe: S) {
-    pipes.remove(pipe)
+  func _remove(pipe: Cancellable) {
+    pipes.remove(C(pipe))
   }
 }
 public class Bag: PipeStorage {
-  public var pipes: Set<S> = []
+  public var pipes: Set<C> = []
   public init() {}
 }
 public class SingleItemBag: _PipeStorage {
-  public var item: S?
+  public var item: C?
   public init() {}
-  public func _insert(pipe: S) {
-    item = pipe
+  public func _insert(pipe: Cancellable) {
+    item = C(pipe)
   }
-  public func _remove(pipe: S) {
-    if item == pipe {
-      item = nil
-    }
+  public func _remove(pipe: Cancellable) {
+    item = nil
   }
   public func clean() {
     item = nil
@@ -51,14 +57,27 @@ public protocol PipeReceiver {
   func receivedInput(_ value: Input)
 }
 
-open class S: Hashable {
+open class S: Cancellable, Hashable {
+  public enum Option: UInt8 {
+    case autocomplete
+  }
   public static var debugEnabled: Bool = false
+  open var shouldDebug: Bool = false
   open var pipeName: String { className(self) }
   open var parents = Set<S>()
   open var childs = WeakArray<S>()
-  open var isEmpty = true
+  open var isEmpty = true {
+    didSet {
+      guard isEmpty != oldValue else { return }
+      if isEmpty && options[.autocomplete] {
+        completed()
+      }
+    }
+  }
   open var storesValues: Bool { false }
   open var requestsValues: Bool { storesValues }
+  open weak var storage: _PipeStorage?
+  open var options: Option.Set = []
   var hasRequesters: Bool {
     childs.allObjects.contains(where: { $0.hasRequesters })
   }
@@ -82,6 +101,9 @@ open class S: Hashable {
   public static func == (lhs: S, rhs: S) -> Bool {
     lhs === rhs
   }
+  public func cancel() {
+    completed()
+  }
   open func remove(from parent: S) {
     log("remove(from parent: \(parent))")
     guard let index = parents.firstIndex(of: parent) else { return }
@@ -99,7 +121,17 @@ open class S: Hashable {
     childs.removeObject(child)
     updateEmptyState()
   }
+  open func completed() {
+    removeFromParents()
+    storage?._remove(pipe: self)
+    childs.forEach { $0.receivedCompletion(from: self) }
+  }
+  
+  open func receivedCompletion(from child: S) {
+    remove(child: child)
+  }
   open func add(child: S) {
+    child.shouldDebug |= shouldDebug
     log("add(child: \(child))")
     childs.append(child)
     child.parents.insert(self)
@@ -158,12 +190,18 @@ open class S: Hashable {
     removeFromParents()
   }
   func log(_ text: @autoclosure ()->String) {
-    if S.debugEnabled {
-      Swift.print("\n\(pipeName)\n  \(text())")
+    if S.debugEnabled && shouldDebug {
+      _print("[S]: \(pipeName): \(text())")
     }
+  }
+  @discardableResult
+  public func autocomplete() -> Self {
+    options[.autocomplete] = true
+    return self
   }
 }
 
+@dynamicMemberLookup
 open class P<Input>: S {
   public override init() {
     super.init()
@@ -174,26 +212,30 @@ open class P<Input>: S {
       $0.send(value)
     }
   }
+  public subscript<Subject>(dynamicMember keyPath: KeyPath<Input, Subject>) -> P<Subject> {
+    map { $0[keyPath: keyPath] }
+  }
 }
 public typealias SingleResult<T> = Pipes.SingleResult<T>
 
 public extension S {
   static let mainStore = Bag()
-  /// Store until received any value. Not implemented yet
-  func storeSingle() {
+  /// Store until completed
+  func store() {
     store(in: S.mainStore)
   }
-  func alwaysStore() {
-    store(in: S.mainStore)
-  }
-  fileprivate func store(in set: inout Set<S>) {
-    set.insert(self)
-  }
-  func store<Holder: _PipeStorage>(in holder: Holder) {
+//  fileprivate func store(in set: inout Set<AnyCancellable>) {
+//    set.insert(self)
+//  }
+  func store(in holder: _PipeStorage) {
     holder._insert(pipe: self)
+    self.storage = holder
   }
 }
 public extension P {
+  static func combine(_ pipes: [P<Input>]) -> P<[Input]> {
+    Pipes.AndX(pipes)
+  }
   func add(_ pipe: P) {
     add(child: pipe)
   }
@@ -219,11 +261,29 @@ public extension P {
   func flatMap<Output>(_ using: @escaping (Input) -> P<Output>) -> P<Output> {
     Pipes.FlatMap(mapper: using).add(to: self).outputPipe
   }
+  func compactMap<T>() -> P<T> where Input == T? {
+    compactMap { $0 }
+  }
   func compactMap<Output>(_ using: @escaping (Input) -> Output?) -> P<Output> {
     Pipes.CompactMap(mapper: using).add(to: self).outputPipe
   }
-  func next(_ action: @escaping (Input) -> ()) -> S {
-    Pipes.Completion(action).add(to: self)
+  func forEach(_ action: @escaping (Input) -> ()) -> S {
+    Pipes.ForEach(action).add(to: self)
+  }
+  func sink(receiveValue action: @escaping (Input) -> ()) -> S {
+    Pipes.ForEach(action).add(to: self)
+  }
+  func first() -> P<Input> {
+    Pipes.First<Input>().add(to: self)
+  }
+  func first(where filter: @escaping (Input) -> (Bool)) -> P<Input> {
+    Pipes.First(where: filter).add(to: self)
+  }
+  func last() -> P<Input> {
+    Pipes.Last<Input>().add(to: self)
+  }
+  func last(where filter: @escaping (Input) -> (Bool)) -> P<Input> {
+    Pipes.Last(where: filter).add(to: self)
   }
   func replace<T: AnyObject>(unowned object: T) -> P<T> {
     map { [unowned object] _ in object }
@@ -238,34 +298,43 @@ public extension P {
     Pipes.PVoid<Input>().add(to: self).outputPipe
   }
   func assign<T: AnyObject>(_ object: T, _ path: WritableKeyPath<T, Input>) -> S {
-    next { [weak object] value in
+    forEach { [weak object] value in
       object?[keyPath: path] = value
     }
   }
+  func assign<T: AnyObject>(_ object: T, _ path: WritableKeyPath<T, Input>,
+                            where condition: @escaping (Input, Input) -> Bool) -> S {
+    forEach { [weak object] value in
+      guard let o = object else { return }
+      if condition(o[keyPath: path], value) {
+        object?[keyPath: path] = value
+      }
+    }
+  }
   func assign<T: AnyObject>(_ object: T, _ path: WritableKeyPath<T, Input?>) -> S {
-    next { [weak object] value in
+    forEach { [weak object] value in
       object?[keyPath: path] = value
     }
   }
   func assign<T>(_ object: T, _ path: WritableKeyPath<T, Input>)
     where T: PipeStorage {
-    next { [weak object] value in
+      forEach { [weak object] value in
       object?[keyPath: path] = value
-    }.store(in: &object.pipes)
+    }.store(in: object)
   }
   func assign<T>(_ object: T, _ path: WritableKeyPath<T, Input?>)
     where T: PipeStorage {
-    next { [weak object] value in
+      forEach { [weak object] value in
       object?[keyPath: path] = value
-    }.store(in: &object.pipes)
+    }.store(in: object)
   }
   func assign<T: PipeStorageAssignable>(_ assignable: T) where T.AssignedValue == Input {
-    next {
+    forEach {
       assignable.assign(value: $0)
-    }.store(in: &assignable.pipeStorage.pipes)
+    }.store(in: assignable.pipeStorage)
   }
   func call<T: AnyObject>(weak object: T, _ function: @escaping (T)->(Input)->()) -> S {
-    next { [weak object] value in
+    forEach { [weak object] value in
       if let object = object {
         function(object)(value)
       }
@@ -273,10 +342,10 @@ public extension P {
   }
   func call<T>(_ object: T, _ function: @escaping (T)->(Input)->())
     where T: AnyObject & PipeStorageAssignable {
-      call(weak: object, function).store(in: &object.pipeStorage.pipes)
+      call(weak: object, function).store(in: object.pipeStorage)
   }
   func call<T>(strong object: T, _ function: @escaping (T)->(Input)->()) -> S {
-    next {
+    forEach {
       function(object)($0)
     }
   }
@@ -287,7 +356,7 @@ public extension P {
   func call<T: AnyObject,A,B>(weak object: T, _ function: @escaping (T)->(A,B)->()) -> S
     where Input == (A,B)
   {
-    next { [weak object] value in
+    forEach { [weak object] value in
       if let object = object {
         function(object)(value.0, value.1)
       }
@@ -301,10 +370,20 @@ public extension P {
     Pipes.Weak(object).add(to: self).outputPipe
   }
   func weak<T: AnyObject>(_ object: T, call: @escaping (T)->(Input)->()) -> S {
-    weak(object).next { call($0.0)($0.1) }
+    weak(object).forEach { call($0.0)($0.1) }
   }
   func single() -> P<Input> {
     Pipes.SingleResult<Input>().add(to: self)
+  }
+  func or(_ pipes: P<Input>...) -> P<Input> {
+    let pipe = P<Input>()
+    pipes.forEach {
+      $0.add(pipe)
+    }
+    return pipe
+  }
+  func and<Input1>(_ second: P<Input1>) -> Pipes.And<Input, Input1> {
+    .init(self, second)
   }
   func input0<A,B>() -> P<A> where Input == (A, B) {
     map { $0.0 }
@@ -318,11 +397,17 @@ public extension P {
   func filter0<A,B>(_ a: A) -> P<B> where Input == (A, B), A: Equatable {
     compactMap { $0.0 == a ? $0.1 : nil }
   }
+  func filterObject0<A,B>(weak a: A) -> P<B> where Input == (A, B), A: AnyObject {
+    weak(a).compactMap { $0.0 === $0.1.0 ? $0.1.1 : nil }
+  }
   func filter(where condition: @escaping (Input)->Bool) -> P {
     Pipes.Filter(filter: condition).add(to: self)
   }
-  func unwrap<T>() -> P<T> where Input == T? {
-    compactMap { $0 }
+  func filterObject(_ value: Input) -> P<Void> where Input: AnyObject {
+    filter(where: { $0 === value }).void()
+  }
+  func optimize(_ time: Double, on queue: DispatchQueue = .main) -> Pipes.Optimize<Input> {
+    Pipes.Optimize<Input>(queue: queue, time: time).add(to: self)
   }
   static func just<Input>(_ value: Input) -> P<Input> {
     Pipes.Just(value)
@@ -337,8 +422,8 @@ public extension P where Input: Equatable {
   func filter(_ value: Input) -> P<Void> {
     filter(where: { $0 == value }).void()
   }
-  func unique() -> P<Input> {
-    Pipes.Unique<Input>().add(to: self)
+  func removeDuplicates(initialValue: Input? = nil) -> P<Input> {
+    Pipes.Unique<Input>(initialValue).add(to: self)
   }
 }
 public extension P where Input: AnyObject & Equatable {
@@ -348,10 +433,13 @@ public extension P where Input: AnyObject & Equatable {
 }
 public extension P where Input == Void {
   func asTrue() -> P<Bool> { map { true } }
-  func asFalse() -> P<Bool> { map { true } }
+  func asFalse() -> P<Bool> { map { false } }
   func send() { send(()) }
+  func map<Some>(_ transform: @escaping @autoclosure ()->(Some)) -> P<Some> {
+    map(transform)
+  }
   func call<T: AnyObject>(weak object: T, _ function: @escaping (T)->()->()) -> S {
-    next { [weak object] _ in
+    forEach { [weak object] _ in
       if let object = object {
         function(object)()
       }
@@ -363,10 +451,10 @@ public extension P where Input == Void {
   }
   func call<T>(_ object: T, _ function: @escaping (T)->()->())
     where T: AnyObject & PipeStorageAssignable {
-      call(weak: object, function).store(in: &object.pipeStorage.pipes)
+      call(weak: object, function).store(in: object.pipeStorage)
   }
   func call<T>(strong object: T, _ function: @escaping (T)->()->()) -> S {
-    next { _ in
+    forEach { _ in
       function(object)()
     }
   }
@@ -382,7 +470,7 @@ public extension P where Input == Void {
     }
   }
   func vnext(_ action: @escaping () -> ()) -> S {
-    Pipes.Completion(action).add(to: self)
+    Pipes.ForEach(action).add(to: self)
   }
   func vmap<Output>(_ using: @escaping () -> Output) -> P<Output> {
     Pipes.Map(mapper: using).add(to: self).outputPipe
@@ -455,15 +543,57 @@ extension Pipes {
       return ()
     }
   }
-  open class Completion<Input>: P<Input> {
+  open class ForEach<Input>: P<Input> {
     var action: (Input) -> ()
     open override var requestsValues: Bool { true }
+    open override var storesValues: Bool { false }
     init(_ action: @escaping (Input) -> ()) {
       self.action = action
     }
     public override func send(_ value: Input) {
       log("send(\(value)) \(childs.count)")
       action(value)
+    }
+  }
+  open class First<Input>: P<Input> {
+    var filter: (Input) -> (Bool)
+    open override var requestsValues: Bool { true }
+    open override var storesValues: Bool { true }
+    @Locked var value: Input?
+    init(where filter: @escaping (Input) -> (Bool) = { _ in true }) {
+      self.filter = filter
+    }
+    public override func send(_ value: Input) {
+      log("send(\(value)) \(childs.count)")
+      guard self.value == nil else { return }
+      guard filter(value) else { return }
+      self.value = value
+      super.send(value)
+      completed()
+    }
+    open override func request(from child: S) {
+      guard let value = value else { return }
+      (child as? P<Input>)?.send(value)
+    }
+  }
+  open class Last<Input>: P<Input> {
+    var filter: (Input) -> (Bool)
+    var lastValue: Input?
+    open override var requestsValues: Bool { true }
+    open override var storesValues: Bool { true }
+    init(where filter: @escaping (Input) -> (Bool) = { _ in true }) {
+      self.filter = filter
+    }
+    public override func send(_ value: Input) {
+      guard filter(value) else { return }
+      lastValue = value
+    }
+    open override func receivedCompletion(from child: S) {
+      super.receivedCompletion(from: child)
+      if let value = lastValue {
+        send(value)
+      }
+      completed()
     }
   }
   open class Map<Input, Output>: OutputPipe<Input, Output> {
@@ -474,6 +604,62 @@ extension Pipes {
     }
     public override func transform(input: Input) -> Output? {
       mapper(input)
+    }
+  }
+  open class And<Input0, Input1>: P2<Input0, Input1> {
+    var i0: Input0? {
+      didSet {
+        if let i0 = i0, let i1 = i1 {
+          send(i0, i1)
+        }
+      }
+    }
+    var i1: Input1? {
+      didSet {
+        if let i0 = i0, let i1 = i1 {
+          send(i0, i1)
+        }
+      }
+    }
+    init(_ p0: P<Input0>, _ p1: P<Input1>) {
+      super.init()
+      add(to: p0.forEach { [unowned self] v in
+        self.set0(v)
+      })
+      add(to: p1.forEach { [unowned self] v in
+        self.set1(v)
+      })
+    }
+    func set0(_ value: Input0) {
+      self.i0 = value
+    }
+    func set1(_ value: Input1) {
+      self.i1 = value
+    }
+  }
+  open class AndX<T>: P<[T]> {
+    var values: [T?]
+    var waiting: Int
+    init(_ pipes: [P<T>]) {
+      values = [T?](repeating: nil, count: pipes.count)
+      waiting = pipes.count
+      super.init()
+      pipes.enumerated().forEach { (i, pipe) in
+        add(to: pipe.forEach { [unowned self] v in
+          if values[i] == nil && waiting > 0 { // checking for waiting is for safety
+            waiting -= 1
+          }
+          values[i] = v
+          if waiting == 0 {
+            send(values.compactMap())
+          }
+        })
+      }
+    }
+    open override func request(from child: S) {
+      guard waiting == 0 else { return }
+      guard let child = child as? P<[T]> else { return }
+      child.send(values.compactMap())
     }
   }
   open class Filter<Input>: P<Input> {
@@ -490,6 +676,7 @@ extension Pipes {
   open class FlatMap<Input, Output>: P<Input> {
     var mapper: (Input) -> P<Output>
     var outputPipe: P<Output> { makePipe() }
+    var lastPipe: P<Output>?
     init(mapper: @escaping (Input) -> P<Output>) {
       self.mapper = mapper
       super.init()
@@ -499,8 +686,10 @@ extension Pipes {
       guard !isEmpty else { return }
       let pipe = mapper(value)
       childs.forEach(as: P<Output>.self) {
+        lastPipe?.remove(child: $0)
         pipe.add(child: $0)
       }
+      lastPipe = pipe
     }
   }
   open class CompactMap<Input, Output>: OutputPipe<Input, Output> {
@@ -572,6 +761,7 @@ extension Pipes {
       super.add(child: child)
       if let result = result {
         (child as? P<T>)?.send(result)
+        child.receivedCompletion(from: self)
       }
     }
     open override func request(from child: S) {
@@ -608,10 +798,91 @@ extension Pipes {
       (child as? P<T>)?.send(result)
     }
   }
+  open class Optimize<T>: P<T> {
+    public enum State {
+      case idle
+      case waiting
+      case queued(T)
+    }
+    @Locked public var state: State = .idle
+    public let waiter: Waiter
+    public let time: Double
+    public init(queue: DispatchQueue, time: Double) {
+      self.waiter = Waiter(queue: queue)
+      self.time = time
+      super.init()
+    }
+    open override func send(_ value: T) {
+      switch state {
+      case .idle:
+        _send(value)
+        state = .waiting
+        waiter.wait(time) { [unowned self] in
+          switch state {
+          case .queued(let v):
+            state = .idle
+            _send(v)
+          case .waiting:
+            state = .idle
+          case .idle: break
+          }
+        }
+      case .waiting, .queued:
+        state = .queued(value)
+      }
+    }
+    open func _send(_ value: T) {
+      super.send(value)
+    }
+  }
+  open class SwitchPipe<T>: P<T> {
+    open var isActive: Bool {
+      didSet {
+        guard isActive != oldValue else { return }
+        if isActive {
+          connect()
+        } else {
+          disconnect()
+        }
+      }
+    }
+    public var link: (parent: S, child: S)?
+    public init(_ isActive: Bool) {
+      self.isActive = isActive
+    }
+    public override func request(from child: S) {
+      super.request(from: child)
+      if !isActive {
+        disconnect()
+      }
+    }
+    open func connect() {
+      guard let link = link else { return }
+      link.child.add(to: link.parent)
+      self.link = nil
+      request()
+    }
+    open func disconnect() {
+      if parents.count == 1, let parent = parents.first {
+        var child = parent
+        while let parent = child.parents.first {
+          if parent.parents.count == 1 && parent.childs.count == 1 {
+            child = parent
+          } else {
+            break
+          }
+        }
+        if let parent = child.parents.first {
+          child.remove(from: parent)
+          link = (parent: parent, child: child)
+        }
+      }
+    }
+  }
 }
 
 @propertyWrapper
-public struct V<Value> {
+public struct V<Value>: CustomStringConvertible {
   @inlinable // trivially forwarding
   public init(initialValue: Value) {
     self.init(wrappedValue: initialValue)
@@ -638,8 +909,35 @@ public struct V<Value> {
       }
     }
   }
+  public var description: String { "\(value) "}
 }
-extension V: CustomStringConvertible {
+
+@propertyWrapper
+public struct SV<Value>: CustomStringConvertible {
+  @inlinable // trivially forwarding
+  public init(initialValue: Value) {
+    self.init(wrappedValue: initialValue)
+  }
+  public init(wrappedValue: Value) {
+    value = wrappedValue
+  }
+  
+  public private(set) var value: Value
+  private var publisher: Var<Value>?
+  public var projectedValue: Var<Value> {
+    mutating get {
+      publisher.lazy { Var(value) }
+    }
+  }
+  public var wrappedValue: Value {
+    get { value }
+    set {
+      value = newValue
+      if let publisher = publisher {
+        publisher.send(newValue)
+      }
+    }
+  }
   public var description: String { "\(value) "}
 }
 
@@ -677,7 +975,7 @@ extension VE: CustomStringConvertible {
   public var description: String { "\(value) "}
 }
 
-// MARK:- Assign
+// MARK: - Assign
 public protocol PipeStorageAssignable {
   associatedtype AssignedValue
   var pipeStorage: PipeStorage { get }
@@ -694,5 +992,21 @@ public struct Assigner<Parent: PipeStorage, T>: PipeStorageAssignable {
   }
   public func assign(value: T) {
     assignUsing(parent, value)
+  }
+}
+
+public class C: Cancellable, Hashable {
+  public var body: Cancellable
+  public init(_ body: Cancellable) {
+    self.body = body
+  }
+  public func cancel() {
+    body.cancel()
+  }
+  public func hash(into hasher: inout Hasher) {
+    ObjectIdentifier(self).hash(into: &hasher)
+  }
+  public static func == (lhs: C, rhs: C) -> Bool {
+    lhs === rhs
   }
 }

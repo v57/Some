@@ -48,13 +48,4 @@ open class View: UIView {
   }
 }
 
-open class DFView2: View, DynamicFrame {
-  public var dynamicFrame: DFrame?
-}
-open class DPView2: View, DynamicPos {
-  public var dpos: DPos? { didSet { updateFrame() } }
-}
-open class DCView2: View, DynamicCenter {
-  public var dcenter: DCenter? { didSet { updateFrame() } }
-}
 #endif

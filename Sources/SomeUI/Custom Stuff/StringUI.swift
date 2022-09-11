@@ -10,6 +10,9 @@
 import UIKit
 
 extension String {
+  public var range: NSRange {
+    NSRange(location: 0, length: (self as NSString).length)
+  }
   public func size(_ font: UIFont) -> CGSize {
     return self.size(withAttributes: [AString.Key.font : font])
   }
@@ -51,6 +54,171 @@ extension String {
   
   public func saveToClipboard() {
     UIPasteboard.general.string = self
+  }
+}
+public class TextLayout {
+  public var text: String {
+    didSet {
+      guard text != oldValue else { return }
+      _size = nil
+      storage = NSTextStorage(string: text, attributes: attributes)
+    }
+  }
+  public var width: CGFloat {
+    didSet {
+      guard width != oldValue else { return }
+      _size = nil
+      container = NSTextContainer(size: CGSize(width, .greatestFiniteMagnitude))
+    }
+  }
+  public var attributes: [NSAttributedString.Key : Any]? {
+    didSet {
+      _size = nil
+      storage = NSTextStorage(string: text, attributes: attributes)
+    }
+  }
+  public var onlyHeight = false
+  public let layout = NSLayoutManager()
+  public var _size: CGSize?
+  public var size: CGSize {
+    if let _size = _size {
+      return _size
+    } else {
+      if onlyHeight {
+        var height: CGFloat = 0
+        layout.enumerateLineFragments(forGlyphRange: text.range, using: { rect, rect2, cont, rang, stop in
+          height += rect2.size.height
+        })
+        height.round(.up)
+        let size = CGSize(width, height)
+        _size = size
+        return size
+      } else {
+        var size = CGSize.zero
+        layout.enumerateLineFragments(forGlyphRange: text.range, using: { rect, rect2, cont, rang, stop in
+          size.height += rect2.size.height
+          size.width = Swift.max(rect2.size.width, size.width)
+        })
+        size = CGSize(size.width.rounded(.up), size.height.rounded(.up))
+        _size = size
+        return size
+      }
+    }
+  }
+  public var storage: NSTextStorage? {
+    didSet {
+      oldValue?.removeLayoutManager(layout)
+      if let storage = storage {
+        storage.addLayoutManager(layout)
+      }
+    }
+  }
+  public var container: NSTextContainer? {
+    didSet {
+      guard container != oldValue else { return }
+      if layout.textContainers.count > 0 {
+        layout.removeTextContainer(at: 0)
+      }
+      if let container = container {
+        layout.addTextContainer(container)
+      }
+    }
+  }
+  public init(text: String = "", width: CGFloat = 0, attributes: [NSAttributedString.Key : Any]? = nil) {
+    self.text = text
+    self.width = width
+    self.attributes = attributes
+  }
+  public func size(text: String, width: CGFloat) -> CGSize {
+    self.text = text
+    self.width = width
+    return size
+  }
+  public func height(text: String, width: CGFloat) -> CGFloat {
+    onlyHeight = true
+    self.text = text
+    self.width = width
+    return size.height
+  }
+}
+
+public class ATextLayout {
+  public var text: AString {
+    didSet {
+      guard text != oldValue else { return }
+      _size = nil
+      storage = NSTextStorage(attributedString: text)
+    }
+  }
+  public var width: CGFloat {
+    didSet {
+      guard width != oldValue else { return }
+      _size = nil
+      container = NSTextContainer(size: CGSize(width, .greatestFiniteMagnitude))
+    }
+  }
+  public var onlyHeight = false
+  public let layout = NSLayoutManager()
+  public var _size: CGSize?
+  public var size: CGSize {
+    if let _size = _size {
+      return _size
+    } else {
+      let range = NSRange(location: 0, length: text.length)
+      if onlyHeight {
+        var height: CGFloat = 0
+        layout.enumerateLineFragments(forGlyphRange: range, using: { rect, rect2, cont, rang, stop in
+          height += rect2.size.height
+        })
+        height.round(.up)
+        let size = CGSize(width, height)
+        _size = size
+        return size
+      } else {
+        var size = CGSize.zero
+        layout.enumerateLineFragments(forGlyphRange: range, using: { rect, rect2, cont, rang, stop in
+          size.height += rect2.size.height
+          size.width = Swift.max(rect2.size.width, size.width)
+        })
+        size = CGSize(size.width.rounded(.up), size.height.rounded(.up))
+        _size = size
+        return size
+      }
+    }
+  }
+  public var storage: NSTextStorage? {
+    didSet {
+      oldValue?.removeLayoutManager(layout)
+      if let storage = storage {
+        storage.addLayoutManager(layout)
+      }
+    }
+  }
+  public var container: NSTextContainer? {
+    didSet {
+      guard container != oldValue else { return }
+      if layout.textContainers.count > 0 {
+        layout.removeTextContainer(at: 0)
+      }
+      if let container = container {
+        layout.addTextContainer(container)
+      }
+    }
+  }
+  public init(text: AString = AString(), width: CGFloat = 0) {
+    self.text = text
+    self.width = width
+  }
+  public func size(text: AString, width: CGFloat) -> CGSize {
+    self.text = text
+    self.width = width
+    return size
+  }
+  public func height(text: AString, width: CGFloat) -> CGFloat {
+    onlyHeight = true
+    self.text = text
+    self.width = width
+    return size.height
   }
 }
 #endif

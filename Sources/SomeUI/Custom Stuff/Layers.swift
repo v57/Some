@@ -58,8 +58,7 @@ public struct ShadowLayer {
 }
 
 public struct GradientLayer {
-  fileprivate var layer: CAGradientLayer
-  fileprivate var data: ShapeData
+  public let layer: CAGradientLayer
   @discardableResult
   public func colors(_ colors: UIColor...) -> Self {
     layer.colors = colors.map(\.cgColor)
@@ -81,9 +80,17 @@ public struct GradientLayer {
     return self
   }
   @discardableResult
+  public func from(_ x: CGFloat, _ y: CGFloat) -> Self {
+    from(CGPoint(x, y))
+  }
+  @discardableResult
   public func to(_ endPoint: CGPoint) -> Self {
     layer.endPoint = endPoint
     return self
+  }
+  @discardableResult
+  public func to(_ x: CGFloat, _ y: CGFloat) -> Self {
+    to(CGPoint(x, y))
   }
   @discardableResult
   public func type(_ type: CAGradientLayerType) -> Self {
@@ -191,7 +198,7 @@ public class ShapeGroup {
     layer.frame.size = size
     layer.mask = data.makeMask()
     self.layer.addSublayer(layer)
-    return GradientLayer(layer: layer, data: data)
+    return GradientLayer(layer: layer)
   }
   @discardableResult
   public func offsetX(_ offset: CGFloat) -> Self {
@@ -272,7 +279,26 @@ open class DynamicLayerView<T>: PView {
     }
   }
 }
-extension CALayer {
+
+public extension CAGradientLayer {
+  func build() -> GradientLayer {
+    GradientLayer(layer: self)
+  }
+}
+
+public extension CALayer {
+  static func noAnimation(_ perform: ()->()) {
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    perform()
+    CATransaction.commit()
+  }
+  var sFrame: CGRect {
+    get { frame }
+    set {
+      CALayer.noAnimation { frame = newValue }
+    }
+  }
   var center: CGPoint {
     get { frame.center }
     set {

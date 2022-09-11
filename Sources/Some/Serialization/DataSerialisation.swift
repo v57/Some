@@ -17,6 +17,18 @@ public extension DataReader {
       throw corrupted
     }
   }
+  func next<T,S>() throws -> T? where T: RawRepresentable, S: DataRepresentable, T.RawValue == S {
+    let value: S? = try next()
+    if let value = value {
+      if let v = T(rawValue: value) {
+        return v
+      } else {
+        throw corrupted
+      }
+    } else {
+      return nil
+    }
+  }
   func next<T,S>() throws -> [T] where T: RawRepresentable, S: DataRepresentable, T.RawValue == S {
     try array { try next() }
   }
@@ -24,6 +36,9 @@ public extension DataReader {
 public extension DataWriter {
   func append<T,S>(_ value: T) where T: RawRepresentable, S: DataRepresentable, T.RawValue == S {
     append(value.rawValue)
+  }
+  func append<T,S>(_ value: T?) where T: RawRepresentable, S: DataRepresentable, T.RawValue == S {
+    append(value?.rawValue)
   }
   func append<T,S>(_ value: T) where T: RawRepresentable, S: DataEncodable, T.RawValue == S {
     append(value.rawValue)
@@ -65,7 +80,7 @@ public extension DataReader {
   }
   func dictionary<Key: Hashable, Value>(_ build: () throws -> (Key, Value)) throws -> [Key: Value] {
     var dictionary = [Key: Value]()
-    try enumerated { _ in 
+    try enumerated { _ in
       let (key, value) = try build()
       dictionary[key] = value
     }
@@ -75,6 +90,18 @@ public extension DataReader {
     where Key: Hashable, Value: DataDecodable {
       try dictionary {
         let value: Value = try next()
+        let key: Key = getKey(value)
+        return (key, value)
+      }
+  }
+  func dictionaryArray<Key, Value>(version: Int, _ path: KeyPath<Value, Key>) throws -> [Key: Value]
+    where Key: Hashable, Value: DataRepresentableVersionable {
+      try dictionaryArray(version: version) { $0[keyPath: path] }
+  }
+  func dictionaryArray<Key,Value>(version: Int, _ getKey: (Value)->(Key)) throws -> [Key: Value]
+    where Key: Hashable, Value: DataRepresentableVersionable {
+      try dictionary {
+        let value: Value = try next(version: version)
         let key: Key = getKey(value)
         return (key, value)
       }

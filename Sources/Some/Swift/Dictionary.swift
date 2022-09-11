@@ -91,3 +91,17 @@ public struct DictionaryOfArrays<K: Hashable,V> {
     edit(key) { $0.append(value) }
   }
 }
+
+@dynamicMemberLookup
+public struct DictionaryBuilder<Key, Value>
+where Key: ExpressibleByStringLiteral & Hashable {
+  public var _body = Dictionary<Key, Value>()
+  public init() {}
+  public subscript(dynamicMember key: Key) -> Value? {
+    get {
+      _body[key]
+    } set {
+      _body[key] = newValue
+    }
+  }
+}

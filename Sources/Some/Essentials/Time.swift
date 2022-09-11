@@ -58,6 +58,12 @@ public struct TimeMeasure: CustomStringConvertible {
   public mutating func stop() {
     end = .mcs
   }
+  public mutating func restart() -> String {
+    stop()
+    let result = description
+    start = .mcs
+    return result
+  }
   public var description: String {
     "\(framePercentage)%"
   }
@@ -65,7 +71,7 @@ public struct TimeMeasure: CustomStringConvertible {
 
 public extension Time {
   static let startup = Time.mcs
-  static var log: String { "[\((Time.mcs - startup).string(unitDecimals: 6, decimals: 3))]" }
+  static var log: String { "[\((Time.mcs - startup).string(unitDecimals: 6, decimals: 3, options: []))]" }
   var future: Time { self - .now }
   var past: Time { .now - self }
   func pad(_ length: Int) -> String {
@@ -180,16 +186,19 @@ public extension Time {
     }
   }
   var uniFormat: String {
-    let current = Time.now
+    let now = Time.now
     var result = ""
-    var timeDifference = Swift.max(current,self)
-    timeDifference -= Swift.min(current,self)
-    if timeDifference > 82800 {
+    var timeDifference = Swift.max(now, self)
+    timeDifference -= Swift.min(now, self)
+    
+    let currentDay = Calendar.current.component(.day, from: now.date)
+    let day = Calendar.current.component(.day, from: self.date)
+    
+    if timeDifference > 82800 || day != currentDay {
       result.append(dateFormat("MMM dd "))
     }
-    if current.year != year {
-      result.append("2k")
-      result.append(dateFormat("YY "))
+    if now.year != year {
+      result.append(dateFormat("YYYY "))
     }
     if !result.isEmpty {
       result.append(" ")
@@ -197,6 +206,41 @@ public extension Time {
     result.append(dateFormat(time: .short))
     return result
   }
+//  func uniFormat() -> (String, Int) {
+//    let now = Time.now
+//    let offset = now - self
+//    if #available(iOS 13.0, *) {
+//      let formatter = RelativeDateTimeFormatter()
+//      formatter.dateTimeStyle = .named
+//      var repeatIn: Time = 0
+//      let offset = Time(offset.magnitude)
+//      if offset < .minute {
+//        repeatIn = 1
+//      } else if offset < .hour {
+//        repeatIn = offset % .minute
+//      } else if offset < .day {
+//        repeatIn = offset % .hour
+//      } else {
+//        repeatIn = offset % .day
+//      }
+//      return (formatter.localizedString(for: date, relativeTo: Date()), repeatIn)
+//    } else {
+//      var result = ""
+//      var timeDifference = Swift.max(now, self)
+//      timeDifference -= Swift.min(now, self)
+//      if timeDifference > 82800 {
+//        result.append(dateFormat("MMM dd "))
+//      }
+//      if now.year != year {
+//        result.append(dateFormat("YYYY "))
+//      }
+//      if !result.isEmpty {
+//        result.append(" ")
+//      }
+//      result.append(dateFormat(time: .short))
+//      return (result, 0)
+//    }
+//  }
   static func ping(_ start: Double) -> Int {
     return Int((Time.abs - start) * 1000)
   }
@@ -269,6 +313,17 @@ public extension Date {
   }
   func string(_ format: DateFormatter) -> String {
     return format.string(from: self)
+  }
+  func dateFormat(date: DateFormatter.Style = .none, time: DateFormatter.Style = .none) -> String {
+    let df = DateFormatter.styled
+    df.dateStyle = date
+    df.timeStyle = time
+    return df.string(from: self)
+  }
+  func dateFormat(_ format: String) -> String {
+    let df = DateFormatter.formatted
+    df.dateFormat = format
+    return df.string(from: self)
   }
 }
 public extension DateFormatter {
@@ -343,3 +398,25 @@ public struct Microseconds: RawRepresentable, Hashable, Comparable {
 extension Microseconds: CustomStringConvertible {
   public var description: String { rawValue.string(unitDecimals: 6, decimals: 6, options: .stripZeroes)+"s" }
 }
+
+
+//class RelativeDatePipe: Var<String> {
+//  var date: Time
+//  init(_ date: Time) {
+//    self.date = date
+//  }
+//  private var current: String {
+//    didSet {
+//      guard current != oldValue else { return }
+//      send(current)
+//    }
+//  }
+//  func update() {
+//    let (text, updateTime) = date.uniFormat()
+//    self.current = text
+//    update(after: updateTime)
+//  }
+//  func update(after time: Time) {
+//
+//  }
+//}

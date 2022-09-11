@@ -14,12 +14,9 @@ extension URLSession {
   /// Default web3 url session.
   /// Uses custom delegate queue to process responses from non-main thread.
   /// You can set it with .shared or your own session if you want some customization
-  public static var some: URLSession = {
-    let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue())
-    return session
-  }()
+  public static var some: URLSession = .shared
 }
-extension URLRequest {
+public extension URLRequest {
   subscript(_ header: String) -> String? {
     get { value(forHTTPHeaderField: header) }
     set { setValue(newValue, forHTTPHeaderField: header) }

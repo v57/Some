@@ -9,11 +9,6 @@
 
 import UIKit
 
-//.lr(16.. | view)
-//.lr(16..)
-//.lr(16.. | superview)
-//.lr(16.. ~ superview)
-
 infix operator ~
 postfix operator ~
 prefix operator ..
@@ -358,11 +353,21 @@ public extension Constraints {
   @discardableResult func fs(_ insets: UIEdgeInsets) -> Self {
     l(insets.left).r(insets.right).t(insets.top).b(insets.bottom)
   }
+  @discardableResult func fs(_ insets: CGFloat) -> Self {
+    lr(insets).tb(insets)
+  }
   @discardableResult func fs(_ view: UIView, _ c: C = Constraints.e) -> Self {
     return make(v.t, view.t, 0, false, c).make(v.l, view.l, 0, false, c).w(view).h(view)
   }
+  @discardableResult func fs(_ insets: UIEdgeInsets, _ view: UIView, _ c: C = Constraints.e) -> Self {
+    return make(v.t, view.t, insets.top, false, c).make(v.l, view.l, insets.left, false, c)
+      .w(-insets.width, view).h(-insets.height, view)
+  }
   @discardableResult func sfs() -> Self {
     return sl().sr().st().sb()
+  }
+  @discardableResult func sfs(_ amount: CGFloat) -> Self {
+    return sl(amount).sr(amount).st(amount).sb(amount)
   }
   /// Center X to superview center x with offset
   @discardableResult func cx(_ o: CGFloat = 0, _ c: C = Constraints.e) -> Self {
@@ -376,6 +381,10 @@ public extension Constraints {
   @discardableResult func cx(_ view: UIView, _ c: C = Constraints.e) -> Self {
     return make(v.cx, view.cx, 0, false, c)
   }
+  /// Center Y to view's achor with offset
+  @discardableResult func cx(_ o: CGFloat, _ anchor: NSLayoutXAxisAnchor, _ c: C = Constraints.e) -> Self {
+    return make(v.cx, anchor, o, false, c)
+  }
   /// Center Y to superview center y with offset
   @discardableResult func cy(_ o: CGFloat = 0, _ c: C = Constraints.e) -> Self {
     return make(v.cy, s.cy, o, false, c)
@@ -383,6 +392,10 @@ public extension Constraints {
   /// Center Y to view's center y with offset
   @discardableResult func cy(_ o: CGFloat, _ view: UIView, _ c: C = Constraints.e) -> Self {
     return make(v.cy, view.cy, o, false, c)
+  }
+  /// Center Y to view's achor with offset
+  @discardableResult func cy(_ o: CGFloat, _ anchor: NSLayoutYAxisAnchor, _ c: C = Constraints.e) -> Self {
+    return make(v.cy, anchor, o, false, c)
   }
   /// Center Y to view's center y
   @discardableResult func cy(_ view: UIView, _ c: C = Constraints.e) -> Self {
@@ -604,6 +617,18 @@ public extension UIView {
   func build(_ view: UIView) -> Constraints {
     view.translatesAutoresizingMaskIntoConstraints = false
     addSubview(view)
+    return Constraints(view: view)
+  }
+  @discardableResult
+  func build(_ view: UIView, above: UIView) -> Constraints {
+    view.translatesAutoresizingMaskIntoConstraints = false
+    insertSubview(view, aboveSubview: above)
+    return Constraints(view: view)
+  }
+  @discardableResult
+  func build(_ view: UIView, below: UIView) -> Constraints {
+    view.translatesAutoresizingMaskIntoConstraints = false
+    insertSubview(view, belowSubview: below)
     return Constraints(view: view)
   }
   func wh(_ s: CGFloat) -> Self {
