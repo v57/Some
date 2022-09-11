@@ -8,6 +8,10 @@
 
 import Foundation
 
+public protocol AnyReaderDecodable {
+  init(_ data: AnyReader) throws
+}
+
 /**
  Dictionary Reader
  
