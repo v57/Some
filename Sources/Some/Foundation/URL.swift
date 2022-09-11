@@ -219,7 +219,12 @@ public struct FileURL {
   }
   /// returns file name with extension
   public var fileName: String {
-    return url.lastPathComponent
+    get {
+      url.lastPathComponent
+    } set {
+      url.deleteLastPathComponent()
+      url.appendPathComponent(newValue)
+    }
   }
   /// returns file name without extension
   public var name: String {
