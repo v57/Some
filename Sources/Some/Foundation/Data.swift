@@ -37,26 +37,7 @@ extension String: LosslessDataConvertible {
 
 public func json(_ object: Any?) -> Data! {
   guard let object = object else { return nil }
-  return try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
-}
-
-extension String {
-  //  public var uuidData: Data {
-  //    var data = Data()
-  //    let password = hashValue
-  //    for i in 1...16 {
-  //      let v = UInt64.seed(password, i)
-  //      let b = UInt8(v & 0xFF)
-  //      data.append(b)
-  //    }
-  //    return data
-  //  }
-  //  public var uuid: String {
-  //    return uuidData.uuidString
-  //  }
-//  public var hex: Data {
-//    return Data(hex: self)
-//  }
+  return try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys, .fragmentsAllowed])
 }
 
 extension Data {
