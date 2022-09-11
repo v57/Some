@@ -120,6 +120,33 @@ public extension Process {
   }
 }
 #endif
+#if os(iOS) || os(macOS)
+public struct TaskInfo {
+  public static var current: TaskInfo {
+    TaskInfo(raw: .current ?? task_vm_info())
+  }
+  public var raw: task_vm_info
+}
+public extension TaskInfo {
+  var memoryUsage: Int { Int(raw.phys_footprint) }
+  var peakMemoryUsage: Int { Int(raw.ledger_phys_footprint_peak) }
+}
+public extension task_vm_info {
+  static var current: task_vm_info? {
+    var count = mach_msg_type_number_t(MemoryLayout<task_vm_info>.size / MemoryLayout<integer_t>.size)
+    let rev1Count = mach_msg_type_number_t(MemoryLayout.offset(of: \task_vm_info.min_address)! / MemoryLayout<integer_t>.size)
+    var info = task_vm_info()
+    let kr = withUnsafeMutablePointer(to: &info) { infoPtr in
+      infoPtr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { intPtr in
+        task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), intPtr, &count)
+      }
+    }
+    guard kr == KERN_SUCCESS, count >= rev1Count
+      else { return nil }
+    return info
+  }
+}
+#endif
 #if os(macOS)
 extension SomeTest {
   static func memoryUsage(_ execute: (()->())->()) {
