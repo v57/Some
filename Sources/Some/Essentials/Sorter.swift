@@ -48,13 +48,25 @@ public struct Sorter<T> {
   }
 }
 public extension Sorter {
+  func appending(_ comparsion: @escaping (T,T)->(ComparsionResult)) -> Self {
+    var a = self
+    a.append(comparsion)
+    return a
+  }
+  func appending<U: Comparable>(_ order: SortOrder = .ascending, _ comparable: @escaping (T)->(U)) -> Self {
+    var a = self
+    a.append(order, comparable)
+    return a
+  }
+}
+public extension Sorter {
   func comparable(for value: T) -> Container {
     Container(value: value, sorter: self)
   }
   mutating func append(_ comparsion: @escaping (T,T)->(ComparsionResult)) {
     comparsions.append(comparsion)
   }
-  mutating func append<U: Comparable>(_ comparable: @escaping (T)->(U), _ order: SortOrder = .ascending) {
+  mutating func append<U: Comparable>(_ order: SortOrder = .ascending, _ comparable: @escaping (T)->(U)) {
     append {
       let a = comparable($0)
       let b = comparable($1)
