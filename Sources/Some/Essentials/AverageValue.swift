@@ -7,7 +7,7 @@
 
 import Swift
 
-// MARK:- Average
+// MARK: - Average
 public struct AverageValue<T: FixedWidthInteger>: CustomStringConvertible, ExpressibleByIntegerLiteral {
   public static var empty: AverageValue<T> { AverageValue() }
   public var size = 0
@@ -101,7 +101,7 @@ extension AverageValue: DataRepresentable {
 }
 
 
-// MARK:- Highest
+// MARK: - Highest
 public struct Highest<T: FixedWidthInteger>: CustomStringConvertible, ExpressibleByIntegerLiteral {
   public var value: T
   public var isEmpty: Bool { value == .min }
@@ -119,7 +119,7 @@ public struct Highest<T: FixedWidthInteger>: CustomStringConvertible, Expressibl
   public var description: String { value.description }
 }
 
-// MARK:- Lowest
+// MARK: - Lowest
 public struct Lowest<T: FixedWidthInteger>: CustomStringConvertible, ExpressibleByIntegerLiteral {
   public var value: T
   public var isEmpty: Bool { value == .max }
@@ -137,7 +137,7 @@ public struct Lowest<T: FixedWidthInteger>: CustomStringConvertible, Expressible
   public var description: String { value.description }
 }
 
-// MARK:- MinMax
+// MARK: - MinMax
 public struct MinMax<T: Comparable> {
   public var min: T!
   public var max: T!

@@ -7,7 +7,7 @@
 
 import Swift
 
-// MARK:- EasyCollection
+// MARK: - EasyCollection
 public protocol EasyCollection: CustomDebugStringConvertible,
   CustomReflectable,
   CustomStringConvertible,
@@ -64,7 +64,7 @@ public extension EasyCollection {
   }
 }
 
-// MARK:- EasierCollection
+// MARK: - EasierCollection
 public protocol EasierCollection:
   EasyCollection,
   ExpressibleByArrayLiteral

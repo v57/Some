@@ -1,6 +1,6 @@
 //
 //  DispatchQueue.swift
-//  faggot-server
+//  Vijo server
 //
 //  Created by Димасик on 08/06/16.
 //  Copyright © 2016 Dmitry Kozlov. All rights reserved.
@@ -165,7 +165,7 @@ public func blockThread(untill unblock: ()->Bool) {
   }
 }
 
-// MARK:- Locking
+// MARK: - Locking
 public func locked(_ mutex: UnsafeMutablePointer<pthread_mutex_t>,f: ()->()) {
   pthread_mutex_lock(mutex)
   f()

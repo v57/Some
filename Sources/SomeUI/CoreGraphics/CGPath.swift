@@ -1,7 +1,7 @@
 #if canImport(CoreGraphics)
 //
 //  File.swift
-//  
+//
 //
 //  Created by Dmitry Kozlov on 30/10/2020.
 //

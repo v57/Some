@@ -265,7 +265,7 @@ public class TCPStream: NSObject, StreamDelegate, TCPConnection {
   }
 }
 
-protocol TCPConnection: class {
+protocol TCPConnection: AnyObject {
   var delegate: TCPDelegate? { get set }
   
   func connect()
@@ -278,7 +278,7 @@ protocol TCPConnection: class {
   func readyToRead()
 }
 
-protocol TCPDelegate: class {
+protocol TCPDelegate: AnyObject {
   var connection: TCPConnection? { get set }
   func connected()
   func disconnected()

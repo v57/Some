@@ -210,7 +210,7 @@ extension Data: DataRepresentable {
 }
 
 
-// MARK:- DataRepresentableVersionable
+// MARK: - DataRepresentableVersionable
 
 public typealias DataRepresentableVersionable = DataDecodableVersionable&DataEncodableVersionable
 public protocol DataEncodableVersionable {

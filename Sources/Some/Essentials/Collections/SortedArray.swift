@@ -128,7 +128,7 @@ public extension SortedArray where Element: ComparsionValue {
     }
   }
   
-  // MARK:- Range functions
+  // MARK: - Range functions
   func select(_ range: Range<Element.ValueToCompare>) -> Range<Int> {
     let start = array.binaryClosest(range.lowerBound, \._valueToCompare)
     let end = array.binaryClosest(range.upperBound, \._valueToCompare)

@@ -620,7 +620,7 @@ public extension UIView {
   }
 }
 
-protocol AutoLayout: class {
+protocol AutoLayout: AnyObject {
   var centerXAnchor: NSLayoutXAxisAnchor { get }
   var centerYAnchor: NSLayoutYAxisAnchor { get }
   var topAnchor: NSLayoutYAxisAnchor { get }

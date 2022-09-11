@@ -106,7 +106,7 @@ public struct UInt256: ExpressibleByIntegerLiteral {
   
 }
 
-// MARK:- UnsignedInteger
+// MARK: - UnsignedInteger
 extension UInt256: UnsignedInteger {
   public static func ^= (lhs: inout UInt256, rhs: UInt256) {
     lhs.raw.0 ^= rhs.raw.0
@@ -154,11 +154,11 @@ extension UInt256: UnsignedInteger {
   public typealias Words = [UInt]
 }
 
-// MARK:- BinaryInteger
+// MARK: - BinaryInteger
 extension UInt256: BinaryInteger {
 }
 
-// MARK:- Numeric
+// MARK: - Numeric
 extension UInt256: Numeric {
   public init?<T>(exactly source: T) where T : BinaryInteger {
     self.init(source)
@@ -578,7 +578,7 @@ extension UInt256 {
   }
 }
 
-// MARK:- Comparable
+// MARK: - Comparable
 extension UInt256: Comparable {
   /// Returns whether the magnitude of this instance is less than, greather
   /// than, or equal to the magnitude of the given value.
@@ -606,7 +606,7 @@ extension UInt256: Comparable {
   }
 }
 
-// MARK:- Hashable
+// MARK: - Hashable
 extension UInt256: Hashable {
   public func hash(into hasher: inout Hasher) {
     hasher.combine(raw.0)
@@ -657,7 +657,7 @@ private extension FixedWidthInteger {
   }
 }
 
-//// MARK:- FixedWidthInteger
+//// MARK: - FixedWidthInteger
 extension UInt256: FixedWidthInteger {
   public init<T>(_truncatingBits source: T) where T : BinaryInteger {
     self.init()

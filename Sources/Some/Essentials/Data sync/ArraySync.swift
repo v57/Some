@@ -12,8 +12,8 @@ public struct AnyWeak {
   }
 }
 
-// MARK:- Client
-public protocol ArraySyncClient: class {
+// MARK: - Client
+public protocol ArraySyncClient: AnyObject {
   associatedtype Item
   
   var header: ArraySync.Header { get set }
@@ -130,7 +130,7 @@ public extension ArraySyncClient {
   }
 }
 
-// MARK:- Local functions
+// MARK: - Local functions
 public extension ArraySyncClient {
   func clearCache() -> P<Void> {
     loadNew(request: .init(header: .init(version: 0, arraySize: 0, updatesSize: 0))).map { response in
@@ -177,7 +177,7 @@ extension ArraySyncServer where Item: MutableId, Item.IdType == Int {
   }
 }
 
-// MARK:- Array sync
+// MARK: - Array sync
 public enum ArraySync {
   public enum Command: UInt8 {
     case add
@@ -366,7 +366,7 @@ public extension ArraySyncServer {
   }
 }
 
-// MARK:- DataRepresentable
+// MARK: - DataRepresentable
 
 
 extension ArraySync.Header: DataRepresentable {

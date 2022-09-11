@@ -7,7 +7,7 @@
 
 import Swift
 
-// MARK:- LimitedArray
+// MARK: - LimitedArray
 public struct LimitedArray<Element> {
   public let limit: Int
   public var position = 0
@@ -77,7 +77,7 @@ extension Array where Element: BinaryInteger {
 }
 
 
-// MARK:- Array map
+// MARK: - Array map
 public protocol ArrayMap: CustomDebugStringConvertible, CustomReflectable, CustomStringConvertible, RandomAccessCollection, MutableCollection, RangeReplaceableCollection where Indices == Range<Int> {
   var array: [Element] { get set }
   var startIndex: Int { get }

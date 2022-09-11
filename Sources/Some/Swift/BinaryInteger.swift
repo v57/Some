@@ -101,7 +101,7 @@ public extension FixedWidthInteger {
   }
 }
 
-// MARK:- To String with radix
+// MARK: - To String with radix
 public extension BinaryInteger {
   func power(_ exponent: Int) -> Self {
     if exponent == 0 { return 1 }

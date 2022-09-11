@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol ProgressProtocol: class {
+public protocol ProgressProtocol: AnyObject {
   var total: Int64 { get }
   var completed: Int64 { set get }
   var isPaused: Bool { get }

@@ -123,7 +123,7 @@ public struct LogContainer: CustomStringConvertible {
 }
 
 
-// MARK:- Logs
+// MARK: - Logs
 @dynamicCallable
 public class Logs {
   public static var all = [Logs]()

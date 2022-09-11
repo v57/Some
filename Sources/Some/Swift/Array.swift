@@ -47,7 +47,7 @@ extension Array where Element: Equatable {
 }
 
 
-// MARK:- Extension Array
+// MARK: - Extension Array
 extension Array {
   public enum Override {
     case first, last, none
@@ -249,7 +249,7 @@ public extension Array where Element: Comparable {
   }
 }
 
-// MARK:- Safe Array
+// MARK: - Safe Array
 public class SafeArray<Element> {
   private var array = [Element]()
   private let queue: DispatchQueue

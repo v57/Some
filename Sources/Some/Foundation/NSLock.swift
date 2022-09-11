@@ -16,7 +16,7 @@ extension NSLock {
   }
 }
 
-// MARK:- SomeThread
+// MARK: - SomeThread
 public var thread = SomeThread(name: "somethread")
 open class SomeThread {
   private let queue: DispatchQueue

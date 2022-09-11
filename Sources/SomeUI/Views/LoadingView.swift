@@ -111,7 +111,7 @@ open class LoadingView: DCView {
     if self.superview == nil {
       alpha = 0.0
     } else {
-      animate ({
+      animate ({ [self] in
         alpha = 0.0
       }) {
         self.animating = false
@@ -122,7 +122,7 @@ open class LoadingView: DCView {
     if self.superview == nil {
       alpha = 0.0
     } else {
-      animate ({alpha = 0.0}) {
+      animate ({self.alpha = 0.0}) {
         self.animating = false
         self.removeFromSuperview()
       }

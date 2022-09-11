@@ -62,7 +62,7 @@ public func raw(_ pointer: UnsafeRawPointer) -> UnsafeRawPointer {
 //  func save(data: DataWriter)
 //}
 //
-//public protocol DataLoadable: class {
+//public protocol DataLoadable: AnyObject {
 //  func load(data: DataReader)
 //  func save(data: DataWriter)
 //}

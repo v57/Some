@@ -14,7 +14,7 @@ extension SomeSettings {
   }
 }
 
-public protocol Manager: class {
+public protocol Manager: AnyObject {
   func start()
   func loaded()
   func pause()
@@ -78,7 +78,7 @@ public struct Version: ExpressibleByIntegerLiteral, CustomStringConvertible {
     "current: \(current) loaded: \(loaded)"
   }
 }
-public protocol Saveable: class {
+public protocol Saveable: AnyObject {
   var autosave: Bool { get }
   var version: Version { get set }
   func save(data: DataWriter) throws
@@ -92,7 +92,7 @@ public extension Saveable {
   }
 }
 
-public protocol CustomSaveable: class {
+public protocol CustomSaveable: AnyObject {
   func save()
   func load() throws
 }

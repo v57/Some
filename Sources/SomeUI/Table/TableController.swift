@@ -9,7 +9,7 @@
 
 import UIKit
 
-public protocol TableControllerDelegate: class {
+public protocol TableControllerDelegate: AnyObject {
   var view: UIView! { get }
   var cells: TableController.Cells { get set }
   

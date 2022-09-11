@@ -34,7 +34,7 @@ open class ImageView: UIImageView {
           } else {
             UIView.animate(withDuration: 0.25, animations: {
               self.alpha = 1.0
-            }) 
+            })
           }
         } else {
           if self.superview == nil {
@@ -42,7 +42,7 @@ open class ImageView: UIImageView {
           } else {
             UIView.animate(withDuration: 0.25, animations: {
               self.alpha = 0.0
-            }) 
+            })
           }
         }
       }

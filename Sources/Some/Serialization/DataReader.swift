@@ -328,7 +328,7 @@ extension DataReader: CustomStringConvertible {
   }
 }
 
-// MARK:- Codable support
+// MARK: - Codable support
 struct DataReaderUnkeyedDecoder: UnkeyedDecodingContainer {
   var decoder: DataReaderDecoder { DataReaderDecoder(data) }
   let data: DataReader

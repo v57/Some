@@ -21,13 +21,13 @@ extension Id {
     id.hash(into: &hasher)
   }
 }
-public protocol HashableClass: class, Id {}
+public protocol HashableClass: AnyObject, Id {}
 extension HashableClass {
   public var id: ObjectIdentifier { ObjectIdentifier(self) }
 }
 
 
-public protocol MutableId: class, Id {
+public protocol MutableId: AnyObject, Id {
   override var id: IdType { get set }
 }
 

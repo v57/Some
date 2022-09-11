@@ -33,6 +33,7 @@ public class Device {
       return false
     }
   }
+  @discardableResult
   static func updateLowPowerMode() -> Bool {
     guard !isInBackground else { return false }
     let newValue = _lowPowerMode

@@ -106,7 +106,7 @@ class TestStatisticsServer: Statistics.Manager {
 }
 
 
-// MARK:- Statistics item extensions
+// MARK: - Statistics item extensions
 public extension Statistics.Item {
   func data(length: Int) -> [Int] {
     var array = [Int]()

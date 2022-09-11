@@ -5,7 +5,7 @@
 //  Created by Dmitry Kozlov on 5/4/20.
 //
 
-protocol SingleItemSync: class {
+protocol SingleItemSync: AnyObject {
   associatedtype Value
   var local: Value? { get set }
   var loading: O<Value>? { get set }

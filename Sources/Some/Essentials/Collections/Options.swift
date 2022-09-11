@@ -102,6 +102,7 @@ public extension Sequence where Element: BinaryInteger {
   }
 }
 
+
 extension BinaryInteger {
   public subscript<T: BinaryInteger>(index: T) -> Bool {
     get {
@@ -117,7 +118,7 @@ extension BinaryInteger {
   }
 }
 
-// MARK:- Options
+// MARK: - Options
 public struct Options<Enum,RawValue>: RawRepresentable
 where Enum: RawRepresentable, RawValue: BinaryInteger, Enum.RawValue == UInt8 {
   public var rawValue: RawValue
@@ -223,7 +224,7 @@ where Enum: RawRepresentable, RawValue: BinaryInteger, Enum.RawValue == UInt8 {
   }
 }
 
-// MARK:- Equatable
+// MARK: - Equatable
 extension Options: Equatable {
   public static func ==(l: Options, r: Options) -> Bool {
     return l.rawValue == r.rawValue
@@ -235,7 +236,7 @@ extension Options: Hashable {
   }
 }
 
-// MARK:- Comparable
+// MARK: - Comparable
 extension Options: Comparable {
   public static func < (lhs: Options, rhs: Options) -> Bool {
     return lhs.rawValue < rhs.rawValue
@@ -251,7 +252,7 @@ extension Options: Comparable {
   }
 }
 
-// MARK:- BinaryInteger
+// MARK: - BinaryInteger
 extension Options: BinaryInteger {
   public static func <<= <RHS>(lhs: inout Options, rhs: RHS) where RHS : BinaryInteger {
     lhs.rawValue <<= rhs
@@ -333,7 +334,7 @@ extension Options: BinaryInteger {
   }
 }
 
-// MARK:- ExpressibleByArrayLiteral
+// MARK: - ExpressibleByArrayLiteral
 extension Options: ExpressibleByArrayLiteral {
   public typealias ArrayLiteralElement = Enum
   public init(arrayLiteral elements: Enum...) {
@@ -341,14 +342,14 @@ extension Options: ExpressibleByArrayLiteral {
   }
 }
 
-// MARK:- ExpressibleByIntegerLiteral
+// MARK: - ExpressibleByIntegerLiteral
 extension Options: ExpressibleByIntegerLiteral {
   public init(integerLiteral value: RawValue) {
     self.init(value)
   }
 }
 
-// MARK:- Numeric
+// MARK: - Numeric
 extension Options: Numeric {
   public typealias Magnitude = RawValue.Magnitude
   public typealias IntegerLiteralType = Int
@@ -381,7 +382,7 @@ extension Options: Numeric {
   }
 }
 
-// MARK:- CustomStringConvertible
+// MARK: - CustomStringConvertible
 extension Options: CustomStringConvertible {
   public var description: String {
     var string = ""
@@ -409,7 +410,7 @@ extension Options: CustomStringConvertible {
   }
 }
 
-// MARK:- FixedWidthInteger
+// MARK: - FixedWidthInteger
 extension Options where RawValue: FixedWidthInteger {
   public var count: Int { rawValue.nonzeroBitCount }
 }

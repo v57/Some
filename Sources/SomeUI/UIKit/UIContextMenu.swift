@@ -1,6 +1,7 @@
+#if canImport(UIKit)
 //
 //  File.swift
-//  
+//
 //
 //  Created by Dmitry Kozlov on 21/01/2021.
 //
@@ -106,3 +107,4 @@ class ContextMenuInteraction: UIContextMenuInteraction, ContextMenuProtocol {
     }
   }
 }
+#endif

@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK:- ArraySyncQueue
+// MARK: - ArraySyncQueue
 public struct ArraySyncQueue<Item: ArraySyncHashedItem> {
   public var appendSending = [Item]()
   public var appendQueued = [Item]()
@@ -52,7 +52,7 @@ public protocol ArraySyncHashedItem {
   var hash: UInt64 { get set }
 }
 
-// MARK:- ArraySyncQueuedClient
+// MARK: - ArraySyncQueuedClient
 public protocol ArraySyncQueuedClient: ArraySyncClient where Item: ArraySyncHashedItem {
   var queue: ArraySyncQueue<Item> { get set }
   func timeout(_ completion: @escaping ()->())
@@ -64,7 +64,7 @@ public protocol ArraySyncQueuedClient: ArraySyncClient where Item: ArraySyncHash
   func updatesSent(items: Indexed<[Item]>, oldValue: Indexed<[Item]>)
 }
 public extension ArraySyncQueuedClient {
-  // MARK:- Added
+  // MARK: - Added
   func added(items: Indexed<[Item]>) {
     guard !items.value.isEmpty else { return }
     var range = 0..<0
@@ -97,14 +97,14 @@ public extension ArraySyncQueuedClient {
     }
   }
   
-  // MARK:- Default timeout
+  // MARK: - Default timeout
   func timeout(_ completion: @escaping ()->()) {
     wait(3) {
       completion()
     }
   }
   
-  // MARK:- Queued append
+  // MARK: - Queued append
   func queuedAppend(items: [Item]) {
     queue.appendQueued.append(contentsOf: items)
     sendAppending()

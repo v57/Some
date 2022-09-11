@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  File.swift
-//  
+//
 //
 //  Created by Dmitry on 06.10.2019.
 //

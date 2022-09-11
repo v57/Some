@@ -19,7 +19,7 @@ public protocol TableCell: CellLayout, DisplayableCell, CustomStringConvertible 
   var size: CGSize { set get }
   var tableInfo: TableInfo? { get set }
 }
-public protocol DisplayableCell: class {
+public protocol DisplayableCell: AnyObject {
   var view: UIView! { get set }
   var isVisible: Bool { get }
   func loaded()

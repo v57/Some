@@ -8,11 +8,11 @@
 import Foundation
 
 //class DataSync {
-//  
+//
 //}
 //
 //struct DataSyncRange {
-//  
+//
 //}
 //
 //enum SelectRange<T: Comparable> {

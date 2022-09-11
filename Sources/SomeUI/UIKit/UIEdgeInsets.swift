@@ -1,7 +1,7 @@
 #if os(iOS)
 //
 //  File.swift
-//  
+//
 //
 //  Created by Dmitry Kozlov on 8/4/20.
 //

@@ -28,7 +28,7 @@ public class SyncSubscriber<Key, Value>: P<Value> {
     super.send(value)
   }
 }
-public protocol DictionarySync: class {
+public protocol DictionarySync: AnyObject {
   associatedtype Key: Hashable
   associatedtype Value
   

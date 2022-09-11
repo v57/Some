@@ -1,7 +1,7 @@
 #if canImport(UIKit)
 //
 //  File.swift
-//  
+//
 //
 //  Created by Dmitry Kozlov on 9/10/20.
 //

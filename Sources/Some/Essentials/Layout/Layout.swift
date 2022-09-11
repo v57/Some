@@ -23,7 +23,7 @@ import Swift
 // struct HLineBuilder {
 //   var width: CGFloat
 //   var gap: CGFloat
-//   
+//
 //   var space: CGFloat
 //   var items: [LineBuilderItem]
 //   mutating func append(item: LayoutItem) -> LayoutContext? {
