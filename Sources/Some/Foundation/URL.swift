@@ -228,8 +228,11 @@ public struct FileURL {
   }
   /// returns file name without extension
   public var name: String {
-    let fileName = url.lastPathComponent as NSString
-    return fileName.deletingPathExtension
+    get {
+      (url.lastPathComponent as NSString).deletingPathExtension
+    } set {
+      fileName = "\(newValue).\(url.pathExtension)"
+    }
   }
   /// returns file extension
   public var `extension`: String {
