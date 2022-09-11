@@ -22,6 +22,9 @@ public enum Base58Error: Error {
 
 
 public extension Data {
+  func base64() -> String {
+    return base64EncodedString()
+  }
   func base58(_ alphabet: Base58Alphabet) -> String {
     var size = count*2
     var data = Data(count: size)
@@ -41,6 +44,9 @@ public extension Data {
 }
 
 public extension String {
+  func base64() -> Data {
+    Data(base64Encoded: self) ?? Data()
+  }
   func base58(_ alphabet: Base58Alphabet) throws -> Data {
     guard !isEmpty else { throw Base58Error.invalidSize }
     let data = Data(utf8)
