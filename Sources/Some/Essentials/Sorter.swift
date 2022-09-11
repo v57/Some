@@ -13,6 +13,17 @@ public enum ComparsionResult {
 public enum SortOrder {
   case ascending, descending
 }
+public struct Descending<T: Comparable>: Comparable {
+  public var value: T
+  public init(_ value: T) {
+    self.value = value
+  }
+  public static func == (lhs: Self, rhs: Self) -> Bool { rhs.value == lhs.value }
+  public static func < (lhs: Self, rhs: Self) -> Bool { rhs.value < lhs.value }
+  public static func <= (lhs: Self, rhs: Self) -> Bool { rhs.value <= lhs.value }
+  public static func >= (lhs: Self, rhs: Self) -> Bool { rhs.value >= lhs.value }
+  public static func > (lhs: Self, rhs: Self) -> Bool { rhs.value > lhs.value }
+}
 public struct Sorter<T> {
   public var comparsions = [((T,T)->(ComparsionResult))]()
   public init() {}
