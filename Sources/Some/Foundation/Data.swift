@@ -42,11 +42,10 @@ public func json(_ object: Any?) -> Data! {
 
 extension Data {
   public var json: Any! {
-    do {
-      return try JSONSerialization.jsonObject(with: self, options: [.mutableContainers, .mutableLeaves])
-    } catch {
-      return nil
-    }
+    try? JSONSerialization.jsonObject(with: self, options: [.mutableContainers, .mutableLeaves])
+  }
+  public func json(_ options: JSONSerialization.ReadingOptions) -> Any? {
+    try? JSONSerialization.jsonObject(with: self, options: options)
   }
   /// - Parameter length: Desired data length
   /// - Returns: Random data
