@@ -154,6 +154,18 @@ public class AnyReader {
       throw unconvertible(to: "String")
     }
   }
+  /// Tries to represent raw as url
+  /// - Returns: URL
+  /// - Throws: DictionaryReader.Error.unconvertible
+  @discardableResult
+  public func url() throws -> URL {
+    if let value = raw as? String {
+      guard let url = URL(string: value) else { throw unconvertible(to: "URL") }
+      return url
+    } else {
+      throw unconvertible(to: "URL")
+    }
+  }
   
   @discardableResult
   public func time() throws -> Time {
