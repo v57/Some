@@ -150,13 +150,13 @@ public struct FileURL {
   }
   
   public var isVideo: Bool {
-    return FileURL.videoFormats.contains(self.extension)
+    FileURL.videoFormats.contains(self.extension.lowercased())
   }
   public var isImage: Bool {
-    return FileURL.imageFormats.contains(self.extension)
+    FileURL.imageFormats.contains(self.extension.lowercased())
   }
   public var isAudio: Bool {
-    return FileURL.audioFormats.contains(self.extension)
+    FileURL.audioFormats.contains(self.extension.lowercased())
   }
   public var fileSize: Int64 {
     guard exists else { return 0 }
@@ -365,17 +365,35 @@ public struct FileURL {
 }
 
 extension FileURL: Hashable {
-  public static func ==(lhs: FileURL, rhs: FileURL) -> Bool {
-    return lhs.url == rhs.url
+  public static func ==(l: FileURL, r: FileURL) -> Bool {
+    l.url == r.url
   }
-  public static func +(lhs: FileURL, rhs: String) -> FileURL {
-    return FileURL(url: lhs.url.appendingPathComponent(rhs))
+  public static func +(l: FileURL, r: String) -> FileURL {
+    FileURL(url: l.url.appendingPathComponent(r))
   }
-  public static func +=(lhs: inout FileURL, rhs: String) {
-    lhs.url.appendPathComponent(rhs)
+  public static func +=(l: inout FileURL, r: String) {
+    l.url.appendPathComponent(r)
   }
   public func hash(into hasher: inout Hasher) {
     url.hash(into: &hasher)
+  }
+}
+extension URL {
+  public static func +(l: URL, r: String) -> URL {
+    l.appendingPathComponent(r)
+  }
+  public static func +=(l: inout URL, r: String) {
+    l.appendPathComponent(r)
+  }
+  public static func -=(l: inout URL, r: Int) {
+    for _ in 0..<r {
+      l.deleteLastPathComponent()
+    }
+  }
+  public static func -(l: URL, r: Int) -> URL {
+    var l = l
+    l -= r
+    return l
   }
 }
 
@@ -457,7 +475,7 @@ struct _FileURL {
   }
   var isDirectory: Bool {
     var isDirectory = ObjCBool(false)
-    manager.fileExists(atPath: url.path, isDirectory: &isDirectory)
+    _ = manager.fileExists(atPath: url.path, isDirectory: &isDirectory)
     return isDirectory.boolValue
   }
   var isReadable: Bool {
