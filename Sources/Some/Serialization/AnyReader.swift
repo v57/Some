@@ -169,7 +169,27 @@ public class AnyReader {
   
   @discardableResult
   public func time() throws -> Time {
-    return try Time(int())
+    do {
+      return try Time(int())
+    } catch {
+      if let date = ISO8601DateFormatter().date(from: try string())?.time {
+        return date
+      } else {
+        throw unconvertible(to: "Time")
+      }
+    }
+  }
+
+  public func date() throws -> Date {
+    do {
+      return try Time(int()).date
+    } catch {
+      if let date = DateFormatter.js.date(from: try string()) {
+        return date
+      } else {
+        throw unconvertible(to: "Date")
+      }
+    }
   }
   
   /// Tries to represent raw as string
