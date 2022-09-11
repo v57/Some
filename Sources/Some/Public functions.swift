@@ -54,7 +54,7 @@ public func ename(_ error: Error?) -> String {
 }
 
 public func recursive<T>(_ object: T, _ path: KeyPath<T, T?>) -> [T] {
-  var array = [T]()
+  var array = [object]
   var object = object
   while let value = object[keyPath: path] {
     object = value
@@ -69,6 +69,14 @@ public func recursiveLast<T>(_ object: T, _ path: KeyPath<T, T?>) -> T {
   }
   return object
 }
+public func recursiveLast<T>(_ object: (T), transform: (T)->T?) -> T {
+  var object = object
+  while let value = transform(object) {
+    object = value
+  }
+  return object
+}
+
 
 public func onCatch(_ description: String, code: ()throws->()) {
   do {
