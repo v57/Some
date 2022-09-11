@@ -53,7 +53,7 @@ public enum StorageError: Error {
 public class Storage {
   public var onUpdate: ((_ key: String, _ value: Any?) -> ())?
   public var localStorage: UserDefaults
-  public var cloudStorage: NSUbiquitousKeyValueStore = .default
+  public var cloudStorage: NSUbiquitousKeyValueStore?
   
   public var cloudKeys = Set<String>()
   public var localKeys = Set<String>()
@@ -78,16 +78,19 @@ public class Storage {
     }
   }
   
-  public init(appGroup: String = "") {
+  public init(appGroup: String = "", cloudStorage: NSUbiquitousKeyValueStore?) {
+    self.cloudStorage = cloudStorage
     if appGroup.isEmpty {
       self.localStorage = .standard
     } else {
       if let localStorage = UserDefaults(suiteName: appGroup) {
         self.localStorage = localStorage
-        let dictionary = cloudStorage.dictionaryRepresentation
-        for (key, value) in dictionary {
-          if localStorage.object(forKey: key) == nil {
-            localStorage.set(value, forKey: key)
+        if let cloudStorage = cloudStorage {
+          let dictionary = cloudStorage.dictionaryRepresentation
+          for (key, value) in dictionary {
+            if localStorage.object(forKey: key) == nil {
+              localStorage.set(value, forKey: key)
+            }
           }
         }
       } else {
@@ -104,11 +107,11 @@ public class Storage {
   
   public func object<T>(for key: String) throws -> T {
     var value: T?
-    if let retv = cloudStorage.object(forKey: key) {
+    if let retv = cloudStorage?.object(forKey: key) {
       value = retv as? T
     } else if let retv = localStorage.object(forKey: key) {
       if !self.localKeys.contains(key) {
-        self.cloudStorage.set(retv, forKey: key)
+        self.cloudStorage?.set(retv, forKey: key)
       }
       value = retv as? T
     }
@@ -126,7 +129,7 @@ public class Storage {
   
   public func set(object: Any, for key: String) {
     if !self.localKeys.contains(key) {
-      self.cloudStorage.set(object, forKey: key)
+      self.cloudStorage?.set(object, forKey: key)
     }
     if !self.cloudKeys.contains(key) {
       self.localStorage.set(object, forKey: key)
@@ -135,7 +138,7 @@ public class Storage {
   
   public func remove(_ key: String) {
     if !self.localKeys.contains(key) {
-      self.cloudStorage.removeObject(forKey: key)
+      self.cloudStorage?.removeObject(forKey: key)
     }
     if !self.cloudKeys.contains(key) {
       self.localStorage.removeObject(forKey: key)
@@ -143,7 +146,7 @@ public class Storage {
   }
   
   public func syncronize() {
-    let cSynced = cloudStorage.synchronize()
+    let cSynced = cloudStorage?.synchronize() ?? true
     let lSynced = localStorage.synchronize()
     if !cSynced {
       print("icloud: syncronize failed")
@@ -166,7 +169,7 @@ public class Storage {
     guard let changedKeys = userInfo[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] else { return }
     
     for key in changedKeys {
-      let value = self.cloudStorage.object(forKey: key)
+      let value = self.cloudStorage?.object(forKey: key)
       if !self.cloudKeys.contains(key) {
         self.localStorage.set(value, forKey: key)
       }
