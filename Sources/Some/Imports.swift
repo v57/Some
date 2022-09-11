@@ -6,3 +6,6 @@
 //
 
 @_exported import Foundation
+#if canImport(Combine)
+@_exported import Combine
+#endif
