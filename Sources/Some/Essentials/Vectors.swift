@@ -46,6 +46,9 @@ public struct Vector2<T> {
     Swift.swap(&a, &b)
   }
 }
+extension Vector2: CustomStringConvertible {
+  public var description: String { "(\(a),\(b))" }
+}
 extension Vector2: Equatable where T: Equatable { }
 extension Vector2: Hashable where T: Hashable { }
 extension Vector2: Comparable where T: Comparable {
@@ -154,6 +157,9 @@ extension Vector3: Equatable where T: Equatable {
 extension Vector3: Hashable where T: Hashable {
   
 }
+extension Vector3: CustomStringConvertible {
+  public var description: String { "(\(a),\(b),\(c)" }
+}
 public struct Vector4<T> {
   public var a: T
   public var b: T
@@ -188,4 +194,7 @@ extension Vector4: DataRepresentable where T: DataRepresentable {
     data.append(c)
     data.append(d)
   }
+}
+extension Vector4: CustomStringConvertible {
+  public var description: String { "(\(a),\(b),\(c),\(d)" }
 }
