@@ -279,8 +279,9 @@ public struct FileURL {
       }
     }
   }
-  public func create(subdirectories: Bool = false) {
+  public func create(directory: Bool? = nil, subdirectories: Bool = false) {
     guard !systemExists else { return }
+    let isDirectory = directory ?? self.isDirectory
     if isDirectory {
       do {
         try FileManager.default
@@ -292,7 +293,7 @@ public struct FileURL {
         }
       }
     } else {
-      directory.create(subdirectories: true)
+      self.directory.create(subdirectories: true)
       let created = FileManager.default
         .createFile(atPath: path, contents: nil, attributes: nil)
       set(exists: created)
