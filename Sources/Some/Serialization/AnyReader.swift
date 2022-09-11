@@ -249,6 +249,19 @@ public class AnyReader {
       throw unconvertible(to: "Int")
     }
   }
+  @discardableResult
+  public func double() throws -> Double {
+    if let value = raw as? Double {
+      return value
+    } else if let value = raw as? Int {
+      return Double(value)
+    } else if let value = raw as? String {
+      guard let value = Double(value) else { throw unconvertible(to: "Double") }
+      return value
+    } else {
+      throw unconvertible(to: "Double")
+    }
+  }
   
   
   /// Tries to represent raw as Int.
